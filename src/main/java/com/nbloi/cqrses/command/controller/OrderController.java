@@ -45,11 +45,12 @@ public class OrderController {
     @PostMapping("/create-order")
     public CompletableFuture<Void> createOrder(@RequestBody CreateOrderRequestDTO request) {
         String orderId = UUID.randomUUID().toString();
+        CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, request.getProductId()));
 
         // mapping between CreateOrderRequestDTO and CreateOrderEvent
         OrderCreatedEvent eventCreateOrder = modelMapper.map(request, OrderCreatedEvent.class);
         orderCreatedEventProducer.sendOrderEvent(eventCreateOrder);
-        return commandGateway.send(new CreateOrderCommand(orderId, request.getProductId()));
+        return orderCreated;
     }
 
     @PostMapping("/ship-order")

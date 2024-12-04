@@ -1,6 +1,6 @@
 package com.nbloi.cqrses.commonapi.event;
 
-import lombok.Setter;
+
 
 public class PaymentEvent {
 
@@ -12,12 +12,11 @@ public class PaymentEvent {
         this.amount = amount;
     }
 
+    public PaymentEvent() {}
+
     public String getPaymentId() {return paymentId;}
     public Double getAmount() {return amount;}
 
 
-    public void setPaymentId(String paymentId) {
-        this.paymentId = paymentId;
-    }
     public void setAmount(Double amount) {}
 }

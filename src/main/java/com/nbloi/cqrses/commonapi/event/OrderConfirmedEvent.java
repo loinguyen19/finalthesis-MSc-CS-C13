@@ -1,18 +1,22 @@
 package com.nbloi.cqrses.commonapi.event;
 
+import lombok.Getter;
+
 import java.util.Objects;
 
+
+@Getter
 public class OrderConfirmedEvent {
 
-    private final String orderId;
+    private String orderId;
 
     public OrderConfirmedEvent(String orderId) {
         this.orderId = orderId;
     }
 
-    public String getOrderId() {
-        return orderId;
-    }
+    public OrderConfirmedEvent() {}
+
+    public String getOrderId(String orderId) {return orderId;}
 
     @Override
     public boolean equals(Object o) {

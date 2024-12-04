@@ -12,6 +12,8 @@ public class InventoryEvent {
         this.productQuantity = productQuantity;
     }
 
+    public InventoryEvent() {}
+
     public String getInventoryId() {return inventoryId;}
     public String getProductName() {return productName;}
     public int getProductQuantity() {return productQuantity;}

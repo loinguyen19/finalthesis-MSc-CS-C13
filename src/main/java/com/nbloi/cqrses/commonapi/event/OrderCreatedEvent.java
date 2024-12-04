@@ -4,8 +4,8 @@ import java.util.Objects;
 
 public class OrderCreatedEvent {
 
-    private final String orderId;
-    private final String productId;
+    private String orderId;
+    private String productId;
 
 
     public OrderCreatedEvent(String orderId, String productId) {
@@ -13,6 +13,7 @@ public class OrderCreatedEvent {
         this.productId = productId;
     }
 
+    public OrderCreatedEvent() {}
 
     public String getOrderId() {
         return orderId;

@@ -1,10 +1,13 @@
 package com.nbloi.cqrses.commonapi.event;
 
+import lombok.Getter;
+
 import java.util.Objects;
 
+@Getter
 public class OrderShippedEvent {
 
-    private final String orderId;
+    private String orderId;
 
     // default constructor, getters, equals/hashCode and toString
 
@@ -13,9 +16,7 @@ public class OrderShippedEvent {
         this.orderId = orderId;
     }
 
-    public String getOrderId() {
-        return orderId;
-    }
+    public OrderShippedEvent() {}
 
     @Override
     public boolean equals(Object o) {
