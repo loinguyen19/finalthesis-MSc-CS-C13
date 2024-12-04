@@ -11,6 +11,7 @@ import com.nbloi.cqrses.query.entity.OrderDetails;
 import com.nbloi.cqrses.query.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,18 +21,18 @@ public class PaymentEventConsumer {
     OrderRepository orderRepository;
 
     @KafkaListener(topics = "payment_events", groupId = "payment_group")
-    public void handlePaymentEvent(PaymentEvent paymentEvent) {
+    public void handlePaymentEvent(@Payload PaymentEvent paymentEvent) {
         // Process the payment event, e.g., update payment status
         System.out.println("Received Payment Event: " + paymentEvent);
         // Implement the logic for payment processing and order status update
 
-        OrderCreatedEvent orderCreatedEvent;
+        OrderConfirmedEvent orderConfirmedEvent;
         try {
-            orderCreatedEvent = new ObjectMapper().convertValue(paymentEvent, OrderCreatedEvent.class);
-            System.out.println(orderCreatedEvent);
+            orderConfirmedEvent = new ObjectMapper().convertValue(paymentEvent, OrderConfirmedEvent.class);
+            System.out.println(orderConfirmedEvent);
 
-            if (orderCreatedEvent.getOrderId() != null) {
-                OrderDetails orderDetailsToSave = new ObjectMapper().convertValue(orderCreatedEvent, OrderDetails.class) ;
+            if (orderConfirmedEvent.getOrderItemId() != null) {
+                OrderDetails orderDetailsToSave = new ObjectMapper().convertValue(orderConfirmedEvent, OrderDetails.class) ;
                 orderRepository.save(orderDetailsToSave);
             }
 

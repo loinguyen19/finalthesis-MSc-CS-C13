@@ -8,32 +8,36 @@ import java.util.Objects;
 @Getter
 public class OrderConfirmedEvent {
 
-    private String orderId;
+    private String orderItemId;
 
-    public OrderConfirmedEvent(String orderId) {
-        this.orderId = orderId;
+    public OrderConfirmedEvent(String orderItemId) {
+        this.orderItemId = orderItemId;
     }
 
     public OrderConfirmedEvent() {}
 
-    public String getOrderId(String orderId) {return orderId;}
+    public String getOrderItemId(String orderItemId) {return orderItemId;}
+
+    public void setOrderItemId(String orderItemId) {
+        this.orderItemId = orderItemId;
+    }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         OrderConfirmedEvent that = (OrderConfirmedEvent) o;
-        return Objects.equals(orderId, that.orderId);
+        return Objects.equals(orderItemId, that.orderItemId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(orderId);
+        return Objects.hashCode(orderItemId);
     }
 
     @Override
     public String toString() {
         return "OrderConfirmedEvent{" +
-                "orderId='" + orderId + '\'' +
+                "orderItemId='" + orderItemId + '\'' +
                 '}';
     }
 }

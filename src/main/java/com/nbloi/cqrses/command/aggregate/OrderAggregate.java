@@ -17,18 +17,18 @@ import org.axonframework.spring.stereotype.Aggregate;
 public class OrderAggregate {
 
     @AggregateIdentifier
-    private String orderId;
+    private String orderItemId;
     private boolean orderConfirmed;
 
     // Aggregate for created order
     @CommandHandler
     public OrderAggregate(CreateOrderCommand command) {
-        AggregateLifecycle.apply(new OrderCreatedEvent(command.getOrderId(), command.getProductId()));
+        AggregateLifecycle.apply(new OrderCreatedEvent(command.getOrderId(), command.getProductId(), command.getQuantity()));
     }
 
     @EventSourcingHandler
     public void on(OrderCreatedEvent event) {
-        this.orderId = event.getOrderId();
+        this.orderItemId = event.getOrderItemId();
         orderConfirmed = false;
     }
 
@@ -40,7 +40,7 @@ public class OrderAggregate {
         if (orderConfirmed) {
             return;
         }
-        AggregateLifecycle.apply(new OrderConfirmedEvent(orderId));
+        AggregateLifecycle.apply(new OrderConfirmedEvent(orderItemId));
     }
 
     @CommandHandler
@@ -48,11 +48,12 @@ public class OrderAggregate {
         if (!orderConfirmed) {
             throw new UnconfirmedOrderException();
         }
-        AggregateLifecycle.apply(new OrderShippedEvent(orderId));
+        AggregateLifecycle.apply(new OrderShippedEvent(orderItemId));
     }
 
     @EventSourcingHandler
     public void on(OrderConfirmedEvent event) {
         orderConfirmed = true;
     }
+
 }

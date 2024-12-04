@@ -1,5 +1,6 @@
 package com.nbloi.cqrses.query.service;
 
+import com.google.common.base.Strings;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
@@ -15,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class OrdersEventHandler {
     @Autowired
     private OrderRepository orderRepository;
 
-    private final Map<String, OrderDetails> orders = new HashMap<>();
+//    private final Map<String, OrderDetails> orders = new HashMap<>();
 
     public OrdersEventHandler(OrderRepository orderRepository) {
         super();
@@ -36,33 +36,33 @@ public class OrdersEventHandler {
 
     @EventHandler
     public void on(OrderCreatedEvent event) {
-        String orderId = event.getOrderId();
-        orders.put(orderId, new OrderDetails(orderId, event.getProductId()));
-        orderRepository.save(orders.get(orderId));
+        String orderId = event.getOrderItemId();
+//        orders.put(orderId, new OrderDetails(orderId, event.getProductId()));
+        OrderDetails orderCreated = orderRepository.findById(orderId).get();
+        orderRepository.save(orderCreated);
     }
 
     @EventHandler
     public void on(OrderConfirmedEvent event) {
-        String orderId = event.getOrderId();
+        String orderId = event.getOrderItemId();
         OrderDetails orderDetailsToConfirm = orderRepository.findById(orderId).get();
 
-        orderDetailsToConfirm.setOrderStatus(OrderStatus.CONFIRMED);
-        orders.put(orderId, orderDetailsToConfirm);
+        orderDetailsToConfirm.setOrderConfirmed();
+        orderRepository.save(orderDetailsToConfirm);
     }
 
     @EventHandler
     public void on(OrderShippedEvent event) {
-        String orderId = event.getOrderId();
+        String orderId = event.getOrderItemId();
         OrderDetails orderDetailsToShip = orderRepository.findById(orderId).get();
 
-        if (orderDetailsToShip.getOrderStatus() == OrderStatus.CONFIRMED) {
+        if (orderDetailsToShip.getOrderStatus().equals(OrderStatus.CONFIRMED.toString())) {
             orderDetailsToShip.setOrderStatus(OrderStatus.SHIPPED);
         } else {
             throw new UnconfirmedOrderException();
         }
 
-        orders.put(orderId, orderDetailsToShip);
-        orderRepository.save(orders.get(orderId));
+        orderRepository.save(orderDetailsToShip);
     }
 
     // Event Handlers for OrderConfirmedEvent and OrderShippedEvent...

@@ -2,15 +2,15 @@ package com.nbloi.cqrses.commonapi.dto;
 
 public class ShipOrderRequestDTO {
 
-    private String orderId;
+    private String orderItemId;
 
     // constructor, getters, equals/hashCode and toString
 
     public ShipOrderRequestDTO() {}
 
-    public ShipOrderRequestDTO(String orderId) {
-        this.orderId = orderId;
+    public ShipOrderRequestDTO(String orderItemId) {
+        this.orderItemId = orderItemId;
     }
 
-    public String getOrderId() {return orderId;}
+    public String getOrderId() {return orderItemId;}
 }

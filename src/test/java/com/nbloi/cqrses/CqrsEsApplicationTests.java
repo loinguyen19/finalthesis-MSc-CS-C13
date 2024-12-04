@@ -14,7 +14,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
+import java.util.List;
 
 @SpringBootTest
 class CqrsEsApplicationTests {
@@ -33,8 +36,8 @@ class CqrsEsApplicationTests {
 		String orderId = UUID.randomUUID().toString();
 		String productId = "Deluxe Chair";
 		fixture.givenNoPriorActivity()
-				.when(new CreateOrderCommand(orderId, productId))
-				.expectEvents(new OrderCreatedEvent(orderId, productId));
+				.when(new CreateOrderCommand(orderId, productId, 2))
+				.expectEvents(new OrderCreatedEvent(orderId, productId, 2));
 
 	}
 
@@ -45,7 +48,7 @@ class CqrsEsApplicationTests {
 		fixture = new AggregateTestFixture<>(OrderAggregate.class);
 		String orderId = UUID.randomUUID().toString();
 		String productId = "Deluxe Chair";
-		fixture.given(new OrderCreatedEvent(orderId, productId))
+		fixture.given(new OrderCreatedEvent(orderId, productId, 5))
 				.when(new ShipOrderCommand(orderId))
 				.expectException(UnconfirmedOrderException.class);
 	}
@@ -55,7 +58,7 @@ class CqrsEsApplicationTests {
 		fixture = new AggregateTestFixture<>(OrderAggregate.class);
 		String orderId = UUID.randomUUID().toString();
 		String productId = "Deluxe Chair";
-		fixture.given(new OrderCreatedEvent(orderId, productId), new OrderConfirmedEvent(orderId))
+		fixture.given(new OrderCreatedEvent(orderId, productId, 5), new OrderConfirmedEvent(orderId))
 				.when(new ShipOrderCommand(orderId))
 				.expectEvents(new OrderShippedEvent(orderId));
 	}

@@ -5,27 +5,64 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
 @Builder
 @Entity
+@Table
 public class OrderDetails {
 
     @Id
-    private  String orderId;
-    private  String productId;
+    private  String orderItemId;
     private OrderStatus orderStatus;
+    private int quantity;
 
-    public OrderDetails(String orderId, String productId) {
-        this.orderId = orderId;
-        this.productId = productId;
+    @OneToOne
+    @JoinColumn(name="product_id", nullable = false)
+    private Products product;
+
+    public OrderDetails(String orderItemId, int quantity) {
+        this.orderItemId = orderItemId;
         orderStatus = OrderStatus.CREATED;
+        this.quantity = quantity;
     }
 
     public OrderDetails() {}
+
+
+    public String getOrderId() {return orderItemId;}
+
+    public Products getProduct() {
+        return product;
+    }
+
+    public String getOrderStatus() {return orderStatus.toString();}
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+
+    public void setOrderItemId(String orderItemId) {
+        this.orderItemId = orderItemId;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setProduct(Products product) {
+        this.product = product;
+    }
+
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
 
     public void setOrderConfirmed() {
         this.orderStatus = OrderStatus.CONFIRMED;
@@ -35,31 +72,13 @@ public class OrderDetails {
         this.orderStatus = OrderStatus.SHIPPED;
     }
 
-    // getters methods
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public OrderStatus getOrderStatus() {
-        return orderStatus;
-    }
-
-    // setter method
-    public void setOrderStatus(OrderStatus orderStatus) {
-        this.orderStatus = orderStatus;
-    }
-
-    // toString method
     @Override
     public String toString() {
-        return "Order{" +
-                "orderId='" + orderId + '\'' +
-                ", productId='" + productId + '\'' +
+        return "OrderDetails{" +
+                "orderItemId='" + OrderDetails.this.orderItemId + '\'' +
                 ", orderStatus=" + orderStatus +
+                ", quantity=" + quantity +
+//                ", product=" + product +
                 '}';
     }
 }
