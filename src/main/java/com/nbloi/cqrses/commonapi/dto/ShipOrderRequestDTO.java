@@ -13,4 +13,6 @@ public class ShipOrderRequestDTO {
     }
 
     public String getOrderId() {return orderItemId;}
+    public void setOrderId(String orderItemId) {this.orderItemId = orderItemId;}
+
 }

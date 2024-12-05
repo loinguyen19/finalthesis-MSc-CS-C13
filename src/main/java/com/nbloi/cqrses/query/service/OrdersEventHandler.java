@@ -8,10 +8,14 @@ import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrderedProductsQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
+import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.OrderDetails;
+import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.repository.OrderRepository;
+import com.nbloi.cqrses.query.repository.ProductRepository;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
+import org.hibernate.criterion.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +31,9 @@ public class OrdersEventHandler {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private ProductInventoryEventHandler productInventoryEventHandler;
+
 //    private final Map<String, OrderDetails> orders = new HashMap<>();
 
     public OrdersEventHandler(OrderRepository orderRepository) {
@@ -38,7 +45,16 @@ public class OrdersEventHandler {
     public void on(OrderCreatedEvent event) {
         String orderId = event.getOrderItemId();
 //        orders.put(orderId, new OrderDetails(orderId, event.getProductId()));
-        OrderDetails orderCreated = orderRepository.findById(orderId).get();
+        OrderDetails orderCreated = new OrderDetails();
+        orderCreated.setOrderItemId(orderId);
+        orderCreated.setOrderStatus(OrderStatus.CREATED);
+        orderCreated.setAmount(event.getAmount());
+        orderCreated.setCurrency(event.getCurrency());
+        orderCreated.setQuantity(event.getQuantity());
+
+        Product product = productInventoryEventHandler.handle(new FindProductByIdQuery(event.getProductId()));
+        orderCreated.setProduct(product);
+
         orderRepository.save(orderCreated);
     }
 
@@ -76,6 +92,5 @@ public class OrdersEventHandler {
     public OrderDetails handle(FindOrderByIdQuery query) {
         return orderRepository.findById(query.getOrderId()).get();
     }
-
 
 }

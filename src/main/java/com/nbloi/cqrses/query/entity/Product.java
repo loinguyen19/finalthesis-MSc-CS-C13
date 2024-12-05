@@ -7,26 +7,30 @@ import javax.persistence.*;
 @Data
 @Builder
 @Entity
-public class Products {
+public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private String productId;
+
     private String name;
     private double price;
-    private int quantity;
-//
-//    @OneToOne(mappedBy = "products")
+    private int stock;
+    private String currency;
+
+//    @OneToOne(fetch = FetchType.LAZY, mappedBy = "product")
 //    private OrderDetails orderDetails;
 
-    public Products(String productId, String name, double price,  int quantity) {
+    public Product(String productId, String name, double price, int stock, String currency) {
         this.productId = productId;
         this.name = name;
         this.price = price;
-        this.quantity = quantity;
+        this.stock = stock;
+        this.currency = currency;
+//        this.orderDetails = orderDetails;
     }
 
-    public Products() {}
+    public Product() {}
 
     public String getProductId() {
         return productId;
@@ -36,15 +40,13 @@ public class Products {
         return name;
     }
 
-    public int getQuantity() {return quantity;}
+    public int getStock() {return stock;}
 
     public double getPrice() {
         return price;
     }
 
-//    public OrderDetails getOrderDetails() {
-//        return orderDetails;
-//    }
+    public String getCurrency() {return currency;}
 
 
     public void setProductId(String productId) {
@@ -59,13 +61,11 @@ public class Products {
         this.price = price;
     }
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
+    public void setStock(int stock) {
+        this.stock = stock;
     }
 
-//    public void setOrderDetails(OrderDetails orderDetails) {
-//        this.orderDetails = orderDetails;
-//    }
+    public void setCurrency(String currency) {this.currency = currency;}
 
     @Override
     public String toString() {
@@ -73,8 +73,8 @@ public class Products {
                 "productId='" + productId + '\'' +
                 ", name='" + name + '\'' +
                 ", price=" + price +
-                ", quantity=" + quantity +
-//                ", orderDetails=" + orderDetails +
+                ", stock=" + stock +
+                ", currency='" + currency + '\'' +
                 '}';
     }
 }

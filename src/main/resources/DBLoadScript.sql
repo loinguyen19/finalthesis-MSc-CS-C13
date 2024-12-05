@@ -1,26 +1,12 @@
-CREATE TABLE `account` (
-                           `id` varchar(255) NOT NULL,
-                           `balance` double DEFAULT NULL,
-                           `currency` varchar(255) DEFAULT NULL,
-                           `status` varchar(255) DEFAULT NULL,
-                           `operation` varchar(255) DEFAULT NULL,
-                           PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-
-CREATE TABLE `operation` (
-                             `id` varchar(255) NOT NULL,
-                             `date` varchar(255) DEFAULT NULL,
-                             `amount` int(11) DEFAULT NULL,
-                             `type` varchar(255) DEFAULT NULL,
-                             `account` varchar(255) DEFAULT NULL,
+CREATE TABLE `products` (
+                             `product_id` varchar(255) NOT NULL,
+                             `name` varchar(255) DEFAULT NULL,
+                             `quantity` int(11) DEFAULT NULL,
+                             `price` double DEFAULT NULL,
+                             `currency` varchar(255) DEFAULT NULL,
+                             CHECK(stock >= 0 and price >=0 ),
                              PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
-
-
-INSERT INTO `account` (`id`,`balance`,`currency`,`status`)  VALUES ("UUID-1","125","2021-05-16","CREATED") ,("UUID-2","56","2021-09-16","CREATED") ,("UUID-3","56","2021-02-05","CREATED") ,("UUID-4","5896","2022-03-28","ACTIVATED") ,("UUID-5","899","2021-01-12","ACTIVATED") ,("UUID-6","478","2022-03-17","ACTIVATED") ,("UUID-7","2000","2021-04-16","ACTIVATED") ,("UUID-8","58","2021-07-20","ACTIVATED") ,("UUID-9","99","2021-01-02","ACTIVATED") ,("UUID-10","8686","2022-04-03","SUSPENDED") ;
-
-
-INSERT INTO `operation` (`id`,`amount`,`date`,`type`,`account`)  VALUES ("UUID-1","125","2021-05-16","Amity","Stokes") ,("UUID-2","56","2021-09-16","Blossom","Valentine") ,("UUID-3","56","2021-02-05","Nina","Gill") ,("UUID-4","5896","2022-03-28","Martha","Rivers") ,("UUID-5","899","2021-01-12","Judith","Best") ,("UUID-6","478","2022-03-17","Sara","Carson") ,("UUID-7","2000","2021-04-16","Zahir","Levine") ,("UUID-8","58","2021-07-20","Cathleen","Bernard") ,("UUID-9","99","2021-01-02","Jamalia","Crane") ,("UUID-10","8686","2022-04-03","Mia","Ewing");
+INSERT INTO `products` (`product_id`,`name`,`quantity`,`price`,`currency`)  VALUES ("UUID-1","Bike","25","500", "VND")  VALUES ("UUID-2","MotorBike","50","1500", "VND")  VALUES ("UUID-3","Car","250","5500", "VND")  VALUES ("UUID-4","Car","285","8500", "VND")  VALUES ("UUID-5","Bike","15","250", "VND")  VALUES ("UUID-6","Shirt","2005","50", "VND")  VALUES ("UUID-7","Laptop","650","800", "VND")  VALUES ("UUID-8","Desk","780","300", "VND")  VALUES ("UUID-9","Sneaker Shoe","2500","320", "VND")  VALUES ("UUID-10","Towel","1000","30", "VND") ;

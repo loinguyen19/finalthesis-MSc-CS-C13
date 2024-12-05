@@ -2,11 +2,11 @@ package com.nbloi.cqrses.command.aggregate;
 
 import com.nbloi.cqrses.commonapi.command.ConfirmOrderCommand;
 import com.nbloi.cqrses.commonapi.command.CreateOrderCommand;
+import com.nbloi.cqrses.commonapi.command.ProductInventoryCommand;
 import com.nbloi.cqrses.commonapi.command.ShipOrderCommand;
-import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
+import com.nbloi.cqrses.commonapi.event.*;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
+import com.nbloi.cqrses.commonapi.exception.UncreatedOrderException;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
@@ -19,20 +19,25 @@ public class OrderAggregate {
     @AggregateIdentifier
     private String orderItemId;
     private boolean orderConfirmed;
+    private boolean orderCreated;
+    private String productId;
+    private boolean productInventoryUpdated;
+
+    protected OrderAggregate() {}
 
     // Aggregate for created order
     @CommandHandler
     public OrderAggregate(CreateOrderCommand command) {
-        AggregateLifecycle.apply(new OrderCreatedEvent(command.getOrderId(), command.getProductId(), command.getQuantity()));
+        AggregateLifecycle.apply(new OrderCreatedEvent(command.getOrderId(), command.getProductId(),
+                command.getQuantity(), command.getAmount(), command.getCurrency()));
     }
 
     @EventSourcingHandler
     public void on(OrderCreatedEvent event) {
         this.orderItemId = event.getOrderItemId();
+        orderConfirmed = true;
         orderConfirmed = false;
     }
-
-    protected OrderAggregate() { }
 
     // Aggregate Command Handlers for confirmed and shipped orders
     @CommandHandler
@@ -54,6 +59,22 @@ public class OrderAggregate {
     @EventSourcingHandler
     public void on(OrderConfirmedEvent event) {
         orderConfirmed = true;
+    }
+
+
+    @CommandHandler
+    public void handle(ProductInventoryCommand command) {
+        if (!orderCreated){
+            throw new UncreatedOrderException();
+        }
+        AggregateLifecycle.apply(new ProductInventoryEvent(command.getProductId(), command.getName(),
+                command.getStock(), command.getPrice(), command.getCurrency()));
+    }
+
+    @EventSourcingHandler
+    public void on(ProductInventoryCommand event) {
+        this.productId = event.getProductId();
+        productInventoryUpdated = true;
     }
 
 }

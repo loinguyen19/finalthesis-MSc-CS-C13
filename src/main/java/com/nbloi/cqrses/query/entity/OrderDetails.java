@@ -1,14 +1,12 @@
 package com.nbloi.cqrses.query.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -21,15 +19,20 @@ public class OrderDetails {
     private  String orderItemId;
     private OrderStatus orderStatus;
     private int quantity;
+    private double amount;
+    private String currency;
 
-    @OneToOne
-    @JoinColumn(name="product_id", nullable = false)
-    private Products product;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="product_id")
+    private Product product;
 
-    public OrderDetails(String orderItemId, int quantity) {
+    public OrderDetails(String orderItemId, int quantity, double amount, String currency, Product product) {
         this.orderItemId = orderItemId;
         orderStatus = OrderStatus.CREATED;
         this.quantity = quantity;
+        this.amount = amount;
+        this.currency = currency;
+        this.product = product;
     }
 
     public OrderDetails() {}
@@ -37,7 +40,7 @@ public class OrderDetails {
 
     public String getOrderId() {return orderItemId;}
 
-    public Products getProduct() {
+    public Product getProduct() {
         return product;
     }
 
@@ -46,6 +49,10 @@ public class OrderDetails {
     public int getQuantity() {
         return quantity;
     }
+
+    public double getAmount() {return amount;}
+
+    public String getCurrency() {return currency;}
 
 
     public void setOrderItemId(String orderItemId) {
@@ -56,7 +63,7 @@ public class OrderDetails {
         this.quantity = quantity;
     }
 
-    public void setProduct(Products product) {
+    public void setProduct(Product product) {
         this.product = product;
     }
 
@@ -72,13 +79,19 @@ public class OrderDetails {
         this.orderStatus = OrderStatus.SHIPPED;
     }
 
+    public void setAmount(double amount) {this.amount = amount;}
+
+    public void setCurrency(String currency) {this.currency = currency;}
+
     @Override
     public String toString() {
         return "OrderDetails{" +
-                "orderItemId='" + OrderDetails.this.orderItemId + '\'' +
+                "orderItemId='" + orderItemId + '\'' +
                 ", orderStatus=" + orderStatus +
                 ", quantity=" + quantity +
-//                ", product=" + product +
+                ", amount=" + amount +
+                ", currency='" + currency + '\'' +
+                ", product=" + product +
                 '}';
     }
 }

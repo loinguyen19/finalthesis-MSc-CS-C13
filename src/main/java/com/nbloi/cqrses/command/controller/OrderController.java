@@ -3,13 +3,15 @@ package com.nbloi.cqrses.command.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.command.ConfirmOrderCommand;
 import com.nbloi.cqrses.commonapi.command.CreateOrderCommand;
-import com.nbloi.cqrses.commonapi.command.ShipOrderCommand;
-import com.nbloi.cqrses.commonapi.dto.ConfirmOrderRequestDTO;
 import com.nbloi.cqrses.commonapi.dto.CreateOrderRequestDTO;
+import com.nbloi.cqrses.commonapi.dto.OrderDetailsDTO;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.query.FindAllOrderedProductsQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
+import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.OrderDetails;
+import com.nbloi.cqrses.query.entity.Product;
+import com.nbloi.cqrses.query.service.ProductInventoryEventHandler;
 import com.nbloi.cqrses.query.service.kafkaproducer.OrderCreatedEventProducer;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.EventProcessingModule;
@@ -20,6 +22,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -40,6 +43,9 @@ public class OrderController {
     @Autowired
     private EventProcessingModule eventProcessingModule;
 
+    @Autowired
+    private ProductInventoryEventHandler productInventoryEventHandler;
+
     // Autowiring constructor and POST/GET endpoints
     public OrderController(CommandGateway commandGateway, QueryGateway queryGateway, EventStore eventStore) {
         this.commandGateway = commandGateway;
@@ -50,32 +56,29 @@ public class OrderController {
     @PostMapping("/create-order")
     public CompletableFuture<Void> createOrder(@RequestBody CreateOrderRequestDTO request) throws IOException {
         String orderId = UUID.randomUUID().toString();
-        CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, request.getProductId(), request.getQuantity()));
 
-        // mapping between CreateOrderRequestDTO and CreateOrderEvent
+        Product productByIdQuery = productInventoryEventHandler.handle(new FindProductByIdQuery(request.getProductId()));
+        int quantity = request.getQuantity();
+        double amount = productByIdQuery.getPrice()*quantity;
+        String currency = productByIdQuery.getCurrency();
 
-//        OrderCreatedEvent orderCreatedEvent= new OrderCreatedEvent(orderId, request.getProductId());
-//        InputStream inputStream = new ByteArrayInputStream(new byte[16384]);
-//        byte[] bytes = new byte[inputStream.available()];
-//        inputStream.read(bytes);
-//
-//        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bytes)));
-        OrderCreatedEvent orderCreatedEventToConvert = new OrderCreatedEvent(orderId, request.getProductId(), request.getQuantity());
+        CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, request.getProductId(),
+                quantity, amount, currency));
 
+        // collect orderCreatedEvent and send to Kafka broker via producer
+        OrderCreatedEvent orderCreatedEventToConvert = new OrderCreatedEvent(orderId, request.getProductId(),
+                quantity, amount, currency);
         OrderCreatedEvent eventCreateOrder = new ObjectMapper().convertValue(orderCreatedEventToConvert, OrderCreatedEvent.class);
-        System.out.println(eventCreateOrder);
-        eventCreateOrder.setOrderItemId(orderId);
-
         orderCreatedEventProducer.sendOrderEvent(eventCreateOrder);
+
         return orderCreated;
     }
 
     // we can not implement "confirm-order" on the interface because it should be done in the backend and after order being created and paid succesfully
-    @PostMapping("/confirm-order")
-    public CompletableFuture<Void> confirmOrder(@RequestBody ConfirmOrderRequestDTO request) throws IOException {
-        String orderId = request.getOrderId();
-        CompletableFuture<Void> orderConfirmed = commandGateway.send(new ConfirmOrderCommand(orderId));
-        return orderConfirmed;
+    @PostMapping("/confirm-order/{orderId}")
+    public String confirmOrder(@PathVariable String orderId) {
+        commandGateway.send(new ConfirmOrderCommand(orderId));
+        return "Order Id: " + orderId + " has been confirmed";
     }
 
 //    // we can not implement "ship-order" on the interface because it should be done in the backend and after order being confirmed
@@ -90,13 +93,22 @@ public class OrderController {
 
     @GetMapping("/all-orders")
     public CompletableFuture<List<OrderDetails>> findAllOrders() {
+//        List<OrderDetails> listOrderDetails = queryGateway.query(new FindAllOrderedProductsQuery(),
+//                ResponseTypes.multipleInstancesOf(OrderDetails.class)).join();
+//
+//        List<OrderDetailsDTO> listOrderDetailsDTO = new ArrayList<>();
+//        for (OrderDetails orderDetails : listOrderDetails) {
+//            listOrderDetailsDTO.add(modelMapper.map(orderDetails, OrderDetailsDTO.class));
+//        }
+
         return queryGateway.query(new FindAllOrderedProductsQuery(), ResponseTypes.multipleInstancesOf(OrderDetails.class));
     }
 
     @GetMapping("/findbyid/{orderId}")
-    public CompletableFuture<List<OrderDetails>> findAllOrders(@PathVariable String orderId) {
-        return queryGateway.query(new FindOrderByIdQuery(orderId), ResponseTypes.multipleInstancesOf(OrderDetails.class));
+    public CompletableFuture<OrderDetails> findOrderById(@PathVariable String orderId) {
+        return queryGateway.query(new FindOrderByIdQuery(orderId), ResponseTypes.instanceOf(OrderDetails.class));
     }
+
 
     @GetMapping("/eventStore/{orderId}")
     public Stream eventStore(@PathVariable String orderId) {

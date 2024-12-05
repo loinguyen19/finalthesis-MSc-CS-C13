@@ -34,10 +34,12 @@ class CqrsEsApplicationTests {
     public void setUpTestCase1() {
 		fixture = new AggregateTestFixture<>(OrderAggregate.class);
 		String orderId = UUID.randomUUID().toString();
-		String productId = "Deluxe Chair";
+		String productId = "Office Desk";
+		double amount = 50;
+		String currency = "VND";
 		fixture.givenNoPriorActivity()
-				.when(new CreateOrderCommand(orderId, productId, 2))
-				.expectEvents(new OrderCreatedEvent(orderId, productId, 2));
+				.when(new CreateOrderCommand(orderId, productId, 2, amount, currency))
+				.expectEvents(new OrderCreatedEvent(orderId, productId, 2, amount, currency));
 
 	}
 
@@ -47,8 +49,10 @@ class CqrsEsApplicationTests {
 	public void setUpTestCase2() {
 		fixture = new AggregateTestFixture<>(OrderAggregate.class);
 		String orderId = UUID.randomUUID().toString();
-		String productId = "Deluxe Chair";
-		fixture.given(new OrderCreatedEvent(orderId, productId, 5))
+		String productId = "Sneaker shoes";
+		double amount = 860;
+		String currency = "VND";
+		fixture.given(new OrderCreatedEvent(orderId, productId, 5, amount, currency))
 				.when(new ShipOrderCommand(orderId))
 				.expectException(UnconfirmedOrderException.class);
 	}
@@ -57,8 +61,10 @@ class CqrsEsApplicationTests {
 	public void setUpTestCase3() {
 		fixture = new AggregateTestFixture<>(OrderAggregate.class);
 		String orderId = UUID.randomUUID().toString();
-		String productId = "Deluxe Chair";
-		fixture.given(new OrderCreatedEvent(orderId, productId, 5), new OrderConfirmedEvent(orderId))
+		String productId = "Laptop Dell";
+		double amount = 2550;
+		String currency = "VND";
+		fixture.given(new OrderCreatedEvent(orderId, productId, 5, amount, currency), new OrderConfirmedEvent(orderId))
 				.when(new ShipOrderCommand(orderId))
 				.expectEvents(new OrderShippedEvent(orderId));
 	}

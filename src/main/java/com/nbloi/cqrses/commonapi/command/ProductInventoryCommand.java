@@ -1,22 +1,25 @@
-package com.nbloi.cqrses.commonapi.event;
+package com.nbloi.cqrses.commonapi.command;
 
-public class ProductInventoryEvent {
+import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
+public class ProductInventoryCommand {
+
+    @TargetAggregateIdentifier
     private String productId;
     private String name;
     private int stock;
     private double price;
     private String currency;
 
-    public ProductInventoryEvent(String productId, String name, int stock, double price, String currency) {
+    public ProductInventoryCommand(String name, int Stock, String productId, double price, String currency) {
         this.productId = productId;
         this.name = name;
-        this.stock = stock;
+        this.stock = Stock;
         this.price = price;
         this.currency = currency;
     }
 
-    public ProductInventoryEvent() {}
+    public ProductInventoryCommand() {}
 
     public String getProductId() {return productId;}
     public String getName() {return name;}
@@ -41,14 +44,4 @@ public class ProductInventoryEvent {
 
     public void setCurrency(String currency) {this.currency = currency;}
 
-    @Override
-    public String toString() {
-        return "ProductInventoryEvent{" +
-                "productId='" + productId + '\'' +
-                ", productName='" + name + '\'' +
-                ", productStock=" + stock +
-                ", price=" + price +
-                ", currency='" + currency + '\'' +
-                '}';
-    }
 }

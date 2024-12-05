@@ -1,33 +1,70 @@
 package com.nbloi.cqrses.commonapi.dto;
 
+import javax.persistence.Column;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 public class ProductDTO {
 
     private String productId;
-    private String productName;
-    private double price;
-    private int productQuantity;
 
-    public ProductDTO( String productName, int productQuantity, String productId, double price) {
-        this.productName = productName;
-        this.productQuantity = productQuantity;
+    @NotBlank (message = "name can not be blank.")
+    private String name;
+
+    @NotNull (message = "price can not be blank.")
+    private double price;
+
+    @NotNull (message = "stock can not be blank.")
+    private int stock;
+
+    @NotEmpty (message = "currency can not be blank.")
+    private String currency = "VND";
+
+    public ProductDTO(String name, int productQuantity, String productId, double price, String currency) {
+        this.name = name;
+        this.stock = productQuantity;
         this.productId = productId;
         this.price = price;
+        this.currency = currency;
     }
 
     public ProductDTO() {}
 
-    public String getProductName() {return productName;}
-    public int getProductQuantity() {return productQuantity;}
+    public String getName() {return name;}
+    public int getStock() {return stock;}
     public String getProductId() {return productId;}
     public double getPrice() {return price;}
+    public String getCurrency() {return currency;}
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
 
     @Override
     public String toString() {
         return "ProductDTO{" +
                 "productId='" + productId + '\'' +
-                ", productName='" + productName + '\'' +
+                ", productName='" + name + '\'' +
                 ", price=" + price +
-                ", productQuantity=" + productQuantity +
+                ", productStock=" + stock +
+                ", currency='" + currency + '\'' +
                 '}';
     }
 }
