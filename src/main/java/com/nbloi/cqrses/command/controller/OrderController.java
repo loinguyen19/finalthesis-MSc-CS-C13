@@ -36,8 +36,7 @@ public class OrderController {
     private final QueryGateway queryGateway;
     private final EventStore eventStore;
 
-    @Autowired
-    private OrderCreatedEventProducer orderCreatedEventProducer;
+
     @Autowired
     private ModelMapper modelMapper;
     @Autowired
@@ -65,11 +64,11 @@ public class OrderController {
         CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, request.getProductId(),
                 quantity, amount, currency));
 
-        // collect orderCreatedEvent and send to Kafka broker via producer
-        OrderCreatedEvent orderCreatedEventToConvert = new OrderCreatedEvent(orderId, request.getProductId(),
-                quantity, amount, currency);
-        OrderCreatedEvent eventCreateOrder = new ObjectMapper().convertValue(orderCreatedEventToConvert, OrderCreatedEvent.class);
-        orderCreatedEventProducer.sendOrderEvent(eventCreateOrder);
+//        // collect orderCreatedEvent and send to Kafka broker via producer
+//        OrderCreatedEvent orderCreatedEventToConvert = new OrderCreatedEvent(orderId, request.getProductId(),
+//                quantity, amount, currency);
+//        OrderCreatedEvent eventCreateOrder = new ObjectMapper().convertValue(orderCreatedEventToConvert, OrderCreatedEvent.class);
+
 
         return orderCreated;
     }

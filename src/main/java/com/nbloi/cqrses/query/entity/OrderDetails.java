@@ -1,12 +1,11 @@
 package com.nbloi.cqrses.query.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
+import javax.persistence.Entity;
+import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import javax.persistence.*;
 
 @Data
 @AllArgsConstructor

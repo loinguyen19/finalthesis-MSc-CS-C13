@@ -13,9 +13,10 @@ import com.nbloi.cqrses.query.entity.OrderDetails;
 import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.repository.ProductRepository;
+import com.nbloi.cqrses.query.service.kafkaproducer.OrderCreatedEventProducer;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
-import org.hibernate.criterion.Order;
+//import org.hibernate.criterion.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +34,10 @@ public class OrdersEventHandler {
 
     @Autowired
     private ProductInventoryEventHandler productInventoryEventHandler;
+
+    // inject OrderCreatedEventProducer to send the event to Kafka broker
+    @Autowired
+    private OrderCreatedEventProducer orderCreatedEventProducer;
 
 //    private final Map<String, OrderDetails> orders = new HashMap<>();
 
@@ -56,6 +61,9 @@ public class OrdersEventHandler {
         orderCreated.setProduct(product);
 
         orderRepository.save(orderCreated);
+
+        orderCreatedEventProducer.sendOrderEvent(event);
+
     }
 
     @EventHandler

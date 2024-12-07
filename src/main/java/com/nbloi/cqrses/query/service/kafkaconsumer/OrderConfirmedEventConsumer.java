@@ -34,7 +34,7 @@ public class OrderConfirmedEventConsumer {
 
             ordersEventHandler.on(orderConfirmedEvent);
 
-        }catch(Exception e){
+        } catch(Exception e){
             e.printStackTrace();
             throw new RuntimeException("Exception in handleOrderConfirmedEvent");
         }

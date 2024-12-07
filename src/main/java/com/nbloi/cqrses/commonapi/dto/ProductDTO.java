@@ -1,6 +1,6 @@
 package com.nbloi.cqrses.commonapi.dto;
 
-import javax.persistence.Column;
+import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
