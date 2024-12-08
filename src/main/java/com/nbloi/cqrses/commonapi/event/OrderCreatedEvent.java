@@ -5,15 +5,15 @@ import java.util.Objects;
 
 public class OrderCreatedEvent {
 
-    private String orderItemId;
+    private String orderId;
     private String productId;
     private int quantity;
     private double amount;
     private String currency;
 
 
-    public OrderCreatedEvent(String orderItemId, String productId, int quantity, double amount, String currency) {
-        this.orderItemId = orderItemId;
+    public OrderCreatedEvent(String orderId, String productId, int quantity, double amount, String currency) {
+        this.orderId = orderId;
         this.productId = productId;
         this.quantity = quantity;
         this.amount = amount;
@@ -23,7 +23,7 @@ public class OrderCreatedEvent {
     public OrderCreatedEvent() {}
 
     public String getOrderItemId() {
-        return orderItemId;
+        return orderId;
     }
 
     public String getProductId() {
@@ -37,8 +37,8 @@ public class OrderCreatedEvent {
     public String getCurrency() {return currency;}
 
 
-    public void setOrderItemId(String orderItemId) {
-        this.orderItemId = orderItemId;
+    public void setOrderItemId(String orderId) {
+        this.orderId = orderId;
     }
 
     public void setProductId(String productId) {
@@ -55,18 +55,18 @@ public class OrderCreatedEvent {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         OrderCreatedEvent that = (OrderCreatedEvent) o;
-        return quantity == that.quantity && Double.compare(amount, that.amount) == 0 && Objects.equals(orderItemId, that.orderItemId) && Objects.equals(productId, that.productId) && Objects.equals(currency, that.currency);
+        return quantity == that.quantity && Double.compare(amount, that.amount) == 0 && Objects.equals(orderId, that.orderId) && Objects.equals(productId, that.productId) && Objects.equals(currency, that.currency);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(orderItemId, productId, quantity, amount, currency);
+        return Objects.hash(orderId, productId, quantity, amount, currency);
     }
 
     @Override
     public String toString() {
         return "OrderCreatedEvent{" +
-                "orderItemId='" + orderItemId + '\'' +
+                "orderId='" + orderId + '\'' +
                 ", productId='" + productId + '\'' +
                 ", quantity=" + quantity +
                 ", amount=" + amount +

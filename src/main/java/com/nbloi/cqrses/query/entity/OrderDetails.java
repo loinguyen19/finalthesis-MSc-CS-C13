@@ -1,11 +1,12 @@
 package com.nbloi.cqrses.query.entity;
 
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
-import javax.persistence.Entity;
-import javax.persistence.*;
+//import javax.persistence.Entity;
+//import javax.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import jakarta.persistence.*;
 
 @Data
 @AllArgsConstructor

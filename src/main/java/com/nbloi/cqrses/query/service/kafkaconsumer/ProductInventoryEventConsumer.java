@@ -32,12 +32,14 @@ public class ProductInventoryEventConsumer {
                 throw new OutOfProductStockException();
             }else {
                 productFoundById.setStock(productFoundById.getStock() - orderCreatedEvent.getQuantity());
+
+                // Save the update stock of each product
+                productRepository.save(productFoundById);
             }
 
             System.out.println(productFoundById);
 
-            // Save the update stock of each product
-            productRepository.save(productFoundById);
+
 
         } catch (Exception e) {
             e.printStackTrace();

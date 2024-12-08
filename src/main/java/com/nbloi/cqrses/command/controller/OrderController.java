@@ -54,18 +54,18 @@ public class OrderController {
 
     @PostMapping("/create-order")
     public CompletableFuture<Void> createOrder(@RequestBody CreateOrderRequestDTO request) throws IOException {
-        String orderId = UUID.randomUUID().toString();
+        String orderItemId = UUID.randomUUID().toString();
 
         Product productByIdQuery = productInventoryEventHandler.handle(new FindProductByIdQuery(request.getProductId()));
         int quantity = request.getQuantity();
         double amount = productByIdQuery.getPrice()*quantity;
         String currency = productByIdQuery.getCurrency();
 
-        CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, request.getProductId(),
+        CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderItemId, request.getProductId(),
                 quantity, amount, currency));
 
 //        // collect orderCreatedEvent and send to Kafka broker via producer
-//        OrderCreatedEvent orderCreatedEventToConvert = new OrderCreatedEvent(orderId, request.getProductId(),
+//        OrderCreatedEvent orderCreatedEventToConvert = new OrderCreatedEvent(orderItemId, request.getProductId(),
 //                quantity, amount, currency);
 //        OrderCreatedEvent eventCreateOrder = new ObjectMapper().convertValue(orderCreatedEventToConvert, OrderCreatedEvent.class);
 
@@ -74,20 +74,20 @@ public class OrderController {
     }
 
     // we can not implement "confirm-order" on the interface because it should be done in the backend and after order being created and paid succesfully
-    @PostMapping("/confirm-order/{orderId}")
-    public String confirmOrder(@PathVariable String orderId) {
-        commandGateway.send(new ConfirmOrderCommand(orderId));
-        return "Order Id: " + orderId + " has been confirmed";
+    @PostMapping("/confirm-order/{orderItemId}")
+    public String confirmOrder(@PathVariable String orderItemId) {
+        commandGateway.send(new ConfirmOrderCommand(orderItemId));
+        return "Order Id: " + orderItemId + " has been confirmed";
     }
 
 //    // we can not implement "ship-order" on the interface because it should be done in the backend and after order being confirmed
 //    @PostMapping("/ship-order")
 //    public CompletableFuture<Void> shipOrder(@RequestBody CreateOrderRequestDTO request) {
-//        String orderId = UUID.randomUUID().toString();
+//        String orderItemId = UUID.randomUUID().toString();
 //        String productId = request.getProductId();
-//        return commandGateway.send(new CreateOrderCommand(orderId, productId))
-//                .thenCompose(result -> commandGateway.send(new ConfirmOrderCommand(orderId)))
-//                .thenCompose(result -> commandGateway.send(new ShipOrderCommand(orderId)));
+//        return commandGateway.send(new CreateOrderCommand(orderItemId, productId))
+//                .thenCompose(result -> commandGateway.send(new ConfirmOrderCommand(orderItemId)))
+//                .thenCompose(result -> commandGateway.send(new ShipOrderCommand(orderItemId)));
 //    }
 
     @GetMapping("/all-orders")
@@ -103,14 +103,14 @@ public class OrderController {
         return queryGateway.query(new FindAllOrderedProductsQuery(), ResponseTypes.multipleInstancesOf(OrderDetails.class));
     }
 
-    @GetMapping("/findbyid/{orderId}")
-    public CompletableFuture<OrderDetails> findOrderById(@PathVariable String orderId) {
-        return queryGateway.query(new FindOrderByIdQuery(orderId), ResponseTypes.instanceOf(OrderDetails.class));
+    @GetMapping("/findbyid/{orderItemId}")
+    public CompletableFuture<OrderDetails> findOrderById(@PathVariable String orderItemId) {
+        return queryGateway.query(new FindOrderByIdQuery(orderItemId), ResponseTypes.instanceOf(OrderDetails.class));
     }
 
 
-    @GetMapping("/eventStore/{orderId}")
-    public Stream eventStore(@PathVariable String orderId) {
-        return eventStore.readEvents(orderId).asStream();
+    @GetMapping("/eventStore/{orderItemId}")
+    public Stream eventStore(@PathVariable String orderItemId) {
+        return eventStore.readEvents(orderItemId).asStream();
     }
 }

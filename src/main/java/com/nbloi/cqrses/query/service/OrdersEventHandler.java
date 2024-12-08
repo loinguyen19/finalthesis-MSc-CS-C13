@@ -9,6 +9,8 @@ import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrderedProductsQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
+import com.nbloi.cqrses.message.MailGateway;
+import com.nbloi.cqrses.message.MailMessage;
 import com.nbloi.cqrses.query.entity.OrderDetails;
 import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.repository.OrderRepository;
@@ -19,7 +21,8 @@ import org.axonframework.queryhandling.QueryHandler;
 //import org.hibernate.criterion.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.transaction.Transactional;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +37,10 @@ public class OrdersEventHandler {
 
     @Autowired
     private ProductInventoryEventHandler productInventoryEventHandler;
+    @Autowired
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrdersEventHandler.class);
+    @Autowired
+    private final MailGateway mailGateway;
 
     // inject OrderCreatedEventProducer to send the event to Kafka broker
     @Autowired
@@ -41,9 +48,10 @@ public class OrdersEventHandler {
 
 //    private final Map<String, OrderDetails> orders = new HashMap<>();
 
-    public OrdersEventHandler(OrderRepository orderRepository) {
+    public OrdersEventHandler(OrderRepository orderRepository, MailGateway mailGateway) {
         super();
         this.orderRepository = orderRepository;
+        this.mailGateway = mailGateway;
     }
 
     @EventHandler
@@ -63,6 +71,13 @@ public class OrdersEventHandler {
         orderRepository.save(orderCreated);
 
         orderCreatedEventProducer.sendOrderEvent(event);
+
+        // send message to outbox when write database already completes
+        MailMessage message = new MailMessage("Order %s created".formatted(orderId),
+                "Your order is marked as 'created' in our system and will be processed to confirmed status.",
+                "");
+        LOGGER.info("Sending email for order {}", orderId);
+        mailGateway.sendMail(message);
 
     }
 
@@ -87,6 +102,13 @@ public class OrdersEventHandler {
         }
 
         orderRepository.save(orderDetailsToShip);
+
+        // send message to outbox when write database already completes
+        MailMessage message = new MailMessage("Order %s shipped".formatted(orderId),
+                "Your order is marked as 'shipped' in our system and will be processed.",
+                "");
+        LOGGER.info("Sending email for order {}", orderId);
+        mailGateway.sendMail(message);
     }
 
     // Event Handlers for OrderConfirmedEvent and OrderShippedEvent...
