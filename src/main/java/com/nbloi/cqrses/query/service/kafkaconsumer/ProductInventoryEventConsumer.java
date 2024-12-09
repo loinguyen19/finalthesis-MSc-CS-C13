@@ -23,19 +23,18 @@ public class ProductInventoryEventConsumer {
         // Implement the logic for inventory updating
         try {
             Product productFoundById = productRepository.findById(orderCreatedEvent.getProductId()).get();
-            if (productFoundById == null) {
+            if (productFoundById.equals(new Product())) {
                 throw new RuntimeException("No product found with id " + orderCreatedEvent.getProductId());
             }
 
-            // Update the quantity of product by id
-            if (productFoundById.getStock() < orderCreatedEvent.getQuantity()) {
-                throw new OutOfProductStockException();
-            }else {
+//            // Update the quantity of product by id
+//            if (productFoundById.getStock() < orderCreatedEvent.getQuantity()) {
+//                throw new OutOfProductStockException();
+//            }else {
                 productFoundById.setStock(productFoundById.getStock() - orderCreatedEvent.getQuantity());
 
                 // Save the update stock of each product
                 productRepository.save(productFoundById);
-            }
 
             System.out.println(productFoundById);
 

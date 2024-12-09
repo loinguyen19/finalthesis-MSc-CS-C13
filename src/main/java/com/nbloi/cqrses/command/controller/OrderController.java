@@ -6,6 +6,7 @@ import com.nbloi.cqrses.commonapi.command.CreateOrderCommand;
 import com.nbloi.cqrses.commonapi.dto.CreateOrderRequestDTO;
 import com.nbloi.cqrses.commonapi.dto.OrderDetailsDTO;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
+import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrderedProductsQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
@@ -61,14 +62,26 @@ public class OrderController {
         double amount = productByIdQuery.getPrice()*quantity;
         String currency = productByIdQuery.getCurrency();
 
-        CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderItemId, request.getProductId(),
-                quantity, amount, currency));
+        if (productByIdQuery.equals(new Product())) {
+            throw new RuntimeException(String.format("Product with id %s not found", request.getProductId()));
+        }
+
+        CompletableFuture<Void> orderCreated;
+
+        // Update the quantity of product by id
+        if (productByIdQuery.getStock() < request.getQuantity()) {
+            throw new OutOfProductStockException();
+        } else {
+//            productByIdQuery.setStock(productByIdQuery.getStock() - request.getQuantity());
+
+            orderCreated = commandGateway.send(new CreateOrderCommand(orderItemId, request.getProductId(),
+                    quantity, amount, currency));
+        }
 
 //        // collect orderCreatedEvent and send to Kafka broker via producer
 //        OrderCreatedEvent orderCreatedEventToConvert = new OrderCreatedEvent(orderItemId, request.getProductId(),
 //                quantity, amount, currency);
 //        OrderCreatedEvent eventCreateOrder = new ObjectMapper().convertValue(orderCreatedEventToConvert, OrderCreatedEvent.class);
-
 
         return orderCreated;
     }

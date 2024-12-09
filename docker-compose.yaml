@@ -1,0 +1,122 @@
+version: '3.3'
+services:
+  axonserver-1:
+    image: my-repository/axonserver:2023.1
+    hostname: axonserver-1
+    volumes:
+      - axonserver-data1:/axonserver/data
+      - axonserver-events1:/axonserver/events
+      - axonserver-log1:/axonserver/log
+    secrets:
+      - source: axoniq-license
+        target: /axonserver/config/axoniq.license
+      - source: axonserver-properties
+        target: /axonserver/config/axonserver.properties
+      - source: axonserver-token
+        target: /axonserver/config/axonserver.token
+    environment:
+      - AXONIQ_LICENSE=/axonserver/config/axoniq.license
+    ports:
+      - '8024:8024'
+      - '8124:8124'
+      - '8224:8224'
+    networks:
+      - axon-demo
+
+#  db:
+#    image: mysql:8.0.40-oracle
+#    container_name: mysql-cqrses-api
+#    ports:
+#      - '3306:3306'
+#      - '3308:3308'
+#    environment:
+#      MYSQL_apoc_export_file_enabled: true
+#      MYSQL_apoc_import_file_enabled: true
+#      MYSQL_apoc_import_file_use__neo4j__config: true
+#      MYSQL_PLUGINS: '["apoc"]'
+#      MYSQL_AUTH: none
+#    healthcheck:
+#      test:
+#        [
+#          "CMD-SHELL", "if [ $$(neo4j status | grep -o \"is running\" | wc -l ) -eq 0 ]; then exit 1; fi"
+#        ]
+#      retries: 5
+#      interval: '5s'
+#
+#  provision:
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#    build:
+#      context: .
+#      dockerfile: Dockerfile.provision
+#    environment:
+#      DB_URI: neo4j://db:8080
+#
+#  api:
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#
+#    build:
+#      context: .
+#      dockerfile: Dockerfile.local
+#    container_name: cqrs-api
+#    ports:
+#      - "9000:9000"
+#    environment:
+#      USE_DB: true
+#      PORT: 9000
+#      HOST_URL: http://localhost:9000
+#      DB_URI: mysql://db:8080
+#
+#  dbui:
+#    image: mysql:8.0.40-oracle
+#    ports:
+#      - '13306:13306'
+#    environment:
+#      MYSQL_apoc_export_file_enabled: true
+#      MYSQL_apoc_import_file_enabled: true
+#      MYSQL_apoc_import_file_use__mysql__config: true
+#      MYSQL_PLUGINS: '["apoc"]'
+#    healthcheck:
+#      test:
+#        [
+#          "CMD-SHELL", "if [ $$(neo4j status | grep -o \"is running\" | wc -l ) -eq 0 ]; then exit 1; fi"
+#        ]
+#      retries: 5
+#      interval: '5s'
+
+
+volumes:
+  axonserver-data1:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/data1
+      o: bind
+  axonserver-events1:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/events1
+      o: bind
+  axonserver-log1:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/log1
+      o: bind
+
+networks:
+  axon-demo:
+
+secrets:
+  axonserver-properties:
+    file: ./axonserver.properties
+  axoniq-license:
+    file: ./axoniq.license
+  axonserver-token:
+    file: ./axonserver.token
+
+
