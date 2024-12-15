@@ -2,18 +2,28 @@ package com.nbloi.cqrses.query.service.kafkaconsumer;
 
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
+import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
+import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
+import com.nbloi.cqrses.query.entity.OrderItem;
 import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.repository.ProductRepository;
+import com.nbloi.cqrses.query.service.ProductInventoryEventHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class ProductInventoryEventConsumer {
 
     @Autowired
-    ProductRepository productRepository;
+    private ProductInventoryEventHandler productInventoryEventHandler;
+
+    @Autowired
+    private ProductRepository productRepository;
 
     @KafkaListener(topics = "order_created_events", groupId = "order_group")
     public void handleProductInventoryEvent(@Payload OrderCreatedEvent orderCreatedEvent) {
@@ -22,23 +32,17 @@ public class ProductInventoryEventConsumer {
 
         // Implement the logic for inventory updating
         try {
-            Product productFoundById = productRepository.findById(orderCreatedEvent.getProductId()).get();
-            if (productFoundById.equals(new Product())) {
-                throw new RuntimeException("No product found with id " + orderCreatedEvent.getProductId());
+            List<OrderItem> orderItems = orderCreatedEvent.getOrderItems();
+            for (OrderItem o : orderItems) {
+                Product productFoundById = productInventoryEventHandler.handle(new FindProductByIdQuery(o.getProduct().getProductId()));
+                if (productFoundById.equals(new Product())) {
+                    throw new UnfoundEntityException(o.getProduct().getProductId(), "Product");
+                } else {
+                    productFoundById.setStock(productFoundById.getStock() - o.getQuantity());
+                    // Save the update stock of each product
+                    productRepository.save(productFoundById);
+                }
             }
-
-//            // Update the quantity of product by id
-//            if (productFoundById.getStock() < orderCreatedEvent.getQuantity()) {
-//                throw new OutOfProductStockException();
-//            }else {
-                productFoundById.setStock(productFoundById.getStock() - orderCreatedEvent.getQuantity());
-
-                // Save the update stock of each product
-                productRepository.save(productFoundById);
-
-            System.out.println(productFoundById);
-
-
 
         } catch (Exception e) {
             e.printStackTrace();

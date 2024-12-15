@@ -1,76 +1,83 @@
 package com.nbloi.cqrses.commonapi.event;
 
+import com.nbloi.cqrses.commonapi.enums.EventType;
+import com.nbloi.cqrses.commonapi.enums.OrderStatus;
+import com.nbloi.cqrses.query.entity.OrderItem;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
 public class OrderCreatedEvent {
 
     private String orderId;
-    private String productId;
-    private int quantity;
-    private double amount;
-    private String currency;
-
-
-    public OrderCreatedEvent(String orderId, String productId, int quantity, double amount, String currency) {
-        this.orderId = orderId;
-        this.productId = productId;
-        this.quantity = quantity;
-        this.amount = amount;
-        this.currency = currency;
-    }
+    private OrderStatus orderStatus;
+    private List<OrderItem> orderItems;
+    private BigDecimal totalAmount;
+    private String type;
 
     public OrderCreatedEvent() {}
 
-    public String getOrderItemId() {
+    public OrderCreatedEvent(String orderId, List<OrderItem> orderItems, OrderStatus orderStatus, BigDecimal totalAmount) {
+        this.orderId = orderId;
+        this.orderItems = orderItems;
+        this.orderStatus = orderStatus;
+        this.totalAmount = totalAmount;
+        this.type = EventType.ORDER_CONFIRMED_EVENT.toString();
+    }
+
+    public String getOrderId() {
         return orderId;
     }
 
-    public String getProductId() {
-        return productId;
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
     }
 
-    public int getQuantity() {return quantity;}
+    public OrderStatus getOrderStatus() {return orderStatus;}
 
-    public double getAmount() {return amount;}
+    public BigDecimal getTotalAmount() {return totalAmount;}
 
-    public String getCurrency() {return currency;}
+    public String getType() {return type;}
 
 
-    public void setOrderItemId(String orderId) {
+    public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
     }
 
-    public void setQuantity(int quantity) {this.quantity = quantity;}
+    public void setOrderStatus(OrderStatus orderStatus) {this.orderStatus = orderStatus;}
 
-    public void setAmount(double amount) {this.amount = amount;}
+    public void setTotalAmount(BigDecimal totalAmount) {this.totalAmount = totalAmount;}
 
-    public void setCurrency(String currency) {this.currency = currency;}
+    public void setType(String type) {this.type = type;}
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         OrderCreatedEvent that = (OrderCreatedEvent) o;
-        return quantity == that.quantity && Double.compare(amount, that.amount) == 0 && Objects.equals(orderId, that.orderId) && Objects.equals(productId, that.productId) && Objects.equals(currency, that.currency);
+        return Objects.equals(orderId, that.orderId) && orderStatus == that.orderStatus &&
+                Objects.equals(orderItems, that.orderItems) &&
+                Objects.equals(totalAmount, that.totalAmount) &&
+                Objects.equals(type, that.type);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(orderId, productId, quantity, amount, currency);
+        return Objects.hash(orderId, orderStatus, orderItems, totalAmount, type);
     }
 
     @Override
     public String toString() {
         return "OrderCreatedEvent{" +
                 "orderId='" + orderId + '\'' +
-                ", productId='" + productId + '\'' +
-                ", quantity=" + quantity +
-                ", amount=" + amount +
-                ", currency='" + currency + '\'' +
+                ", orderStatus=" + orderStatus +
+                ", orderItems=" + orderItems +
+                ", totalAmount=" + totalAmount +
+                ", type='" + type + '\'' +
                 '}';
     }
 }

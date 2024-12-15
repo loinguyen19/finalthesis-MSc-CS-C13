@@ -1,4 +1,4 @@
-package com.nbloi.cqrses.message;
+package com.nbloi.cqrses.mail;
 
 import java.util.random.RandomGenerator;
 import org.slf4j.Logger;

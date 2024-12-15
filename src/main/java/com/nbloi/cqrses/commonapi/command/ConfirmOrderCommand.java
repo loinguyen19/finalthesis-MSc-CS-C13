@@ -5,17 +5,17 @@ import org.axonframework.modelling.command.TargetAggregateIdentifier;
 public class ConfirmOrderCommand {
 
     @TargetAggregateIdentifier
-    private String orderItemId;
+    private String orderId;
 
     // constructor, getters, equals/hashCode and toString
 
     public ConfirmOrderCommand() {}
 
-    public ConfirmOrderCommand(String orderItemId) {
-        this.orderItemId = orderItemId;
+    public ConfirmOrderCommand(String orderId) {
+        this.orderId = orderId;
     }
 
     public String getOrderId() {
-        return orderItemId;
+        return orderId;
     }
 }

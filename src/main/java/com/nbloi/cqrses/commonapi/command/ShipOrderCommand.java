@@ -6,15 +6,15 @@ import org.axonframework.modelling.command.TargetAggregateIdentifier;
 public class ShipOrderCommand {
 
     @TargetAggregateIdentifier
-    private String orderItemId;
+    private String orderId;
 
     // constructor, getters, equals/hashCode and toString
 
     public ShipOrderCommand(){}
 
-    public ShipOrderCommand(String orderItemId) {
-        this.orderItemId = orderItemId;
+    public ShipOrderCommand(String orderId) {
+        this.orderId = orderId;
     }
 
-    public String getOrderId() {return orderItemId;}
+    public String getOrderId() {return orderId;}
 }

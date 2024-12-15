@@ -1,4 +1,4 @@
-package com.nbloi.cqrses.message;
+package com.nbloi.cqrses.mail;
 
 public interface MailSender {
 

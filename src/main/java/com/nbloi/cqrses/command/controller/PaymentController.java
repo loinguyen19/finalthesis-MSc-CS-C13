@@ -29,8 +29,8 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         commandGateway.send(new PaymentCommand(paymentEvent.getPaymentId(), paymentEvent.getAmount(),
-                paymentEvent.getCurrency(), paymentEvent.getOrderItemId()));
-        paymentEventProducer.sendPaymentEvent(paymentEvent);
+                paymentEvent.getCurrency(), paymentEvent.getOrderId()));
+//        paymentEventProducer.sendPaymentEvent(paymentEvent);
         return ResponseEntity.ok("Payment processed successfully");
     }
 }

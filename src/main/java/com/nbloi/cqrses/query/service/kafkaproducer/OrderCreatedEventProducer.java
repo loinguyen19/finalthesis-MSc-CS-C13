@@ -19,12 +19,12 @@ public class OrderCreatedEventProducer {
     private final static long sendTimeout = 3000;
 
     @Autowired
-    private KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
+    private KafkaTemplate<String, String> kafkaTemplate;
 
-    public void sendOrderEvent(@Payload OrderCreatedEvent orderEvent) {
+    public void sendOrderEvent(@Payload String orderEvent, String aggregateId) {
         try {
-            kafkaTemplate.send(TOPIC, orderEvent).get(sendTimeout, TimeUnit.MILLISECONDS);
-            log.info("Sent order event to kafka topic: " + TOPIC + " with record value: " + orderEvent.toString());
+            kafkaTemplate.send(TOPIC, aggregateId ,orderEvent).get(sendTimeout, TimeUnit.MILLISECONDS);
+            log.info("Sent order event to kafka topic: " + TOPIC + " with record value: {}", orderEvent);
         } catch (Exception e) {
             log.info("KafkaEventBus publish get timeout", e);
             throw new RuntimeException(e);

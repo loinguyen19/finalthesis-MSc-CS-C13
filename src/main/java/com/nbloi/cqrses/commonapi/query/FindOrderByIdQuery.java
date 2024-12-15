@@ -4,17 +4,17 @@ import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 
 public class FindOrderByIdQuery {
 
-    private String orderItemId;
+    private String orderId;
 
     // Constructor
     public FindOrderByIdQuery() {
     }
 
-    public FindOrderByIdQuery(String orderItemId) {
-        this.orderItemId = orderItemId;
+    public FindOrderByIdQuery(String orderId) {
+        this.orderId = orderId;
     }
 
 
-    public String getOrderId() {return orderItemId;}
+    public String getOrderId() {return orderId;}
 
 }

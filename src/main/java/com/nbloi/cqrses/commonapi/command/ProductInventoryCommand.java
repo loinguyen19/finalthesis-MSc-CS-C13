@@ -2,16 +2,18 @@ package com.nbloi.cqrses.commonapi.command;
 
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
+import java.math.BigDecimal;
+
 public class ProductInventoryCommand {
 
     @TargetAggregateIdentifier
     private String productId;
     private String name;
     private int stock;
-    private double price;
+    private BigDecimal price;
     private String currency;
 
-    public ProductInventoryCommand(String name, int Stock, String productId, double price, String currency) {
+    public ProductInventoryCommand(String name, int Stock, String productId, BigDecimal price, String currency) {
         this.productId = productId;
         this.name = name;
         this.stock = Stock;
@@ -24,7 +26,7 @@ public class ProductInventoryCommand {
     public String getProductId() {return productId;}
     public String getName() {return name;}
     public int getStock() {return stock;}
-    public double getPrice() {return price;}
+    public BigDecimal getPrice() {return price;}
     public String getCurrency() {return currency;}
 
 
@@ -40,7 +42,7 @@ public class ProductInventoryCommand {
         this.stock = stock;
     }
 
-    public void setPrice(double price) {this.price = price;}
+    public void setPrice(BigDecimal price) {this.price = price;}
 
     public void setCurrency(String currency) {this.currency = currency;}
 

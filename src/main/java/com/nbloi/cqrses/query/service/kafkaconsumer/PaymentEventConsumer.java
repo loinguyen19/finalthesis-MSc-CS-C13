@@ -1,14 +1,13 @@
 package com.nbloi.cqrses.query.service.kafkaconsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.command.controller.OrderController;
-import com.nbloi.cqrses.commonapi.dto.ConfirmOrderRequestDTO;
-import com.nbloi.cqrses.commonapi.dto.CreateOrderRequestDTO;
 import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentEvent;
-import com.nbloi.cqrses.query.entity.OrderDetails;
+import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
+import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
+import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.repository.OrderRepository;
+import com.nbloi.cqrses.query.service.OrderEventHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -18,7 +17,10 @@ import org.springframework.stereotype.Service;
 public class PaymentEventConsumer {
 
     @Autowired
-    OrderRepository orderRepository;
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private OrderEventHandler orderEventHandler;
 
     @KafkaListener(topics = "payment_events", groupId = "payment_group")
     public void handlePaymentEvent(@Payload PaymentEvent paymentEvent) {
@@ -31,11 +33,13 @@ public class PaymentEventConsumer {
             orderConfirmedEvent = new ObjectMapper().convertValue(paymentEvent, OrderConfirmedEvent.class);
             System.out.println(orderConfirmedEvent);
 
-            if (orderConfirmedEvent.getOrderItemId() != null) {
-                OrderDetails orderDetailsToSave = new ObjectMapper().convertValue(orderConfirmedEvent, OrderDetails.class) ;
-                orderRepository.save(orderDetailsToSave);
+            if (!orderConfirmedEvent.getOrderId().isEmpty()) {
+                Order orderToSave = orderEventHandler.handle(new FindOrderByIdQuery(orderConfirmedEvent.getOrderId()));
+                orderToSave.setOrderConfirmedStatus();
+                orderRepository.save(orderToSave);
+            } else {
+                throw new UnfoundEntityException(orderConfirmedEvent.getOrderId(), "Order");
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);

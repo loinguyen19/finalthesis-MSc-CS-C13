@@ -1,54 +1,40 @@
 package com.nbloi.cqrses.commonapi.dto;
 
+import com.nbloi.cqrses.commonapi.enums.OrderStatus;
+import com.nbloi.cqrses.query.entity.OrderItem;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.List;
+
 public class CreateOrderRequestDTO {
 
-    private String orderItemId;
-    private String productId;
-    private int quantity;
-    private double amount;
-    private String currency;
+    private OrderStatus orderStatus;
+    private List<OrderItemDTO> orderItems;
+    private BigDecimal totalAmount;
 
     // constructor, getters, equals/hashCode and toString
-    public CreateOrderRequestDTO(String orderItemId, String productId, int quantity, double amount, String currency) {
-        this.orderItemId = orderItemId;
-        this.productId = productId;
-        this.quantity = quantity;
-        this.amount = amount;
-        this.currency = currency;
+    public CreateOrderRequestDTO( List<OrderItemDTO> orderItems) {
+        this.orderStatus = OrderStatus.CREATED;
+        this.orderItems = orderItems;
     }
 
     public CreateOrderRequestDTO() {}
 
-    public String getOrderItemId() {
-        return orderItemId;
+    public List<OrderItemDTO> getOrderItems() {
+        return orderItems;
     }
 
-    public String getProductId() {return productId;}
+    public OrderStatus getOrderStatus() {return this.orderStatus;}
 
-    public int getQuantity() {return quantity;}
+    public BigDecimal getTotalAmount() {return this.totalAmount;}
 
-    public double getAmount() {return amount;}
-
-    public String getCurrency() {return currency;}
-
-
-    public void setOrderItemId(String orderItemId) {
-        this.orderItemId = orderItemId;
+    public void setOrderItems(List<OrderItemDTO> orderItems) {
+        this.orderItems = orderItems;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
+    public void setOrderStatus(OrderStatus orderStatus) {this.orderStatus = orderStatus;}
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
+    public void setTotalAmount(BigDecimal totalAmount) {this.totalAmount = totalAmount;}
 
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
 }

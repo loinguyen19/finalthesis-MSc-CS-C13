@@ -1,4 +1,4 @@
 package com.nbloi.cqrses.commonapi.query;
 
-public class FindAllProductQuery {
+public class FindAllOrdersQuery {
 }

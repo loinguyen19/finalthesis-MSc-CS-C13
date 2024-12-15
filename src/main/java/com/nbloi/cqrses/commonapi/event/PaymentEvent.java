@@ -1,44 +1,51 @@
 package com.nbloi.cqrses.commonapi.event;
 
 
+import com.nbloi.cqrses.commonapi.enums.EventType;
+
+import java.math.BigDecimal;
 
 public class PaymentEvent {
 
     private String paymentId;
-    private Double amount;
+    private BigDecimal amount;
     private String currency;
+    private String type;
 
-    private String orderItemId;
+    //TODO: add relationship mapping with Order
+    private String orderId;
 
-    public PaymentEvent(String paymentId, Double amount, String currency, String orderId) {
+    //TODO: add payment Status and payment method in this class
+
+    public PaymentEvent(String paymentId, BigDecimal amount, String currency, String orderId) {
         this.paymentId = paymentId;
         this.amount = amount;
         this.currency = currency;
-        this.orderItemId = orderId;
+        this.orderId = orderId;
+        this.type = EventType.PAYMENT_EVENT.toString();
     }
 
     public PaymentEvent() {}
 
     public String getPaymentId() {return paymentId;}
-    public Double getAmount() {return amount;}
+    public BigDecimal getAmount() {return amount;}
     public String getCurrency() {return currency;}
-    public String getOrderItemId() {return orderItemId;}
+    public String getOrderId() {return orderId;}
+    public String getType() {return type;}
 
     public void setPaymentId(String paymentId) {
         this.paymentId = paymentId;
     }
-
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
-
     public void setCurrency(String currency) {
         this.currency = currency;
     }
-
-    public void setOrderItemId(String orderItemId) {
-        this.orderItemId = orderItemId;
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
+    public void setType(String type) {this.type = type;}
 
     @Override
     public String toString() {
@@ -46,7 +53,8 @@ public class PaymentEvent {
                 "paymentId='" + paymentId + '\'' +
                 ", amount=" + amount +
                 ", currency='" + currency + '\'' +
-                ", orderId='" + orderItemId + '\'' +
+                ", type='" + type + '\'' +
+                ", orderId='" + orderId + '\'' +
                 '}';
     }
 

@@ -1,4 +1,4 @@
-package com.nbloi.cqrses.message;
+package com.nbloi.cqrses.mail;
 
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.MessagingGateway;

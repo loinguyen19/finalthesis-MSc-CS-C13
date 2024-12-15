@@ -6,7 +6,10 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.persistence.*;
 
-public class ProductDTO {
+import java.io.Serializable;
+import java.math.BigDecimal;
+
+public class ProductDTO{
 
     private String productId;
 
@@ -14,7 +17,7 @@ public class ProductDTO {
     private String name;
 
     @NotNull (message = "price can not be blank.")
-    private double price;
+    private BigDecimal price;
 
     @NotNull (message = "stock can not be blank.")
     private int stock;
@@ -22,7 +25,7 @@ public class ProductDTO {
     @NotEmpty (message = "currency can not be blank.")
     private String currency = "VND";
 
-    public ProductDTO(String name, int productQuantity, String productId, double price, String currency) {
+    public ProductDTO(String name, int productQuantity, String productId, BigDecimal price, String currency) {
         this.name = name;
         this.stock = productQuantity;
         this.productId = productId;
@@ -35,7 +38,7 @@ public class ProductDTO {
     public String getName() {return name;}
     public int getStock() {return stock;}
     public String getProductId() {return productId;}
-    public double getPrice() {return price;}
+    public BigDecimal getPrice() {return price;}
     public String getCurrency() {return currency;}
 
     public void setProductId(String productId) {
@@ -46,7 +49,7 @@ public class ProductDTO {
         this.name = name;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 

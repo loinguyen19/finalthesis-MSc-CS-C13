@@ -1,5 +1,6 @@
 package com.nbloi.cqrses.commonapi.event;
 
+import com.nbloi.cqrses.commonapi.enums.EventType;
 import lombok.Getter;
 
 import java.util.Objects;
@@ -7,32 +8,40 @@ import java.util.Objects;
 @Getter
 public class OrderShippedEvent {
 
-    private String orderItemId;
+    private String orderId;
+    private String type;
 
     // default constructor, getters, equals/hashCode and toString
 
 
     public OrderShippedEvent(String orderId) {
-        this.orderItemId = orderId;
+        this.orderId = orderId;
+        this.type = EventType.ORDER_SHIPPED_EVENT.toString();
     }
 
     public OrderShippedEvent() {}
 
-
-
-    public void setOrderItemId(String orderItemId) {
-        this.orderItemId = orderItemId;
+    public String getOrderId() {
+        return orderId;
     }
+
+    public String getType() {return this.type;}
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
+
+    public void setType(String type) {this.type = type;}
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         OrderShippedEvent that = (OrderShippedEvent) o;
-        return Objects.equals(orderItemId, that.orderItemId);
+        return Objects.equals(orderId, that.orderId) && Objects.equals(type, that.type) ;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(orderItemId);
+        return Objects.hash(orderId, type);
     }
 }

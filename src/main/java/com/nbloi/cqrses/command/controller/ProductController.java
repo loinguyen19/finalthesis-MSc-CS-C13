@@ -3,7 +3,7 @@ package com.nbloi.cqrses.command.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.dto.ProductDTO;
 import com.nbloi.cqrses.commonapi.event.ProductInventoryEvent;
-import com.nbloi.cqrses.commonapi.query.FindAllProductQuery;
+import com.nbloi.cqrses.commonapi.query.FindAllProductsQuery;
 import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.repository.ProductRepository;
@@ -46,7 +46,7 @@ public class ProductController {
 
     @GetMapping("/products")
     public List<ProductDTO> findAllProducts() {
-        List<Product> listProduct = queryGateway.query(new FindAllProductQuery(),
+        List<Product> listProduct = queryGateway.query(new FindAllProductsQuery(),
                 ResponseTypes.multipleInstancesOf(Product.class)).join();
 
         List<ProductDTO> listProductDTO = new ArrayList<>();

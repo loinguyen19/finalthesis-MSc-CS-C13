@@ -1,18 +1,20 @@
 package com.nbloi.cqrses.commonapi.dto;
 
+import java.io.Serializable;
+
 public class ShipOrderRequestDTO {
 
-    private String orderItemId;
+    private String orderId;
 
     // constructor, getters, equals/hashCode and toString
 
     public ShipOrderRequestDTO() {}
 
-    public ShipOrderRequestDTO(String orderItemId) {
-        this.orderItemId = orderItemId;
+    public ShipOrderRequestDTO(String orderId) {
+        this.orderId = orderId;
     }
 
-    public String getOrderId() {return orderItemId;}
-    public void setOrderId(String orderItemId) {this.orderItemId = orderItemId;}
+    public String getOrderId() {return orderId;}
+    public void setOrderId(String orderId) {this.orderId = orderId;}
 
 }

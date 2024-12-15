@@ -1,41 +1,55 @@
 package com.nbloi.cqrses.command.aggregate;
 
-import com.nbloi.cqrses.commonapi.command.ConfirmOrderCommand;
-import com.nbloi.cqrses.commonapi.command.CreateOrderCommand;
-import com.nbloi.cqrses.commonapi.command.ProductInventoryCommand;
-import com.nbloi.cqrses.commonapi.command.ShipOrderCommand;
+import com.nbloi.cqrses.commonapi.command.*;
+import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.commonapi.event.*;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
 import com.nbloi.cqrses.commonapi.exception.UncreatedOrderException;
+import com.nbloi.cqrses.query.entity.OrderItem;
+import com.nbloi.cqrses.query.entity.Product;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
 
+import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
 @Aggregate
 public class OrderAggregate {
 
     @AggregateIdentifier
-    private String orderItemId;
+    private String orderId;
+    private List<OrderItem> orderItems;
+    private OrderStatus orderStatus;
+    private BigDecimal totalAmount;
     private boolean orderConfirmed;
-    private boolean orderCreated;
-    private String productId;
-    private boolean productInventoryUpdated;
 
-    protected OrderAggregate() {}
+    protected OrderAggregate() {
+        // Required by Axon
+    }
 
     // Aggregate for created order
     @CommandHandler
     public OrderAggregate(CreateOrderCommand command) {
-        AggregateLifecycle.apply(new OrderCreatedEvent(command.getOrderId(), command.getProductId(),
-                command.getQuantity(), command.getAmount(), command.getCurrency()));
+        AggregateLifecycle.apply(new OrderCreatedEvent(
+                command.getOrderId(),
+                command.getOrderItems(),
+                command.getOrderStatus(),
+                command.getTotalAmount()
+        ));
     }
 
     @EventSourcingHandler
     public void on(OrderCreatedEvent event) {
-        this.orderItemId = event.getOrderItemId();
-        orderConfirmed = true;
+        this.orderId = event.getOrderId();
+        this.orderItems = event.getOrderItems();
+        this.orderStatus = event.getOrderStatus();
+        this.totalAmount = event.getTotalAmount();
         orderConfirmed = false;
     }
 
@@ -45,7 +59,7 @@ public class OrderAggregate {
         if (orderConfirmed) {
             return;
         }
-        AggregateLifecycle.apply(new OrderConfirmedEvent(orderItemId));
+        AggregateLifecycle.apply(new OrderConfirmedEvent(orderId));
     }
 
     @CommandHandler
@@ -53,7 +67,7 @@ public class OrderAggregate {
         if (!orderConfirmed) {
             throw new UnconfirmedOrderException();
         }
-        AggregateLifecycle.apply(new OrderShippedEvent(orderItemId));
+        AggregateLifecycle.apply(new OrderShippedEvent(orderId));
     }
 
     @EventSourcingHandler
@@ -62,19 +76,23 @@ public class OrderAggregate {
     }
 
 
-    @CommandHandler
-    public void handle(ProductInventoryCommand command) {
-        if (!orderCreated){
-            throw new UncreatedOrderException();
-        }
-        AggregateLifecycle.apply(new ProductInventoryEvent(command.getProductId(), command.getName(),
-                command.getStock(), command.getPrice(), command.getCurrency()));
+    public String getOrderId() {
+        return orderId;
     }
 
-    @EventSourcingHandler
-    public void on(ProductInventoryCommand event) {
-        this.productId = event.getProductId();
-        productInventoryUpdated = true;
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
     }
 
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public boolean isOrderConfirmed() {
+        return orderConfirmed;
+    }
 }

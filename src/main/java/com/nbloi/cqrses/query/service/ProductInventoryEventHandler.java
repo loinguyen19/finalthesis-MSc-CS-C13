@@ -1,7 +1,7 @@
 package com.nbloi.cqrses.query.service;
 
 import com.nbloi.cqrses.commonapi.event.ProductInventoryEvent;
-import com.nbloi.cqrses.commonapi.query.FindAllProductQuery;
+import com.nbloi.cqrses.commonapi.query.FindAllProductsQuery;
 import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.repository.ProductRepository;
@@ -31,8 +31,8 @@ public class ProductInventoryEventHandler {
         Product product = productRepository.findById(event.getProductId()).get();
 
         product.setName(event.getName());
-        product.setStock(event.getStock());
         product.setPrice(event.getPrice());
+        product.setStock(event.getStock());
         product.setCurrency(event.getCurrency());
         productRepository.save(product);
     }
@@ -45,7 +45,7 @@ public class ProductInventoryEventHandler {
     }
 
     @QueryHandler
-    public List<Product> handle(FindAllProductQuery query) {
+    public List<Product> handle(FindAllProductsQuery query) {
         return new ArrayList<>(productRepository.findAll());
     }
 
