@@ -1,27 +1,27 @@
 version: '3.3'
 services:
-  axonserver-1:
-    image: my-repository/axonserver:2023.1
-    hostname: axonserver-1
-    volumes:
-      - axonserver-data1:/axonserver/data
-      - axonserver-events1:/axonserver/events
-      - axonserver-log1:/axonserver/log
-    secrets:
-      - source: axoniq-license
-        target: /axonserver/config/axoniq.license
-      - source: axonserver-properties
-        target: /axonserver/config/axonserver.properties
-      - source: axonserver-token
-        target: /axonserver/config/axonserver.token
-    environment:
-      - AXONIQ_LICENSE=/axonserver/config/axoniq.license
-    ports:
-      - '8024:8024'
-      - '8124:8124'
-      - '8224:8224'
-    networks:
-      - axon-demo
+#  axonserver-1:
+#    image: my-repository/axonserver:2023.1
+#    hostname: axonserver-1
+#    volumes:
+#      - axonserver-data1:/axonserver/data
+#      - axonserver-events1:/axonserver/events
+#      - axonserver-log1:/axonserver/log
+#    secrets:
+#      - source: axoniq-license
+#        target: /axonserver/config/axoniq.license
+#      - source: axonserver-properties
+#        target: /axonserver/config/axonserver.properties
+#      - source: axonserver-token
+#        target: /axonserver/config/axonserver.token
+#    environment:
+#      - AXONIQ_LICENSE=/axonserver/config/axoniq.license
+#    ports:
+#      - '8024:8024'
+#      - '8124:8124'
+#      - '8224:8224'
+#    networks:
+#      - axon-demo
 
 #  db:
 #    image: mysql:8.0.40-oracle
@@ -86,6 +86,28 @@ services:
 #        ]
 #      retries: 5
 #      interval: '5s'
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.4
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.4
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://172.24.236.211:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
 
 volumes:
