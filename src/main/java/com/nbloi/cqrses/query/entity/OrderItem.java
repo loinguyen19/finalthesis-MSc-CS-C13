@@ -38,15 +38,14 @@ public class OrderItem {
     private Product product;
 
 
-    public OrderItem(String orderItemId, int quantity, BigDecimal price, String currency, Product product,
-                     Order order) {
+    public OrderItem(String orderItemId, int quantity, BigDecimal price, String currency, Product product) {
         this.orderItemId = orderItemId;
         this.quantity = quantity;
         this.price = price;
         this.totalPrice = price.multiply(BigDecimal.valueOf(quantity));
         this.currency = currency;
         this.product = product;
-        this.order = order;
+//        this.order = order;
     }
 
     public OrderItem() {}

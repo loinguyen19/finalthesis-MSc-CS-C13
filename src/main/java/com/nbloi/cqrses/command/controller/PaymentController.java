@@ -19,6 +19,7 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("/api")
 public class PaymentController {
 
+    @Autowired
     private CommandGateway commandGateway;
     @Autowired
     private PaymentEventProducer paymentEventProducer;
@@ -30,7 +31,9 @@ public class PaymentController {
         }
         commandGateway.send(new PaymentCommand(paymentEvent.getPaymentId(), paymentEvent.getAmount(),
                 paymentEvent.getCurrency(), paymentEvent.getOrderId()));
-//        paymentEventProducer.sendPaymentEvent(paymentEvent);
+
+        // send the event to Kafka broker in PaymentEventHandler service class
+        // paymentEventProducer.sendPaymentEvent(paymentEvent);
         return ResponseEntity.ok("Payment processed successfully");
     }
 }

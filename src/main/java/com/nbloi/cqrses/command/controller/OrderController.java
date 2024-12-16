@@ -77,7 +77,7 @@ public class OrderController {
             OrderItem orderItem = new ObjectMapper().convertValue(oDTO, OrderItem.class);
              orderItem.setProduct(productByIdQuery);
             listOrderItems.add(orderItem);
-        }
+            }
         CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, listOrderItems,
                 request.getTotalAmount()));
 

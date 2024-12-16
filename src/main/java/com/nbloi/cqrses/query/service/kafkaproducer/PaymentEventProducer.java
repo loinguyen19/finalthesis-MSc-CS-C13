@@ -1,6 +1,8 @@
 package com.nbloi.cqrses.query.service.kafkaproducer;
 
+import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentEvent;
+import com.nbloi.cqrses.config.SerializerUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -19,9 +21,13 @@ public class PaymentEventProducer {
     @Autowired
     private KafkaTemplate<String, PaymentEvent> kafkaTemplate;
 
-    public void sendPaymentEvent(@Payload PaymentEvent paymentEvent) {
+    public void sendPaymentEvent(@Payload String paymentEvent) {
         try {
-            kafkaTemplate.send(TOPIC, paymentEvent).get(sendTimeout, TimeUnit.MILLISECONDS);
+            // Deserialize the payload into PaymentEvent object
+            PaymentEvent paymentEventDeSerialized = SerializerUtils.deserializeFromJsonBytes(paymentEvent, PaymentEvent.class);
+
+            // Send this PaymentEvent object to Kafka consumer
+            kafkaTemplate.send(TOPIC, paymentEventDeSerialized).get(sendTimeout, TimeUnit.MILLISECONDS);
             log.info("Sent payment event to kafka topic: " + TOPIC + " with record value: {}", paymentEvent.toString());
         } catch (Exception e) {
             log.info("KafkaEventBus publish get timeout", e);

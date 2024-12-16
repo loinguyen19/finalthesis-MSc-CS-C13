@@ -8,15 +8,19 @@ import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
+import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
+import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
 import com.nbloi.cqrses.mail.MailGateway;
 import com.nbloi.cqrses.mail.MailMessage;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OrderItem;
 import com.nbloi.cqrses.query.entity.OutboxMessage;
+import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
+import com.nbloi.cqrses.query.repository.ProductRepository;
 import com.nbloi.cqrses.query.service.kafkaproducer.OrderCreatedEventProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
@@ -44,6 +48,9 @@ public class OrderEventHandler {
     private ProductInventoryEventHandler productInventoryEventHandler;
 
     @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
     private final MailGateway mailGateway;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderEventHandler.class);
@@ -65,15 +72,15 @@ public class OrderEventHandler {
     @EventHandler
     public void on(OrderCreatedEvent event) {
         try {
-            if ("problematicEventId".equals(event.getOrderId())) {
-                log.warn("Skipping problematic event: {}", event.getOrderId());
-                return;
-            }
+//            if ("problematicEventId".equals(event.getOrderId())) {
+//                log.warn("Skipping problematic event: {}", event.getOrderId());
+//                return;
+//            }
 //            else if ("UUID-OT-1".equals(event.getOrderId())) {
 //                // Skip this specific event
 //                return;
 //            }
-            else {
+//            else {
                 String orderId = event.getOrderId();
 
                 Order order = new Order();
@@ -104,10 +111,24 @@ public class OrderEventHandler {
                         UUID.randomUUID().toString(),
                         event.getOrderId(),
                         event.getClass().getSimpleName(),
-                        serializeEvent(event),  // Serialize the event
-                        OutboxStatus.PENDING
+                        new ObjectMapper().writeValueAsString(event),
+//                        serializeEvent(event),  // Serialize the event
+                        OutboxStatus.PENDING.toString()
                 );
                 outboxRepository.save(outboxMessage);
+                log.info("Processing OutboxMessage with payload: {}", outboxMessage.getPayload());
+
+//            for (OrderItem o : listOfOrderItems) {
+//                Product productFoundById = productInventoryEventHandler.handle(new FindProductByIdQuery(o.getProduct().getProductId()));
+//                if (productFoundById.equals(new Product())) {
+//                    throw new UnfoundEntityException(o.getProduct().getProductId(), "Product");
+//                } else {
+//                    productFoundById.setStock(productFoundById.getStock() - o.getQuantity());
+//
+//                    // Save the update stock of each product
+//                    productRepository.save(productFoundById);
+//                }
+//            }
 
 /*                // Publish the event into Kafka broker
                 orderCreatedEventProducer.sendOrderEvent(event);*/
@@ -118,7 +139,7 @@ public class OrderEventHandler {
                         "orderCreated");
                 LOGGER.info("Sending email for created order {}", orderId);
                 mailGateway.sendMail(message);*/
-            }
+//            }
 
         } catch (Exception e){
             // Log the error and take appropriate action
