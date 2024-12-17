@@ -1,5 +1,6 @@
 package com.nbloi.cqrses.query.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -9,25 +10,23 @@ import java.util.Set;
 public class Customer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String customerId;
-    private String firstName;
-    private String lastName;
+    private String name;
     private String email;
     private String phoneNumber;
 
     //TODO: reopen relationship mapping with Order entity again
 
-//    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private Set<Order> orders;
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private Set<Order> orders;
 
-    public Customer(String customerId, String firstName, String lastName, String email, String phoneNumber) {
+    public Customer(String customerId, String name, String email, String phoneNumber) {
         this.customerId = customerId;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
-//        this.orders = orders;
     }
 
     public Customer() {
@@ -41,24 +40,20 @@ public class Customer {
         this.customerId = customerId;
     }
 
-    public String getFirstName() {
-        return firstName;
+    public String getName() {
+        return name;
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getLastName() {
-        return lastName;
+    public Set<Order> getOrders() {
+        return orders;
     }
 
-//    public Set<Order> getOrders() {
-//        return orders;
-//    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    public void setOrders(Set<Order> orders) {
+        this.orders = orders;
     }
 
     public String getEmail() {
@@ -77,16 +72,12 @@ public class Customer {
         this.phoneNumber = phoneNumber;
     }
 
-//    public void setOrders(Set<Order> orders) {
-//        this.orders = orders;
-//    }
 
     @Override
     public String toString() {
         return "Customer{" +
                 "customerId='" + customerId + '\'' +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
+                ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
 //                ", orders=" + orders +

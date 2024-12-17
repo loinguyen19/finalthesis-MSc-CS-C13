@@ -15,15 +15,20 @@ public class OrderCreatedEvent {
     private List<OrderItem> orderItems;
     private BigDecimal totalAmount;
     private String type;
+    private String customerId;
+    private String paymentId;
 
     public OrderCreatedEvent() {}
 
-    public OrderCreatedEvent(String orderId, List<OrderItem> orderItems, OrderStatus orderStatus, BigDecimal totalAmount) {
+    public OrderCreatedEvent(String orderId, List<OrderItem> orderItems, OrderStatus orderStatus, BigDecimal totalAmount,
+                             String customerId, String paymentId) {
         this.orderId = orderId;
         this.orderItems = orderItems;
         this.orderStatus = orderStatus;
         this.totalAmount = totalAmount;
-        this.type = EventType.ORDER_CONFIRMED_EVENT.toString();
+        this.type = getClass().getSimpleName();
+        this.customerId = customerId;
+        this.paymentId = paymentId;
     }
 
     public String getOrderId() {
@@ -40,6 +45,10 @@ public class OrderCreatedEvent {
 
     public String getType() {return type;}
 
+    public String getCustomerId() {return customerId;}
+
+    public String getPaymentId() {return paymentId;}
+
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
@@ -54,6 +63,11 @@ public class OrderCreatedEvent {
     public void setTotalAmount(BigDecimal totalAmount) {this.totalAmount = totalAmount;}
 
     public void setType(String type) {this.type = type;}
+
+    public void setCustomerId(String customerId) {this.customerId = customerId;}
+
+    public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
+
 
     @Override
     public boolean equals(Object o) {

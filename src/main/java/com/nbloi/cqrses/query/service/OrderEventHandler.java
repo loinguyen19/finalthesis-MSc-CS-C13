@@ -4,28 +4,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
+import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
 import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
-import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
-import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
-import com.nbloi.cqrses.mail.MailGateway;
-import com.nbloi.cqrses.mail.MailMessage;
-import com.nbloi.cqrses.query.entity.Order;
-import com.nbloi.cqrses.query.entity.OrderItem;
-import com.nbloi.cqrses.query.entity.OutboxMessage;
-import com.nbloi.cqrses.query.entity.Product;
+import com.nbloi.cqrses.query.entity.*;
 import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
-import com.nbloi.cqrses.query.repository.ProductRepository;
-import com.nbloi.cqrses.query.service.kafkaproducer.OrderCreatedEventProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
-//import org.hibernate.criterion.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -44,29 +35,16 @@ public class OrderEventHandler {
     @Autowired
     private OrderRepository orderRepository;
 
-    @Autowired
-    private ProductInventoryEventHandler productInventoryEventHandler;
-
-    @Autowired
-    private ProductRepository productRepository;
-
-    @Autowired
-    private final MailGateway mailGateway;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderEventHandler.class);
-
-    // inject OrderCreatedEventProducer to send the event to Kafka broker
-    @Autowired
-    private OrderCreatedEventProducer orderCreatedEventProducer;
 
     @Autowired
     private OutboxRepository outboxRepository;
 
 
-    public OrderEventHandler(OrderRepository orderRepository, MailGateway mailGateway) {
+    public OrderEventHandler(OrderRepository orderRepository, OutboxRepository outboxRepository) {
         super();
         this.orderRepository = orderRepository;
-        this.mailGateway = mailGateway;
+        this.outboxRepository = outboxRepository;
     }
 
     @EventHandler
@@ -102,6 +80,19 @@ public class OrderEventHandler {
 
                 order.setOrderItems(listOfOrderItems);
                 order.setTotalAmount(event.getTotalAmount());
+
+                // Instantiate a new Customer object and set it with received customer id from order created event
+                Customer customer = new Customer();
+                customer.setCustomerId(event.getCustomerId());
+                order.setCustomer(customer);
+
+                // Instantiate a new Payment object and set it with received payment id from order created event
+                Payment payment = new Payment();
+                payment.setPaymentId(event.getPaymentId());
+                payment.setPaymentStatus(PaymentStatus.NEW);
+                payment.setOrder(order);
+
+                order.setPayment(payment);
 
                 // Persist the Order and its OrderItems using the repository
                 orderRepository.save(order);

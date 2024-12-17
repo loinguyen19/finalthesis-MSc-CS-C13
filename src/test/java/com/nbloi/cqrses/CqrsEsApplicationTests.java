@@ -81,14 +81,16 @@ class CqrsEsApplicationTests {
 		orderItems.add(orderItem2);
 
 		String orderId = UUID.randomUUID().toString();
+		String customerId = UUID.randomUUID().toString();
+		String paymentId = UUID.randomUUID().toString();
 
 		// then: should return the OrderCreatedEvent when producing the command successfully
 		ResultValidator<OrderAggregate> resultValidator = fixture.givenNoPriorActivity()
-				.when(new CreateOrderCommand(orderId, orderItems, totalAmount))
-				.expectEvents(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount));
+				.when(new CreateOrderCommand(orderId, orderItems, totalAmount, customerId, paymentId))
+				.expectEvents(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount, customerId, paymentId));
 
 
-		OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount);
+		OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount, customerId, paymentId);
 		orderEventHandler.on(orderCreatedEvent);
 		Order orderFindById = orderEventHandler.handle(new FindOrderByIdQuery(orderId));
 		System.out.println(orderFindById);
@@ -118,7 +120,10 @@ class CqrsEsApplicationTests {
 		BigDecimal totalAmount = orderItem.getTotalPrice();
 
 		String orderId = UUID.randomUUID().toString();
-		fixture.given(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount))
+		String customerId = UUID.randomUUID().toString();
+		String paymentId = UUID.randomUUID().toString();
+
+		fixture.given(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount, customerId, paymentId))
 				.when(new ShipOrderCommand(orderId))
 				.expectException(UnconfirmedOrderException.class);
 	}
@@ -144,7 +149,10 @@ class CqrsEsApplicationTests {
 		BigDecimal totalAmount = orderItem.getTotalPrice();
 
 		String orderId = UUID.randomUUID().toString();
-		fixture.given(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount), new OrderConfirmedEvent(orderId))
+		String customerId = UUID.randomUUID().toString();
+		String paymentId = UUID.randomUUID().toString();
+		fixture.given(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount, customerId, paymentId),
+						new OrderConfirmedEvent(orderId))
 				.when(new ShipOrderCommand(orderId))
 				.expectEvents(new OrderShippedEvent(orderId));
 	}

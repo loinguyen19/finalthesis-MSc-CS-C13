@@ -3,7 +3,6 @@ package com.nbloi.cqrses.command.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.command.ConfirmOrderCommand;
 import com.nbloi.cqrses.commonapi.command.CreateOrderCommand;
-import com.nbloi.cqrses.commonapi.command.CreateOrderItemCommand;
 import com.nbloi.cqrses.commonapi.dto.CreateOrderRequestDTO;
 import com.nbloi.cqrses.commonapi.dto.OrderItemDTO;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
@@ -58,6 +57,8 @@ public class OrderController {
     @PostMapping("/create-order")
     public CompletableFuture<Void> createOrder(@RequestBody CreateOrderRequestDTO request) {
         String orderId = UUID.randomUUID().toString();
+        String customerId = UUID.randomUUID().toString();
+        String paymentId = UUID.randomUUID().toString();
 
         List<OrderItemDTO> listOrderItemsDTO = request.getOrderItems();
         List<OrderItem> listOrderItems = new ArrayList<>();
@@ -79,7 +80,7 @@ public class OrderController {
             listOrderItems.add(orderItem);
             }
         CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, listOrderItems,
-                request.getTotalAmount()));
+                request.getTotalAmount(), customerId, paymentId));
 
         return orderCreated;
     }

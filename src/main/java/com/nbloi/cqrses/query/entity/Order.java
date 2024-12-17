@@ -1,6 +1,7 @@
 package com.nbloi.cqrses.query.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import jakarta.persistence.*;
 
@@ -27,13 +28,17 @@ public class Order {
     private LocalDateTime updatedAt;
 
 
-//    @ManyToOne
-//    @JoinColumn(name = "customer_id", nullable = false)
-//    private Customer customer;
+    @ManyToOne (cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private Set<OrderItem> orderItems;
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name="payment_id",nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private Payment payment;
 
     public Order() {}
 
@@ -56,18 +61,6 @@ public class Order {
         return orderStatus;
     }
 
-    public void setOrderCreatedStatus(OrderStatus orderStatus) {
-        this.orderStatus = orderStatus;
-    }
-
-    public void setOrderConfirmedStatus() {
-        this.orderStatus = OrderStatus.CONFIRMED;
-    }
-
-    public void setOrderShippedStatus() {
-        this.orderStatus = OrderStatus.SHIPPED;
-    }
-
     public Set<OrderItem> getOrderItems() {
         return orderItems;
     }
@@ -84,16 +77,38 @@ public class Order {
         return createdAt;
     }
 
+    public Customer getCustomer() {return customer;}
+
+    public Payment getPayment() {
+        return payment;
+    }
+
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
 
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
+    public void setOrderCreatedStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    public void setOrderConfirmedStatus() {
+        this.orderStatus = OrderStatus.CONFIRMED;
+    }
+
+    public void setOrderShippedStatus() {
+        this.orderStatus = OrderStatus.SHIPPED;
     }
 
     public void setOrderItems(Set<OrderItem> orderItems) {
         this.orderItems = orderItems;
+    }
+
+    public void setCustomer(Customer customer) {this.customer = customer;}
+
+    public void setPayment(Payment payment) {this.payment = payment;}
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
 

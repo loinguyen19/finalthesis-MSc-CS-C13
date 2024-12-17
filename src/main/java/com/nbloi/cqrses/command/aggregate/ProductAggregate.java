@@ -1,8 +1,6 @@
 package com.nbloi.cqrses.command.aggregate;
 
-import com.nbloi.cqrses.commonapi.command.CreateOrderItemCommand;
 import com.nbloi.cqrses.commonapi.command.ProductInventoryCommand;
-import com.nbloi.cqrses.commonapi.event.OrderItemCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.ProductInventoryEvent;
 import com.nbloi.cqrses.commonapi.exception.UncreatedOrderException;
 import org.axonframework.commandhandling.CommandHandler;

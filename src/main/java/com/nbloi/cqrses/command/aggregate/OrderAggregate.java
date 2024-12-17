@@ -28,6 +28,8 @@ public class OrderAggregate {
     private OrderStatus orderStatus;
     private BigDecimal totalAmount;
     private boolean orderConfirmed;
+    private String customerId;
+    private String productId;
 
     protected OrderAggregate() {
         // Required by Axon
@@ -40,7 +42,9 @@ public class OrderAggregate {
                 command.getOrderId(),
                 command.getOrderItems(),
                 command.getOrderStatus(),
-                command.getTotalAmount()
+                command.getTotalAmount(),
+                command.getCustomerId(),
+                command.getPaymentId()
         ));
     }
 
@@ -50,6 +54,8 @@ public class OrderAggregate {
         this.orderItems = event.getOrderItems();
         this.orderStatus = event.getOrderStatus();
         this.totalAmount = event.getTotalAmount();
+        this.customerId = event.getCustomerId();
+        this.productId = event.getPaymentId();
         orderConfirmed = false;
     }
 
