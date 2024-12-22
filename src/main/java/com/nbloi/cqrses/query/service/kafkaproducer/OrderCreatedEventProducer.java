@@ -30,15 +30,6 @@ public class OrderCreatedEventProducer {
 
     public void sendOrderEvent(@Payload String orderEvent) {
         try {
-//            OrderCreatedEvent orderCreatedEventDeSerialized = SerializerUtils.deserializeFromJsonBytes(orderEvent, OrderCreatedEvent.class);
-//            OrderCreatedEvent eventConverted = new ObjectMapper().convertValue(orderEvent, OrderCreatedEvent.class);
-//            OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent();
-//            orderCreatedEvent.setOrderId(eventConverted.getOrderId());
-//            orderCreatedEvent.setOrderStatus(eventConverted.getOrderStatus());
-//            orderCreatedEvent.setType(eventConverted.getType());
-//            orderCreatedEvent.setOrderItems(eventConverted.getOrderItems());
-//            orderCreatedEvent.setTotalAmount(eventConverted.getTotalAmount());
-
             kafkaTemplate.send(TOPIC, orderEvent).get(sendTimeout, TimeUnit.MILLISECONDS);
             LOGGER.info("Sent order event to kafka topic: " + TOPIC + " with record value: {}", orderEvent);
         } catch (Exception e) {

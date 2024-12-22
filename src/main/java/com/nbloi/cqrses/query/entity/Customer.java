@@ -2,7 +2,11 @@ package com.nbloi.cqrses.query.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.validator.constraints.UUID;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
@@ -10,19 +14,17 @@ import java.util.Set;
 public class Customer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String customerId;
     private String name;
     private String email;
     private String phoneNumber;
-
-    //TODO: reopen relationship mapping with Order entity again
+    private BigDecimal balance;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Set<Order> orders;
 
-    public Customer(String customerId, String name, String email, String phoneNumber) {
+    public Customer(String customerId, String name, String email, String phoneNumber, BigDecimal balance) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
@@ -42,6 +44,10 @@ public class Customer {
 
     public String getName() {
         return name;
+    }
+
+    public BigDecimal getBalance() {
+        return balance;
     }
 
     public void setName(String name) {
@@ -72,6 +78,9 @@ public class Customer {
         this.phoneNumber = phoneNumber;
     }
 
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+    }
 
     @Override
     public String toString() {

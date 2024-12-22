@@ -2,6 +2,7 @@ package com.nbloi.cqrses.query.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
@@ -101,7 +102,7 @@ public class OrderEventHandler {
                 OutboxMessage outboxMessage = new OutboxMessage(
                         UUID.randomUUID().toString(),
                         event.getOrderId(),
-                        event.getClass().getSimpleName(),
+                        EventType.ORDER_CREATED_EVENT.toString(),
                         new ObjectMapper().writeValueAsString(event),
 //                        serializeEvent(event),  // Serialize the event
                         OutboxStatus.PENDING.toString()
@@ -143,17 +144,12 @@ public class OrderEventHandler {
     @EventHandler
     public void on(OrderConfirmedEvent event) {
         String orderId = event.getOrderId();
-        Order orderItemToConfirm = orderRepository.findById(orderId).get();
+        Order order = orderRepository.findById(orderId).get();
 
-        orderItemToConfirm.setOrderConfirmedStatus();
-        orderRepository.save(orderItemToConfirm);
+        order.setOrderConfirmedStatus();
+        orderRepository.save(order);
 
-/*        // send message to outbox when write database already completes
-        MailMessage message = new MailMessage("Order %s confirmed".formatted(orderId),
-                "Your order is marked as 'confirmed' in our system and will be moved to delivery service.",
-                "orderConfirmed");
-        LOGGER.info("Sending email for confirmed order {}", orderId);
-        mailGateway.sendMail(message);*/
+        // TODO: send message to transactional outbox pattern to manage the event state before sending to Kafka broker
     }
 
     @EventHandler
@@ -169,12 +165,8 @@ public class OrderEventHandler {
 
         orderRepository.save(orderToShip);
 
-/*        // send message to outbox when write database already completes
-        MailMessage message = new MailMessage("Order %s shipped".formatted(orderId),
-                "Your order is marked as 'shipped' in our system and will be on the way to ship.",
-                "orderShipped");
-        LOGGER.info("Sending email for shipped order {}", orderId);
-        mailGateway.sendMail(message);*/
+        // TODO: send message to transactional outbox pattern to manage the event state before sending to Kafka broker
+
     }
 
     // Event Handlers for OrderConfirmedEvent and OrderShippedEvent...

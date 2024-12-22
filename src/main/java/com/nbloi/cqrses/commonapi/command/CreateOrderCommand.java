@@ -5,6 +5,7 @@ import com.nbloi.cqrses.query.entity.OrderItem;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class CreateOrderCommand {
@@ -16,6 +17,7 @@ public class CreateOrderCommand {
     private BigDecimal totalAmount;
     private String customerId;
     private String paymentId;
+    private LocalDateTime createdAt;
 
     // constructor, getters, equals/hashCode and toString
         public CreateOrderCommand(String orderId, List<OrderItem> orderItems, BigDecimal totalAmount,
@@ -26,6 +28,7 @@ public class CreateOrderCommand {
         this.totalAmount = totalAmount;
         this.customerId = customerId;
         this.paymentId = paymentId;
+        this.createdAt = LocalDateTime.now();
     }
 
 
@@ -43,6 +46,8 @@ public class CreateOrderCommand {
 
     public String getPaymentId() {return paymentId;}
 
+    public LocalDateTime getCreatedAt() {return createdAt;}
+
     public void setOrderItems(List<OrderItem> orderItems) {}
 
     public void setTotalAmount(BigDecimal totalAmount) {this.totalAmount = totalAmount;}
@@ -50,5 +55,7 @@ public class CreateOrderCommand {
     public void setCustomerId(String customerId) {this.customerId = customerId;}
 
     public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
+
+    protected void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
 
 }

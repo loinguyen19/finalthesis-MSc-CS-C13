@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Data;
 //import javax.persistence.*;
 import jakarta.persistence.*;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -15,7 +17,9 @@ import java.util.Set;
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID, generator = "UUID")
+    @UuidGenerator
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private String productId;
 
     private String name;

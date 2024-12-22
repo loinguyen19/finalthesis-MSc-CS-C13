@@ -2,7 +2,7 @@ package com.nbloi.cqrses.query.service.kafkaconsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
-import com.nbloi.cqrses.commonapi.event.PaymentEvent;
+import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.service.OrderEventHandler;
@@ -18,15 +18,15 @@ public class OrderConfirmedEventConsumer {
     OrderEventHandler orderEventHandler;
 
     @KafkaListener(topics = "payment_events", groupId = "payment_group")
-    public void handleOrderConfirmedEvent(@Payload PaymentEvent paymentEvent) {
+    public void handleOrderConfirmedEvent(@Payload PaymentCompletedEvent paymentCompletedEvent) {
         // Process the order event, e.g., store it in the database
-        System.out.println("Received Payment Event: " + paymentEvent);
+        System.out.println("Received Payment Event: " + paymentCompletedEvent);
 
         // Implement the logic for order confirmation processing
         try{
-            Order orderToConfirm = orderEventHandler.handle(new FindOrderByIdQuery(paymentEvent.getOrderId()));
+            Order orderToConfirm = orderEventHandler.handle(new FindOrderByIdQuery(paymentCompletedEvent.getOrderId()));
 
-            if (orderToConfirm == null) { throw new RuntimeException("No order found by id " + paymentEvent.getOrderId()); }
+            if (orderToConfirm == null) { throw new RuntimeException("No order found by id " + paymentCompletedEvent.getOrderId()); }
             OrderConfirmedEvent orderConfirmedEvent = new ObjectMapper().convertValue(orderToConfirm, OrderConfirmedEvent.class);
 
             orderEventHandler.on(orderConfirmedEvent);

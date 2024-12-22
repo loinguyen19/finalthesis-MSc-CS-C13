@@ -1,7 +1,7 @@
 package com.nbloi.cqrses.query.service.kafkaproducer;
 
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
-import com.nbloi.cqrses.commonapi.event.PaymentEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
 import com.nbloi.cqrses.config.SerializerUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,16 +19,16 @@ public class PaymentEventProducer {
     private final static long sendTimeout = 3000;
 
     @Autowired
-    private KafkaTemplate<String, PaymentEvent> kafkaTemplate;
+    private KafkaTemplate<String, PaymentCompletedEvent> kafkaTemplate;
 
     public void sendPaymentEvent(@Payload String paymentEvent) {
         try {
             // Deserialize the payload into PaymentEvent object
-            PaymentEvent paymentEventDeSerialized = SerializerUtils.deserializeFromJsonBytes(paymentEvent, PaymentEvent.class);
+            PaymentCompletedEvent paymentCompletedEvent = new ObjectMapper().readValue(paymentEvent, PaymentCompletedEvent.class);
 
             // Send this PaymentEvent object to Kafka consumer
-            kafkaTemplate.send(TOPIC, paymentEventDeSerialized).get(sendTimeout, TimeUnit.MILLISECONDS);
-            log.info("Sent payment event to kafka topic: " + TOPIC + " with record value: {}", paymentEvent.toString());
+            kafkaTemplate.send(TOPIC, paymentCompletedEvent).get(sendTimeout, TimeUnit.MILLISECONDS);
+            log.info("Sent payment event to kafka topic: " + TOPIC + " with record value: {}", paymentEvent);
         } catch (Exception e) {
             log.info("KafkaEventBus publish get timeout", e);
             throw new RuntimeException(e);

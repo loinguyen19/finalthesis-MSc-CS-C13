@@ -25,6 +25,9 @@ public enum PaymentStatus {
     TO_BE_POSTED,
 
     // The system sets this database status if the payment has been successfully forwarded to the collections/disbursements system.
-    POSTED,
+    COMPLETED,
+
+    // When payment is failed to proceed
+    FAILED
 
 }

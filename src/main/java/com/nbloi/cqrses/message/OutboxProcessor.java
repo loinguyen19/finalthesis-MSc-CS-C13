@@ -1,9 +1,13 @@
 package com.nbloi.cqrses.message;
 
+import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
+import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.query.entity.OutboxMessage;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
 import com.nbloi.cqrses.query.service.kafkaproducer.OrderCreatedEventProducer;
+import com.nbloi.cqrses.query.service.kafkaproducer.PaymentEventProducer;
+import jdk.jfr.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +32,8 @@ public class OutboxProcessor {
     private OrderCreatedEventProducer orderCreatedEventProducer;
 
     private final Logger log = LoggerFactory.getLogger(OutboxProcessor.class);
+    @Autowired
+    private PaymentEventProducer paymentEventProducer;
 
     @Transactional
     @Scheduled(fixedRate = 5000)  // Poll every 5 seconds
@@ -37,7 +43,14 @@ public class OutboxProcessor {
         for (OutboxMessage message : messages) {
             try {
                 // Publish message to Kafka
-                orderCreatedEventProducer.sendOrderEvent(message.getPayload());
+                EventType eventType = EventType.valueOf(message.getEventType());
+                switch (eventType) {
+                    case EventType.ORDER_CREATED_EVENT:
+                        orderCreatedEventProducer.sendOrderEvent(message.getPayload());
+                    case EventType.PAYMENT_COMPLETED_EVENT:
+                        paymentEventProducer.sendPaymentEvent(message.getPayload());
+                    default:
+                }
 
                 // Mark message as PROCESSED
                 message.setStatus("PROCESSED");
