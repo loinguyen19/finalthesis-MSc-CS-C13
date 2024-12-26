@@ -1,6 +1,10 @@
 package com.nbloi.cqrses.message;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.enums.EventType;
+import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
+import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.PaymentCreatedEvent;
 import com.nbloi.cqrses.query.entity.OutboxMessage;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
 import com.nbloi.cqrses.query.service.kafkaconsumer.ProductInventoryEventConsumer;
@@ -51,10 +55,18 @@ public class OutboxProcessor {
                 switch (eventType) {
                     case EventType.ORDER_CREATED_EVENT:
                         orderCreatedEventProducer.sendOrderEvent(message.getPayload());
-                    case EventType.PRODUCT_INVENTORY_UPDATED_EVENT:
-                        paymentEventProducer.sendPaymentCreatedEvent(message.getPayload());
-                    case EventType.PAYMENT_CREATED_EVENT:
-                        paymentEventProducer.sendPaymentCreatedEvent(message.getPayload());
+                    case EventType.PRODUCT_INVENTORY_UPDATED_EVENT, EventType.PAYMENT_CREATED_EVENT:
+                        OrderCreatedEvent orderCreatedEvent = new ObjectMapper().readValue(message.getPayload(), OrderCreatedEvent.class);
+                        PaymentCreatedEvent paymentCreatedEvent = new PaymentCreatedEvent();
+                        paymentCreatedEvent.setPaymentId(orderCreatedEvent.getPaymentId());
+                        paymentCreatedEvent.setPaymentDate(LocalDateTime.now());
+                        paymentCreatedEvent.setPaymentStatus(PaymentStatus.CREATED);
+                        paymentCreatedEvent.setTotalAmount(orderCreatedEvent.getTotalAmount());
+                        paymentCreatedEvent.setCurrency(orderCreatedEvent.getCurrency());
+                        paymentCreatedEvent.setOrderId(orderCreatedEvent.getOrderId());
+
+                        String paymentCreatedEventPayload = new ObjectMapper().writeValueAsString(paymentCreatedEvent);
+                        paymentEventProducer.sendPaymentCreatedEvent(paymentCreatedEventPayload);
                     case EventType.PAYMENT_COMPLETED_EVENT:
                         paymentEventProducer.sendPaymentCompletedEvent(message.getPayload());
                     case EventType.PAYMENT_FAILED_EVENT:

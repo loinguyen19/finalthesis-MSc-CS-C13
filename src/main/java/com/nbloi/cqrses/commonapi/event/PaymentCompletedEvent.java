@@ -1,8 +1,10 @@
 package com.nbloi.cqrses.commonapi.event;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
+import jakarta.persistence.Column;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,6 +15,9 @@ public class PaymentCompletedEvent {
     private BigDecimal amount;
     private String currency;
     private String type;
+
+    @Column(nullable = false, updatable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime paymentDate;
     private PaymentStatus paymentStatus;
 
@@ -31,7 +36,7 @@ public class PaymentCompletedEvent {
 
     public PaymentCompletedEvent() {}
 
-    public String getPaymentCompletedId() {return paymentId;}
+    public String getPaymentId() {return paymentId;}
     public BigDecimal getTotalAmount() {return amount;}
     public String getCurrency() {return currency;}
     public String getOrderId() {return orderId;}
@@ -39,7 +44,7 @@ public class PaymentCompletedEvent {
     public LocalDateTime getPaymentDate() {return paymentDate;}
     public PaymentStatus getPaymentStatus() {return paymentStatus;}
 
-    public void setPaymentCompletedId(String paymentId) {
+    public void setPaymentId(String paymentId) {
         this.paymentId = paymentId;
     }
     public void setTotalAmount(BigDecimal amount) {

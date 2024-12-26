@@ -56,7 +56,8 @@ public class ProductInventoryEventConsumer {
                     throw new UnfoundEntityException(o.getProduct().getProductId(), "Product");
                 } else {
                     productFoundById.setStock(productFoundById.getStock() - o.getQuantity());
-
+                    // TODO: recheck that the product inventory has not been updated after order created successfully
+                    // TODO: UPDATED - it's updated, but asynchronously
                     // Save the update stock of each product
                     productRepository.save(productFoundById);
                 }

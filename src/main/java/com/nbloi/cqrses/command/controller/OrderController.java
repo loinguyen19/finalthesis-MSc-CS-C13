@@ -5,8 +5,6 @@ import com.nbloi.cqrses.commonapi.command.ConfirmOrderCommand;
 import com.nbloi.cqrses.commonapi.command.CreateOrderCommand;
 import com.nbloi.cqrses.commonapi.dto.CreateOrderRequestDTO;
 import com.nbloi.cqrses.commonapi.dto.OrderItemDTO;
-import com.nbloi.cqrses.commonapi.enums.OrderStatus;
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
@@ -21,18 +19,13 @@ import org.axonframework.config.EventProcessingModule;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.queryhandling.QueryGateway;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
-import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping(path = "/api/orders")
@@ -57,7 +50,6 @@ public class OrderController {
     @PostMapping("/create-order")
     public CompletableFuture<Void> createOrder(@RequestBody CreateOrderRequestDTO request) {
         String orderId = UUID.randomUUID().toString();
-//        String customerId = UUID.randomUUID().toString();
         String customerId = request.getCustomerId();
         String paymentId = UUID.randomUUID().toString();
 
@@ -81,7 +73,7 @@ public class OrderController {
             listOrderItems.add(orderItem);
             }
         CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, listOrderItems,
-                request.getTotalAmount(), request.getCurrency(), request.getCustomerId(), paymentId));
+                request.getTotalAmount(), request.getCurrency(), customerId, paymentId));
 
         return orderCreated;
     }

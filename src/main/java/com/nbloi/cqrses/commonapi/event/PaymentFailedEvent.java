@@ -36,7 +36,7 @@ public class PaymentFailedEvent {
 
     public PaymentFailedEvent() {}
 
-    public String getPaymentFailedId() {return paymentId;}
+    public String getPaymentId() {return paymentId;}
     public BigDecimal getTotalAmount() {return amount;}
     public String getCurrency() {return currency;}
     public String getOrderId() {return orderId;}
@@ -44,6 +44,9 @@ public class PaymentFailedEvent {
     public LocalDateTime getPaymentDate() {return paymentDate;}
     public PaymentStatus getPaymentStatus() {return paymentStatus;}
 
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
+    }
     public void setTotalAmount(BigDecimal amount) {
         this.amount = amount;
     }

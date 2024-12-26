@@ -1,9 +1,13 @@
 package com.nbloi.cqrses.query.service.kafkaconsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nbloi.cqrses.commonapi.enums.EventType;
+import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
 import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentCreatedEvent;
+import com.nbloi.cqrses.query.entity.OutboxMessage;
 import com.nbloi.cqrses.query.repository.OrderRepository;
+import com.nbloi.cqrses.query.repository.OutboxRepository;
 import com.nbloi.cqrses.query.service.OrderEventHandler;
 import com.nbloi.cqrses.query.service.PaymentEventHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -25,10 +31,13 @@ public class PaymentFailedEventConsumer {
     @Autowired
     private PaymentEventHandler paymentEventHandler;
 
-    @KafkaListener(topics = "payment_events", groupId = "payment_group")
+    @Autowired
+    private OutboxRepository outboxRepository;
+
+    @KafkaListener(topics = "payment_created_events", groupId = "payment_group")
     public void handlePaymentEvent(@Payload String paymentCreatedEvent) {
         // Process the payment event, e.g., update payment status
-        log.info("Received Payment Event: " + paymentCreatedEvent);
+        log.info("Received Payment Created Event: " + paymentCreatedEvent);
         // Implement the logic for payment processing and order status update
 
         OrderConfirmedEvent orderConfirmedEvent;

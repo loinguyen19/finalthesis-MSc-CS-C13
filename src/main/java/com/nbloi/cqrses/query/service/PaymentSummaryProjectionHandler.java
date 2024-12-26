@@ -23,7 +23,7 @@ public class PaymentSummaryProjectionHandler {
 
         PaymentSummaryView view = new PaymentSummaryView();
         view.setOrderId(event.getOrderId());
-        view.setPaymentId(event.getPaymentCompletedId());
+        view.setPaymentId(event.getPaymentId());
         view.setPaymentStatus("COMPLETED");
         view.setPaymentDate(event.getPaymentDate());
         view.setPaymentTotalAmount(event.getTotalAmount());
@@ -33,7 +33,7 @@ public class PaymentSummaryProjectionHandler {
 
     @EventHandler
     public void on(PaymentFailedEvent event) {
-        PaymentSummaryView view = paymentSummaryViewRepository.findById(event.getPaymentFailedId()).get();
+        PaymentSummaryView view = paymentSummaryViewRepository.findById(event.getPaymentId()).get();
         view.setPaymentStatus(PaymentStatus.FAILED.toString());
         paymentSummaryViewRepository.save(view);
     }

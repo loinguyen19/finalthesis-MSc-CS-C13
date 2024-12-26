@@ -25,7 +25,7 @@ public class PaymentCompletedEventConsumer {
     @Autowired
     private PaymentEventHandler paymentEventHandler;
 
-    @KafkaListener(topics = "payment_events", groupId = "payment_group")
+    @KafkaListener(topics = "payment_completed_events", groupId = "payment_group")
     public void handlePaymentEvent(@Payload String paymentCreatedEvent) {
         // Process the payment event, e.g., update payment status
         log.info("Received Payment Event: " + paymentCreatedEvent);

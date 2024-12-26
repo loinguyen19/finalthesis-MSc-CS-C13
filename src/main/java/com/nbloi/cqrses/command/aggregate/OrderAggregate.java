@@ -7,6 +7,7 @@ import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
 import com.nbloi.cqrses.commonapi.exception.UncreatedOrderException;
 import com.nbloi.cqrses.query.entity.OrderItem;
 import com.nbloi.cqrses.query.entity.Product;
+import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
@@ -20,6 +21,7 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Aggregate
+@Slf4j
 public class OrderAggregate {
 
     @AggregateIdentifier
@@ -29,7 +31,8 @@ public class OrderAggregate {
     private BigDecimal totalAmount;
     private boolean orderConfirmed;
     private String customerId;
-    private String productId;
+    private String paymentId;
+    private String currency;
 
     protected OrderAggregate() {
         // Required by Axon
@@ -38,6 +41,9 @@ public class OrderAggregate {
     // Aggregate for created order
     @CommandHandler
     public OrderAggregate(CreateOrderCommand command) {
+        // Avoid heavy computations or synchronous calls here.
+        log.info("Handling CreateOrderCommand for orderId: {}", command.getOrderId());
+
         AggregateLifecycle.apply(new OrderCreatedEvent(
                 command.getOrderId(),
                 command.getOrderItems(),
@@ -55,8 +61,9 @@ public class OrderAggregate {
         this.orderItems = event.getOrderItems();
         this.orderStatus = event.getOrderStatus();
         this.totalAmount = event.getTotalAmount();
+        this.currency = event.getCurrency();
         this.customerId = event.getCustomerId();
-        this.productId = event.getPaymentId();
+        this.paymentId = event.getPaymentId();
         orderConfirmed = false;
     }
 
@@ -102,4 +109,11 @@ public class OrderAggregate {
     public boolean isOrderConfirmed() {
         return orderConfirmed;
     }
+
+    public String getCustomerId() {return customerId;}
+
+    public String getPaymentId() {return paymentId;}
+
+    public String getCurrency() {return currency;}
+
 }

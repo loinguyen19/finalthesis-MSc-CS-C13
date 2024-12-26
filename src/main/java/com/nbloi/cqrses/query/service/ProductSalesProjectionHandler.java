@@ -1,11 +1,9 @@
 package com.nbloi.cqrses.query.service;
 
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderItemAddedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentFailedEvent;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OrderItem;
-import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.entity.ProductSalesView;
 import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.repository.ProductRepository;

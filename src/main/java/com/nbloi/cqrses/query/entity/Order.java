@@ -1,6 +1,7 @@
 package com.nbloi.cqrses.query.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import jakarta.persistence.*;
@@ -18,6 +19,7 @@ public class Order {
     private String orderId;
     private OrderStatus orderStatus;
     private BigDecimal totalAmount;
+    private String currency;
 
     @Column(nullable = false, updatable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -38,6 +40,7 @@ public class Order {
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JoinColumn(name="payment_id",nullable = false)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @JsonManagedReference
     private Payment payment;
 
     public Order() {}
@@ -51,6 +54,7 @@ public class Order {
         this.updatedAt = updatedAt;
 //        this.customer = customer;
         this.orderItems = orderItems;
+        this.currency = "VND";
     }
 
     public String getOrderId() {
@@ -83,6 +87,8 @@ public class Order {
         return payment;
     }
 
+    public String getCurrency() {return currency;}
+
     public void setOrderId(String orderId) {
         this.orderId = orderId;
     }
@@ -111,6 +117,7 @@ public class Order {
         this.totalAmount = totalAmount;
     }
 
+    public void setCurrency(String currency) {this.currency = currency;}
 
 
     @PrePersist

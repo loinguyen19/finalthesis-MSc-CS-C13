@@ -14,6 +14,7 @@ import com.nbloi.cqrses.query.entity.OutboxMessage;
 import com.nbloi.cqrses.query.entity.Payment;
 import com.nbloi.cqrses.query.repository.CustomerRepository;
 import com.nbloi.cqrses.query.repository.OrderRepository;
+import com.nbloi.cqrses.query.repository.OutboxRepository;
 import com.nbloi.cqrses.query.repository.PaymentRepository;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,8 @@ public class PaymentEventHandler {
 
     @Autowired
     private CustomerRepository customerRepository;
+    @Autowired
+    private OutboxRepository outboxRepository;
 
     @EventHandler
     public void onProcessing(PaymentCreatedEvent event) throws JsonProcessingException {
@@ -38,27 +41,30 @@ public class PaymentEventHandler {
         Customer customer = customerRepository.findById(order.getCustomer().getCustomerId()).get();
 
         if (customer.getBalance().compareTo(event.getTotalAmount()) >= 0) {
-            Customer updatedCustomer = new Customer();
-            updatedCustomer.setBalance(customer.getBalance().subtract(event.getTotalAmount()));
-            customerRepository.save(updatedCustomer);
+            customer.setBalance(customer.getBalance().subtract(event.getTotalAmount()));
+            customerRepository.save(customer);
 
             PaymentCompletedEvent paymentCompletedEvent = new ObjectMapper().convertValue(event, PaymentCompletedEvent.class);
 
             // Save Outbox Message
             OutboxMessage outboxMessage = new OutboxMessage(UUID.randomUUID().toString(),
-                    paymentCompletedEvent.getPaymentCompletedId(),
+                    paymentCompletedEvent.getPaymentId(),
                     EventType.PAYMENT_COMPLETED_EVENT.toString(),
                     new ObjectMapper().writeValueAsString(paymentCompletedEvent),
                     OutboxStatus.PENDING.toString());
+
+            outboxRepository.save(outboxMessage);
         }
         else if (customer.getBalance().compareTo(event.getTotalAmount()) < 0) {
             PaymentFailedEvent paymentFailedEvent = new ObjectMapper().convertValue(event, PaymentFailedEvent.class);
             // Save Outbox Message
             OutboxMessage outboxMessage = new OutboxMessage(UUID.randomUUID().toString(),
-                    paymentFailedEvent.getPaymentFailedId(),
+                    paymentFailedEvent.getPaymentId(),
                     EventType.PAYMENT_FAILED_EVENT.toString(),
                     new ObjectMapper().writeValueAsString(paymentFailedEvent),
                     OutboxStatus.PENDING.toString());
+
+            outboxRepository.save(outboxMessage);
         }
         else {
             throw new RuntimeException("There some unknown error occurred");

@@ -96,13 +96,13 @@ public class OrderCreatedEvent {
         return Objects.equals(orderId, that.orderId) && orderStatus == that.orderStatus
                 && Objects.equals(orderItems, that.orderItems) && Objects.equals(totalAmount, that.totalAmount)
                 && Objects.equals(customerId, that.customerId)
-                && Objects.equals(paymentId, that.paymentId) && Objects.equals(createdAt, that.createdAt)
+//                && Objects.equals(paymentId, that.paymentId)
                 && Objects.equals(currency, that.currency);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(orderId, orderStatus, orderItems, totalAmount, customerId, paymentId, createdAt, currency);
+        return Objects.hash(orderId, orderStatus, orderItems, totalAmount, customerId, currency);
     }
 
     @Override
@@ -114,13 +114,12 @@ public class OrderCreatedEvent {
                 ", totalAmount=" + totalAmount +
                 ", customerId='" + customerId + '\'' +
                 ", paymentId='" + paymentId + '\'' +
-                ", createdAt=" + createdAt +
                 ", currency='" + currency + '\'' +
                 '}';
     }
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+//    @PrePersist
+//    protected void onCreate() {
+//        createdAt = LocalDateTime.now();
+//    }
 }

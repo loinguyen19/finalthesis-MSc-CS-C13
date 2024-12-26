@@ -29,10 +29,10 @@ public class PaymentProcessingEventConsumer {
     @Autowired
     private OutboxRepository outboxRepository;
 
-    @KafkaListener(topics = "product_inventory_updated_events", groupId = "payment_group")
+    @KafkaListener(topics = "payment_created_events", groupId = "payment_group")
     public void handlePaymentEvent(@Payload String paymentCreatedEvent) {
         // Process the payment event, e.g., update payment status
-        log.info("Received Payment Event: " + paymentCreatedEvent);
+        log.info("Received Payment Created Event: " + paymentCreatedEvent);
         // Implement the logic for payment processing and order status update
 
         OrderConfirmedEvent orderConfirmedEvent;

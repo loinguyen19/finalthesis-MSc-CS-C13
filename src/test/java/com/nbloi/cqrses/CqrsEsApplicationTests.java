@@ -45,7 +45,7 @@ class CqrsEsApplicationTests {
 	private FixtureConfiguration<OrderAggregate> fixture;
 
 	@Test
-	@Before("Should produce and return the expexted OrderCreatedEvent")
+	@Before("Should produce and return the expected OrderCreatedEvent")
 	// test case: should return the OrderCreatedEvent when producing the command successfully
     public void setUpTestCase1() {
 		fixture = new AggregateTestFixture<>(OrderAggregate.class);
@@ -53,20 +53,20 @@ class CqrsEsApplicationTests {
 		String orderItemId = UUID.randomUUID().toString();
 		String orderItemId2 = UUID.randomUUID().toString();
 
-		String productId = UUID.randomUUID().toString();
-		String name = "Office Desk";
-		BigDecimal price = BigDecimal.valueOf(50);
+		String productId = "UUID-10";
+		String name = "Towel";
+		BigDecimal price = BigDecimal.valueOf(30);
 		int quantity1 = 10;
 		BigDecimal totalPrice1 = price.multiply(BigDecimal.valueOf(quantity1));
-		int stock = 25;
+		int stock = 1000;
 		String currency = "VND";
 
-		String productId2 = UUID.randomUUID().toString();
-		String name2 = "Office Desk";
-		BigDecimal price2 = BigDecimal.valueOf(5.99);
+		String productId2 = "UUID-8";
+		String name2 = "Desk";
+		BigDecimal price2 = BigDecimal.valueOf(300);
 		int quantity2 = 5;
 		BigDecimal totalPrice2 = price2.multiply(BigDecimal.valueOf(quantity2));
-		int stock2 = 500;
+		int stock2 = 780;
 
 		Product product = new Product(productId, name, price, stock, currency);
 		Product product2 = new Product(productId2, name2, price2, stock2, currency);
@@ -81,7 +81,7 @@ class CqrsEsApplicationTests {
 		orderItems.add(orderItem2);
 
 		String orderId = UUID.randomUUID().toString();
-		String customerId = UUID.randomUUID().toString();
+		String customerId = "UUID-C-5";
 		String paymentId = UUID.randomUUID().toString();
 //		String currency = "VND";
 
@@ -91,7 +91,7 @@ class CqrsEsApplicationTests {
 				.expectEvents(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount, currency, customerId, paymentId));
 
 
-		OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount,
+		OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED, totalAmount,
 				currency, customerId, paymentId);
 		orderEventHandler.on(orderCreatedEvent);
 		Order orderFindById = orderEventHandler.handle(new FindOrderByIdQuery(orderId));

@@ -15,10 +15,7 @@ import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.query.entity.*;
-import com.nbloi.cqrses.query.repository.OrderRepository;
-import com.nbloi.cqrses.query.repository.OutboxRepository;
-import com.nbloi.cqrses.query.repository.PaymentRepository;
-import com.nbloi.cqrses.query.repository.ProductRepository;
+import com.nbloi.cqrses.query.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
@@ -27,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -48,26 +46,23 @@ public class OrderEventHandler {
     private ProductRepository productRepository;
     @Autowired
     private PaymentRepository paymentRepository;
+    @Autowired
+    private CustomerRepository customerRepository;
 
 
-    public OrderEventHandler(OrderRepository orderRepository, OutboxRepository outboxRepository) {
+    public OrderEventHandler(OrderRepository orderRepository, OutboxRepository outboxRepository, ProductRepository productRepository,
+                             PaymentRepository paymentRepository, CustomerRepository customerRepository) {
         super();
         this.orderRepository = orderRepository;
         this.outboxRepository = outboxRepository;
+        this.productRepository = productRepository;
+        this.paymentRepository = paymentRepository;
+        this.customerRepository = customerRepository;
     }
 
     @EventHandler
     public void on(OrderCreatedEvent event) {
         try {
-//            if ("problematicEventId".equals(event.getOrderId())) {
-//                log.warn("Skipping problematic event: {}", event.getOrderId());
-//                return;
-//            }
-//            else if ("UUID-OT-1".equals(event.getOrderId())) {
-//                // Skip this specific event
-//                return;
-//            }
-//            else {
                 String orderId = event.getOrderId();
 
                 Order order = new Order();
@@ -92,8 +87,8 @@ public class OrderEventHandler {
                             throw new OutOfProductStockException();
                         }
                     }
-                    product.setStock(product.getStock() - item.getQuantity());
-                    productRepository.save(product);
+                    // will update product inventory in ProductInventoryEventConsumer
+                    // whenever OrderEventHandler publish the event to broker successfully
 
                     orderItem.setProduct(product);
 
@@ -102,22 +97,23 @@ public class OrderEventHandler {
 
                 order.setOrderItems(listOfOrderItems);
                 order.setTotalAmount(event.getTotalAmount());
+                order.setCurrency(event.getCurrency());
 
-                // Instantiate a new Customer object and set it with received customer id from order created event
-                Customer customer = new Customer();
-                customer.setCustomerId(event.getCustomerId());
+                // Find the customer in database and set them into order
+                Customer customer = customerRepository.findById(event.getCustomerId()).orElse(null);
                 order.setCustomer(customer);
 
                 // Instantiate a new Payment object and set it with received payment id from order created event
                 Payment payment = new Payment();
-                payment.setPaymentId(event.getPaymentId());
-                payment.setPaymentStatus(PaymentStatus.CREATED);
-                payment.setOrder(order);
+                    payment.setPaymentId(UUID.randomUUID().toString());
+                    payment.setTotalAmount(event.getTotalAmount());
+                    payment.setPaymentStatus(PaymentStatus.CREATED);
+                    payment.setOrder(order);
+                order.setPayment(payment);
                 paymentRepository.save(payment);
 
-                order.setPayment(payment);
-
                 // Persist the Order and its OrderItems using the repository
+                log.info("Order created: {}", orderId);
                 orderRepository.save(order);
 
                 // Save Outbox Message
@@ -131,18 +127,6 @@ public class OrderEventHandler {
                 );
                 outboxRepository.save(outboxMessage);
                 log.info("Processing 'created order' OutboxMessage with payload: {}", outboxMessage.getPayload());
-
-//            for (OrderItem o : listOfOrderItems) {
-//                Product productFoundById = productInventoryEventHandler.handle(new FindProductByIdQuery(o.getProduct().getProductId()));
-//                if (productFoundById.equals(new Product())) {
-//                    throw new UnfoundEntityException(o.getProduct().getProductId(), "Product");
-//                } else {
-//                    productFoundById.setStock(productFoundById.getStock() - o.getQuantity());
-//
-//                    // Save the update stock of each product
-//                    productRepository.save(productFoundById);
-//                }
-//            }
 
 /*                // Publish the event into Kafka broker
                 orderCreatedEventProducer.sendOrderEvent(event);*/

@@ -1,18 +1,25 @@
 package com.nbloi.cqrses.commonapi.event;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.PrePersist;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentCreatedEvent {
 
     private String paymentId;
     private BigDecimal totalAmount;
     private String currency;
     private String type;
-    private LocalDateTime paymentDate;
+
+//    @Column(nullable = false, updatable = false)
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+//    private LocalDateTime paymentDate;
     private PaymentStatus paymentStatus;
 
     private String orderId;
@@ -24,7 +31,6 @@ public class PaymentCreatedEvent {
         this.currency = currency;
         this.orderId = orderId;
         this.type = this.getClass().getSimpleName();
-        this.paymentDate = LocalDateTime.now();
         this.paymentStatus = PaymentStatus.CREATED;
     }
 
@@ -35,7 +41,7 @@ public class PaymentCreatedEvent {
     public String getCurrency() {return currency;}
     public String getOrderId() {return orderId;}
     public String getType() {return type;}
-    public LocalDateTime getPaymentDate() {return paymentDate;}
+//    public LocalDateTime getPaymentDate() {return paymentDate;}
     public PaymentStatus getPaymentStatus() {return paymentStatus;}
 
     public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
@@ -60,8 +66,13 @@ public class PaymentCreatedEvent {
                 ", currency='" + currency + '\'' +
                 ", type='" + type + '\'' +
                 ", orderId='" + orderId + '\'' +
-                ", paymentDate=" + paymentDate +
+//                ", paymentDate=" + paymentDate +
                 '}';
     }
+
+//    @PrePersist
+//    public void prePersist() {
+//        paymentDate = LocalDateTime.now();
+//    }
 
 }
