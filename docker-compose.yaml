@@ -1,27 +1,19 @@
 version: '3.3'
 services:
-#  axonserver-1:
-#    image: my-repository/axonserver:2023.1
-#    hostname: axonserver-1
-#    volumes:
-#      - axonserver-data1:/axonserver/data
-#      - axonserver-events1:/axonserver/events
-#      - axonserver-log1:/axonserver/log
-#    secrets:
-#      - source: axoniq-license
-#        target: /axonserver/config/axoniq.license
-#      - source: axonserver-properties
-#        target: /axonserver/config/axonserver.properties
-#      - source: axonserver-token
-#        target: /axonserver/config/axonserver.token
-#    environment:
-#      - AXONIQ_LICENSE=/axonserver/config/axoniq.license
-#    ports:
-#      - '8024:8024'
-#      - '8124:8124'
-#      - '8224:8224'
-#    networks:
-#      - axon-demo
+  axonserver-1:
+    image: axoniq/axonserver:2023.1.0-jdk-17-dev
+    hostname: axonserver-1
+    volumes:
+      - axonserver-data:/axonserver/data
+      - axonserver-events:/axonserver/events
+      - axonserver-log:/axonserver/log
+#      - ./axonserver.properties:/config/axonserver.properties
+    ports:
+      - '8024:8024'
+      - '8124:8124'
+      - '8224:8224'
+    networks:
+      - axon-demo
 
 #  db:
 #    image: mysql:8.0.40-oracle
@@ -32,13 +24,13 @@ services:
 #    environment:
 #      MYSQL_apoc_export_file_enabled: true
 #      MYSQL_apoc_import_file_enabled: true
-#      MYSQL_apoc_import_file_use__neo4j__config: true
+#      MYSQL_apoc_import_file_use__mysql__config: true
 #      MYSQL_PLUGINS: '["apoc"]'
 #      MYSQL_AUTH: none
 #    healthcheck:
 #      test:
 #        [
-#          "CMD-SHELL", "if [ $$(neo4j status | grep -o \"is running\" | wc -l ) -eq 0 ]; then exit 1; fi"
+#          "CMD-SHELL", "if [ $$(mysql status | grep -o \"is running\" | wc -l ) -eq 0 ]; then exit 1; fi"
 #        ]
 #      retries: 5
 #      interval: '5s'
@@ -51,7 +43,7 @@ services:
 #      context: .
 #      dockerfile: Dockerfile.provision
 #    environment:
-#      DB_URI: neo4j://db:8080
+#      DB_URI: mysql://db:8080
 #
 #  api:
 #    depends_on:
@@ -82,7 +74,7 @@ services:
 #    healthcheck:
 #      test:
 #        [
-#          "CMD-SHELL", "if [ $$(neo4j status | grep -o \"is running\" | wc -l ) -eq 0 ]; then exit 1; fi"
+#          "CMD-SHELL", "if [ $$(mysql status | grep -o \"is running\" | wc -l ) -eq 0 ]; then exit 1; fi"
 #        ]
 #      retries: 5
 #      interval: '5s'
@@ -93,14 +85,17 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     ports:
-      - 22181:2181
+      - "22181:2181"
+    networks:
+      - kafka-net
 
   kafka:
     image: confluentinc/cp-kafka:7.4.4
     depends_on:
       - zookeeper
     ports:
-      - 29092:29092
+      - "29092:29092"
+      - "9092:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -108,37 +103,41 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
+      KAFKA_CREATE_TOPICS: "order_group, payment_group, product_group"
+    volumes:
+      - ./Kafka:/confluentinc/kafka
+    networks:
+        - kafka-net
 
 volumes:
-  axonserver-data1:
+  axonserver-data:
     driver: local
     driver_opts:
       type: none
-      device: ${PWD}/data1
+      device: ${PWD}/data
       o: bind
-  axonserver-events1:
+  axonserver-events:
     driver: local
     driver_opts:
       type: none
-      device: ${PWD}/events1
+      device: ${PWD}/events
       o: bind
-  axonserver-log1:
+  axonserver-log:
     driver: local
     driver_opts:
       type: none
-      device: ${PWD}/log1
+      device: ${PWD}/log
+      o: bind
+  ./Kafka:
+    driver: local
+    driver_opts:
+      type: none
+      device: /confluentinc/kafka
       o: bind
 
 networks:
   axon-demo:
-
-secrets:
-  axonserver-properties:
-    file: ./axonserver.properties
-  axoniq-license:
-    file: ./axoniq.license
-  axonserver-token:
-    file: ./axonserver.token
+  kafka-net:
+    driver: bridge
 
 
