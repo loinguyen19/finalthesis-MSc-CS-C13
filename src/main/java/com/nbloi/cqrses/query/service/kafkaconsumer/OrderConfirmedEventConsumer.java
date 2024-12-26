@@ -5,6 +5,7 @@ import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
+import com.nbloi.cqrses.query.entity.Payment;
 import com.nbloi.cqrses.query.service.OrderEventHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -17,20 +18,23 @@ public class OrderConfirmedEventConsumer {
     @Autowired
     OrderEventHandler orderEventHandler;
 
-    @KafkaListener(topics = "payment_events", groupId = "payment_group")
-    public void handleOrderConfirmedEvent(@Payload PaymentCompletedEvent paymentCompletedEvent) {
+    @KafkaListener(topics = "payment_completed_events", groupId = "payment_group")
+    public void handleOrderConfirmedEvent(@Payload String paymentCompletedEvent) {
         // Process the order event, e.g., store it in the database
         System.out.println("Received Payment Event: " + paymentCompletedEvent);
 
         // Implement the logic for order confirmation processing
         try{
-            Order orderToConfirm = orderEventHandler.handle(new FindOrderByIdQuery(paymentCompletedEvent.getOrderId()));
+            Payment payment = new ObjectMapper().readValue(paymentCompletedEvent, Payment.class);
+            Order foundOrder = orderEventHandler.handle(new FindOrderByIdQuery(payment.getOrder().getOrderId()));
 
-            if (orderToConfirm == null) { throw new RuntimeException("No order found by id " + paymentCompletedEvent.getOrderId()); }
-            OrderConfirmedEvent orderConfirmedEvent = new ObjectMapper().convertValue(orderToConfirm, OrderConfirmedEvent.class);
+            if (foundOrder == null) {
+                throw new RuntimeException("No order found by id " + payment.getOrder().getOrderId());
+            }
+            OrderConfirmedEvent orderConfirmedEvent = new OrderConfirmedEvent(foundOrder.getOrderId());
 
             orderEventHandler.on(orderConfirmedEvent);
-
+            // TODO: create sendConfirmedEvent in producer of order. Send sendConfirmedEvent() to convert to Shipped order
         } catch(Exception e){
             e.printStackTrace();
             throw new RuntimeException("Exception in handleOrderConfirmedEvent");

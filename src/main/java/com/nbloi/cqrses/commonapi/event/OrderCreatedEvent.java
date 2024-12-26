@@ -1,8 +1,12 @@
 package com.nbloi.cqrses.commonapi.event;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.query.entity.OrderItem;
+import jakarta.persistence.Column;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,23 +19,29 @@ public class OrderCreatedEvent {
     private OrderStatus orderStatus;
     private List<OrderItem> orderItems;
     private BigDecimal totalAmount;
-    private String type;
     private String customerId;
     private String paymentId;
+    private String currency;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    private String type;
 
     public OrderCreatedEvent() {}
 
     public OrderCreatedEvent(String orderId, List<OrderItem> orderItems, OrderStatus orderStatus, BigDecimal totalAmount,
-                             String customerId, String paymentId) {
+                             String currency, String customerId, String paymentId) {
         this.orderId = orderId;
         this.orderItems = orderItems;
         this.orderStatus = orderStatus;
         this.totalAmount = totalAmount;
-        this.type = getClass().getSimpleName();
+        this.currency = currency;
         this.customerId = customerId;
         this.paymentId = paymentId;
         this.createdAt = LocalDateTime.now();
+        this.type = this.getClass().getSimpleName();
     }
 
     public String getOrderId() {
@@ -46,14 +56,15 @@ public class OrderCreatedEvent {
 
     public BigDecimal getTotalAmount() {return totalAmount;}
 
-    public String getType() {return type;}
-
     public String getCustomerId() {return customerId;}
 
     public String getPaymentId() {return paymentId;}
 
     public LocalDateTime getCreatedAt() {return createdAt;}
 
+    public String getCurrency() {return currency;}
+
+    public String getType() {return type;}
 
     public void setOrderId(String orderId) {
         this.orderId = orderId;
@@ -67,25 +78,31 @@ public class OrderCreatedEvent {
 
     public void setTotalAmount(BigDecimal totalAmount) {this.totalAmount = totalAmount;}
 
-    public void setType(String type) {this.type = type;}
-
     public void setCustomerId(String customerId) {this.customerId = customerId;}
 
     public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
 
     public void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
 
+    public void setCurrency(String currency) {this.currency = currency;}
+
+    public void setType(String type) {this.type = type;}
+
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         OrderCreatedEvent that = (OrderCreatedEvent) o;
-        return Objects.equals(orderId, that.orderId) && orderStatus == that.orderStatus && Objects.equals(orderItems, that.orderItems) && Objects.equals(totalAmount, that.totalAmount) && Objects.equals(type, that.type) && Objects.equals(customerId, that.customerId) && Objects.equals(paymentId, that.paymentId) && Objects.equals(createdAt, that.createdAt);
+        return Objects.equals(orderId, that.orderId) && orderStatus == that.orderStatus
+                && Objects.equals(orderItems, that.orderItems) && Objects.equals(totalAmount, that.totalAmount)
+                && Objects.equals(customerId, that.customerId)
+                && Objects.equals(paymentId, that.paymentId) && Objects.equals(createdAt, that.createdAt)
+                && Objects.equals(currency, that.currency);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(orderId, orderStatus, orderItems, totalAmount, type, customerId, paymentId, createdAt);
+        return Objects.hash(orderId, orderStatus, orderItems, totalAmount, customerId, paymentId, createdAt, currency);
     }
 
     @Override
@@ -95,10 +112,15 @@ public class OrderCreatedEvent {
                 ", orderStatus=" + orderStatus +
                 ", orderItems=" + orderItems +
                 ", totalAmount=" + totalAmount +
-                ", type='" + type + '\'' +
                 ", customerId='" + customerId + '\'' +
                 ", paymentId='" + paymentId + '\'' +
                 ", createdAt=" + createdAt +
+                ", currency='" + currency + '\'' +
                 '}';
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
     }
 }

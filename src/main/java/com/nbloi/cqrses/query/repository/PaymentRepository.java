@@ -6,7 +6,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface PaymentRepository extends JpaRepository<Payment, Long> {
+public interface PaymentRepository extends JpaRepository<Payment, String> {
 
-    Payment findPaymentByCustomerId(@Param("customerId") String customerId);
+//    Payment findPaymentByCustomerId(@Param("customerId") String customerId);
+
+//    Payment findPaymentByOrderId(@Param("orderId") String orderId);
 }

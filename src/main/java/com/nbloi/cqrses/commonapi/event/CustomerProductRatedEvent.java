@@ -8,17 +8,17 @@ public class CustomerProductRatedEvent {
     private double rating;
     private LocalDateTime ratedAt;
 
-    private String productId;
     private String customerId;
+    private String productId;
 
     public CustomerProductRatedEvent() {
     }
 
-    public CustomerProductRatedEvent(double rating, LocalDateTime ratedAt, String productId, String customerId) {
+    public CustomerProductRatedEvent(String customerId, String productId, double rating, LocalDateTime ratedAt) {
+        this.customerId = customerId;
+        this.productId = productId;
         this.rating = rating;
         this.ratedAt = ratedAt;
-        this.productId = productId;
-        this.customerId = customerId;
     }
 
     public String getProductRatedId() {

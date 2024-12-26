@@ -1,5 +1,5 @@
 package com.nbloi.cqrses.config;
-
+/*
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -25,4 +25,4 @@ public class SerializerUtils {
             throw new RuntimeException(String.format("Failed to deserialize payload into type %s", valueType), e);
         }
     }
-}
+}*/

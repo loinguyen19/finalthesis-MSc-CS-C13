@@ -1,7 +1,9 @@
 package com.nbloi.cqrses.commonapi.event;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
+import jakarta.persistence.Column;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,6 +14,9 @@ public class PaymentFailedEvent {
     private BigDecimal amount;
     private String currency;
     private String type;
+
+    @Column(nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime paymentDate;
     private PaymentStatus paymentStatus;
 
@@ -19,7 +24,8 @@ public class PaymentFailedEvent {
 
     //TODO: add payment Status and payment method in this class
 
-    public PaymentFailedEvent(String orderId, BigDecimal amount, String currency) {
+    public PaymentFailedEvent(String paymentId, String orderId, BigDecimal amount, String currency) {
+        this.paymentId = paymentId;
         this.amount = amount;
         this.currency = currency;
         this.orderId = orderId;
@@ -31,14 +37,14 @@ public class PaymentFailedEvent {
     public PaymentFailedEvent() {}
 
     public String getPaymentFailedId() {return paymentId;}
-    public BigDecimal getAmount() {return amount;}
+    public BigDecimal getTotalAmount() {return amount;}
     public String getCurrency() {return currency;}
     public String getOrderId() {return orderId;}
     public String getType() {return type;}
     public LocalDateTime getPaymentDate() {return paymentDate;}
     public PaymentStatus getPaymentStatus() {return paymentStatus;}
 
-    public void setAmount(BigDecimal amount) {
+    public void setTotalAmount(BigDecimal amount) {
         this.amount = amount;
     }
     public void setCurrency(String currency) {

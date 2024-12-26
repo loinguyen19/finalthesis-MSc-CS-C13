@@ -9,12 +9,16 @@ import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
 import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
+import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
+import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.query.entity.*;
 import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
+import com.nbloi.cqrses.query.repository.PaymentRepository;
+import com.nbloi.cqrses.query.repository.ProductRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
@@ -40,6 +44,10 @@ public class OrderEventHandler {
 
     @Autowired
     private OutboxRepository outboxRepository;
+    @Autowired
+    private ProductRepository productRepository;
+    @Autowired
+    private PaymentRepository paymentRepository;
 
 
     public OrderEventHandler(OrderRepository orderRepository, OutboxRepository outboxRepository) {
@@ -74,8 +82,21 @@ public class OrderEventHandler {
                     orderItem.setTotalPrice(item.getTotalPrice());
                     orderItem.setCurrency(item.getCurrency());
                     orderItem.setOrder(order); // Properly assign the parent order
-                    orderItem.setProduct(item.getProduct());
-//                    orderItem.setProduct(productInventoryEventHandler.handle(new FindProductByIdQuery(item.getProduct().getProductId())));
+
+                    // check if the product in each order item exists. Then, check if product inventory still has enough stock
+                    Product product = productRepository.findById(item.getProduct().getProductId()).orElse(null);
+                    if (product == null) {
+                        throw new UnfoundEntityException(item.getProduct().getProductId(), Product.class.getSimpleName());
+                    } else {
+                        if (product.getStock() < item.getQuantity()) {
+                            throw new OutOfProductStockException();
+                        }
+                    }
+                    product.setStock(product.getStock() - item.getQuantity());
+                    productRepository.save(product);
+
+                    orderItem.setProduct(product);
+
                     return orderItem;
                 }).collect(Collectors.toSet());
 
@@ -90,8 +111,9 @@ public class OrderEventHandler {
                 // Instantiate a new Payment object and set it with received payment id from order created event
                 Payment payment = new Payment();
                 payment.setPaymentId(event.getPaymentId());
-                payment.setPaymentStatus(PaymentStatus.NEW);
+                payment.setPaymentStatus(PaymentStatus.CREATED);
                 payment.setOrder(order);
+                paymentRepository.save(payment);
 
                 order.setPayment(payment);
 
@@ -108,7 +130,7 @@ public class OrderEventHandler {
                         OutboxStatus.PENDING.toString()
                 );
                 outboxRepository.save(outboxMessage);
-                log.info("Processing OutboxMessage with payload: {}", outboxMessage.getPayload());
+                log.info("Processing 'created order' OutboxMessage with payload: {}", outboxMessage.getPayload());
 
 //            for (OrderItem o : listOfOrderItems) {
 //                Product productFoundById = productInventoryEventHandler.handle(new FindProductByIdQuery(o.getProduct().getProductId()));
@@ -134,7 +156,7 @@ public class OrderEventHandler {
 //            }
 
         } catch (Exception e){
-            // Log the error and take appropriate action
+            // Log the error for more specific message
             LOGGER.error("Error handling event: {}", event, e);
         }
 
@@ -143,33 +165,62 @@ public class OrderEventHandler {
 
     @EventHandler
     public void on(OrderConfirmedEvent event) {
-        String orderId = event.getOrderId();
-        Order order = orderRepository.findById(orderId).get();
+        try {
+            String orderId = event.getOrderId();
+            Order order = orderRepository.findById(orderId).get();
 
-        order.setOrderConfirmedStatus();
-        orderRepository.save(order);
+            order.setOrderConfirmedStatus();
+            orderRepository.save(order);
 
-        // TODO: send message to transactional outbox pattern to manage the event state before sending to Kafka broker
+            // TODO: send message to transactional outbox pattern to manage the event state before sending to Kafka broker
+            // Save Outbox Message
+            OutboxMessage outboxMessage = new OutboxMessage(
+                    UUID.randomUUID().toString(),
+                    event.getOrderId(),
+                    EventType.ORDER_CONFIRMED_EVENT.toString(),
+                    new ObjectMapper().writeValueAsString(event),
+                    OutboxStatus.PENDING.toString()
+            );
+            outboxRepository.save(outboxMessage);
+            log.info("Processing 'confirmed order' OutboxMessage with payload: {}", outboxMessage.getPayload());
+        } catch (Exception e){
+            // Log the error for more specific message
+            LOGGER.error("Error handling event: {}", event, e);
+        }
     }
 
     @EventHandler
     public void on(OrderShippedEvent event) {
-        String orderId = event.getOrderId();
-        Order orderToShip = orderRepository.findById(orderId).get();
+        try {
+            String orderId = event.getOrderId();
+            Order orderToShip = orderRepository.findById(orderId).get();
 
-        if (orderToShip.getOrderStatus().equals(OrderStatus.CONFIRMED.toString())) {
-            orderToShip.setOrderShippedStatus();
-        } else {
-            throw new UnconfirmedOrderException();
+            if (orderToShip.getOrderStatus().toString().equals(OrderStatus.CONFIRMED.toString())) {
+                orderToShip.setOrderShippedStatus();
+            } else {
+                throw new UnconfirmedOrderException();
+            }
+
+            orderRepository.save(orderToShip);
+
+            // TODO: send message to transactional outbox pattern to manage the event state before sending to Kafka broker
+            // Save Outbox Message
+            OutboxMessage outboxMessage = new OutboxMessage(
+                    UUID.randomUUID().toString(),
+                    event.getOrderId(),
+                    EventType.ORDER_SHIPPED_EVENT.toString(),
+                    new ObjectMapper().writeValueAsString(event),
+                    OutboxStatus.PENDING.toString()
+            );
+            outboxRepository.save(outboxMessage);
+            log.info("Processing 'shipped order' OutboxMessage with payload: {}", outboxMessage.getPayload());
+        } catch (Exception e){
+            // Log the error for more specific message
+            LOGGER.error("Error handling event: {}", event, e);
         }
-
-        orderRepository.save(orderToShip);
-
-        // TODO: send message to transactional outbox pattern to manage the event state before sending to Kafka broker
 
     }
 
-    // Event Handlers for OrderConfirmedEvent and OrderShippedEvent...
 
     @QueryHandler
     public List<Order> handle(FindAllOrdersQuery query) {
@@ -179,15 +230,6 @@ public class OrderEventHandler {
     @QueryHandler
     public Order handle(FindOrderByIdQuery query) {
         return orderRepository.findById(query.getOrderId()).get();
-    }
-
-
-    private String serializeEvent(Object event) {
-        try {
-            return new ObjectMapper().writeValueAsString(event);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize event", e);
-        }
     }
 
 }

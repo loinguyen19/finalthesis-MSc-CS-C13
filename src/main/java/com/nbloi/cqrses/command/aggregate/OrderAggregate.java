@@ -43,6 +43,7 @@ public class OrderAggregate {
                 command.getOrderItems(),
                 command.getOrderStatus(),
                 command.getTotalAmount(),
+                command.getCurrency(),
                 command.getCustomerId(),
                 command.getPaymentId()
         ));

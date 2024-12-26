@@ -1,13 +1,12 @@
 package com.nbloi.cqrses.message;
 
 import com.nbloi.cqrses.commonapi.enums.EventType;
-import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.query.entity.OutboxMessage;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
+import com.nbloi.cqrses.query.service.kafkaconsumer.ProductInventoryEventConsumer;
 import com.nbloi.cqrses.query.service.kafkaproducer.OrderCreatedEventProducer;
 import com.nbloi.cqrses.query.service.kafkaproducer.PaymentEventProducer;
-import jdk.jfr.Event;
+import com.nbloi.cqrses.query.service.kafkaproducer.ProductInventoryEventProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +33,11 @@ public class OutboxProcessor {
     private final Logger log = LoggerFactory.getLogger(OutboxProcessor.class);
     @Autowired
     private PaymentEventProducer paymentEventProducer;
+    @Autowired
+    private ProductInventoryEventConsumer productInventoryEventConsumer;
+
+    @Autowired
+    private ProductInventoryEventProducer productInventoryEventProducer;
 
     @Transactional
     @Scheduled(fixedRate = 5000)  // Poll every 5 seconds
@@ -47,8 +51,14 @@ public class OutboxProcessor {
                 switch (eventType) {
                     case EventType.ORDER_CREATED_EVENT:
                         orderCreatedEventProducer.sendOrderEvent(message.getPayload());
+                    case EventType.PRODUCT_INVENTORY_UPDATED_EVENT:
+                        paymentEventProducer.sendPaymentCreatedEvent(message.getPayload());
+                    case EventType.PAYMENT_CREATED_EVENT:
+                        paymentEventProducer.sendPaymentCreatedEvent(message.getPayload());
                     case EventType.PAYMENT_COMPLETED_EVENT:
-                        paymentEventProducer.sendPaymentEvent(message.getPayload());
+                        paymentEventProducer.sendPaymentCompletedEvent(message.getPayload());
+                    case EventType.PAYMENT_FAILED_EVENT:
+                        throw new RuntimeException("Your total balance is not sufficient to pay this event");
                     default:
                 }
 

@@ -1,11 +1,5 @@
 package com.nbloi.cqrses.query.service.kafkaproducer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
-import com.nbloi.cqrses.config.SerializerUtils;
-import com.nbloi.cqrses.query.service.OrderEventHandler;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -16,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 @Service
-@Slf4j
 public class OrderCreatedEventProducer {
 
     private static final String TOPIC = "order_created_events";

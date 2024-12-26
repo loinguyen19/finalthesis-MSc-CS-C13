@@ -19,7 +19,8 @@ public class PaymentCompletedEvent {
     private String orderId;
 
 
-    public PaymentCompletedEvent(BigDecimal amount, String currency, String orderId) {
+    public PaymentCompletedEvent(String paymentId, BigDecimal amount, String currency, String orderId) {
+        this.paymentId = paymentId;
         this.amount = amount;
         this.currency = currency;
         this.orderId = orderId;
@@ -30,15 +31,18 @@ public class PaymentCompletedEvent {
 
     public PaymentCompletedEvent() {}
 
-    public String getPaymentId() {return paymentId;}
-    public BigDecimal getAmount() {return amount;}
+    public String getPaymentCompletedId() {return paymentId;}
+    public BigDecimal getTotalAmount() {return amount;}
     public String getCurrency() {return currency;}
     public String getOrderId() {return orderId;}
     public String getType() {return type;}
     public LocalDateTime getPaymentDate() {return paymentDate;}
     public PaymentStatus getPaymentStatus() {return paymentStatus;}
 
-    public void setAmount(BigDecimal amount) {
+    public void setPaymentCompletedId(String paymentId) {
+        this.paymentId = paymentId;
+    }
+    public void setTotalAmount(BigDecimal amount) {
         this.amount = amount;
     }
     public void setCurrency(String currency) {

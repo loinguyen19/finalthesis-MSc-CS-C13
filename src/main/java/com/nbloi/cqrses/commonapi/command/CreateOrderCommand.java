@@ -1,7 +1,9 @@
 package com.nbloi.cqrses.commonapi.command;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.query.entity.OrderItem;
+import jakarta.persistence.Column;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.math.BigDecimal;
@@ -17,10 +19,14 @@ public class CreateOrderCommand {
     private BigDecimal totalAmount;
     private String customerId;
     private String paymentId;
+
+    @Column(nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+    private String currency;
 
     // constructor, getters, equals/hashCode and toString
-        public CreateOrderCommand(String orderId, List<OrderItem> orderItems, BigDecimal totalAmount,
+        public CreateOrderCommand(String orderId, List<OrderItem> orderItems, BigDecimal totalAmount, String currency,
                                   String customerId, String paymentId) {
         this.orderId = orderId;
         this.orderStatus = OrderStatus.CREATED;
@@ -29,6 +35,7 @@ public class CreateOrderCommand {
         this.customerId = customerId;
         this.paymentId = paymentId;
         this.createdAt = LocalDateTime.now();
+        this.currency = currency;
     }
 
 
@@ -48,6 +55,8 @@ public class CreateOrderCommand {
 
     public LocalDateTime getCreatedAt() {return createdAt;}
 
+    public String getCurrency() {return currency;}
+
     public void setOrderItems(List<OrderItem> orderItems) {}
 
     public void setTotalAmount(BigDecimal totalAmount) {this.totalAmount = totalAmount;}
@@ -57,5 +66,7 @@ public class CreateOrderCommand {
     public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
 
     protected void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
+
+    public void setCurrency(String currency) {this.currency = currency;}
 
 }

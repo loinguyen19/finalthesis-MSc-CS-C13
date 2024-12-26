@@ -140,17 +140,17 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!--- Flyway -->
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-core</artifactId>
-			<version>9.22.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-mysql</artifactId>
+<!--		&lt;!&ndash;- Flyway &ndash;&gt;-->
+<!--		<dependency>-->
+<!--			<groupId>org.flywaydb</groupId>-->
+<!--			<artifactId>flyway-core</artifactId>-->
 <!--			<version>9.22.3</version>-->
-		</dependency>
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.flywaydb</groupId>-->
+<!--			<artifactId>flyway-mysql</artifactId>-->
+<!--			<version>9.22.3</version>-->
+<!--		</dependency>-->
 		<!-- Swagger -->
 		<dependency>
 			<groupId>io.springfox</groupId>

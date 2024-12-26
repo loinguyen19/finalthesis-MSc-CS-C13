@@ -1,7 +1,7 @@
 package com.nbloi.cqrses.command.controller;
 
 import com.nbloi.cqrses.commonapi.command.PaymentCommand;
-import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
+import com.nbloi.cqrses.commonapi.event.PaymentCreatedEvent;
 import com.nbloi.cqrses.query.service.kafkaproducer.PaymentEventProducer;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +22,15 @@ public class PaymentController {
     private PaymentEventProducer paymentEventProducer;
 
     @PostMapping("/payment")
-    public ResponseEntity<String> payment(@RequestBody PaymentCompletedEvent paymentCompletedEvent) {
-        if (paymentCompletedEvent == null) {
+    public ResponseEntity<String> payment(@RequestBody PaymentCreatedEvent paymentCreatedEvent) {
+        if (paymentCreatedEvent == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        commandGateway.send(new PaymentCommand(paymentCompletedEvent.getPaymentId(), paymentCompletedEvent.getAmount(),
-                paymentCompletedEvent.getCurrency(), paymentCompletedEvent.getOrderId()));
+        commandGateway.send(new PaymentCommand(paymentCreatedEvent.getPaymentId(), paymentCreatedEvent.getTotalAmount(),
+                paymentCreatedEvent.getCurrency(), paymentCreatedEvent.getOrderId()));
 
         // send the event to Kafka broker in PaymentEventHandler service class
-        // paymentEventProducer.sendPaymentEvent(paymentEvent);
+        // paymentEventProducer.sendPaymentCreatedEvent(paymentEvent);
         return ResponseEntity.ok("Payment processed successfully");
     }
 }

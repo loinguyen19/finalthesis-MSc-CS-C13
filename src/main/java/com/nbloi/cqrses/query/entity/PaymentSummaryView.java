@@ -24,20 +24,20 @@ public class PaymentSummaryView {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime paymentDate;
 
-    private BigDecimal paymentAmount;
+    private BigDecimal paymentTotalAmount;
 
 
     public PaymentSummaryView() {
     }
 
     public PaymentSummaryView(String paymentSummaryId, String orderId, String paymentId, String paymentStatus,
-                              LocalDateTime paymentDate, BigDecimal paymentAmount) {
+                              LocalDateTime paymentDate, BigDecimal paymentTotalAmount) {
         this.paymentSummaryId = paymentSummaryId;
         this.orderId = orderId;
         this.paymentId = paymentId;
         this.paymentStatus = paymentStatus;
         this.paymentDate = paymentDate;
-        this.paymentAmount = paymentAmount;
+        this.paymentTotalAmount = paymentTotalAmount;
     }
 
     public String getPaymentSummaryId() {
@@ -80,12 +80,12 @@ public class PaymentSummaryView {
         this.paymentDate = paymentDate;
     }
 
-    public BigDecimal getPaymentAmount() {
-        return paymentAmount;
+    public BigDecimal getPaymentTotalAmount() {
+        return paymentTotalAmount;
     }
 
-    public void setPaymentAmount(BigDecimal paymentAmount) {
-        this.paymentAmount = paymentAmount;
+    public void setPaymentTotalAmount(BigDecimal paymentTotalAmount) {
+        this.paymentTotalAmount = paymentTotalAmount;
     }
 
     @Override
@@ -96,7 +96,7 @@ public class PaymentSummaryView {
                 ", paymentId='" + paymentId + '\'' +
                 ", paymentStatus='" + paymentStatus + '\'' +
                 ", paymentDate=" + paymentDate +
-                ", paymentAmount=" + paymentAmount +
+                ", paymentTotalAmount=" + paymentTotalAmount +
                 '}';
     }
 

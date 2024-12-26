@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class PaymentCreatedEvent {
 
     private String paymentId;
-    private BigDecimal amount;
+    private BigDecimal totalAmount;
     private String currency;
     private String type;
     private LocalDateTime paymentDate;
@@ -18,8 +18,9 @@ public class PaymentCreatedEvent {
     private String orderId;
 
 
-    public PaymentCreatedEvent(BigDecimal amount, String currency, String orderId) {
-        this.amount = amount;
+    public PaymentCreatedEvent(String paymentId, BigDecimal totalAmount, String currency, String orderId) {
+        this.paymentId = paymentId;
+        this.totalAmount = totalAmount;
         this.currency = currency;
         this.orderId = orderId;
         this.type = this.getClass().getSimpleName();
@@ -30,15 +31,16 @@ public class PaymentCreatedEvent {
     public PaymentCreatedEvent() {}
 
     public String getPaymentId() {return paymentId;}
-    public BigDecimal getAmount() {return amount;}
+    public BigDecimal getTotalAmount() {return totalAmount;}
     public String getCurrency() {return currency;}
     public String getOrderId() {return orderId;}
     public String getType() {return type;}
     public LocalDateTime getPaymentDate() {return paymentDate;}
     public PaymentStatus getPaymentStatus() {return paymentStatus;}
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
+    public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
     public void setCurrency(String currency) {
         this.currency = currency;
@@ -54,7 +56,7 @@ public class PaymentCreatedEvent {
     public String toString() {
         return "PaymentEvent{" +
                 "paymentId='" + paymentId + '\'' +
-                ", amount=" + amount +
+                ", totalAmount=" + totalAmount +
                 ", currency='" + currency + '\'' +
                 ", type='" + type + '\'' +
                 ", orderId='" + orderId + '\'' +

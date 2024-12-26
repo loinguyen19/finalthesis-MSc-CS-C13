@@ -1,3 +1,4 @@
+/*
 package com.nbloi.cqrses.config;
 
 import javax.sql.DataSource;
@@ -31,3 +32,4 @@ public class SpringIntegrationConfiguration {
     }
 }
 
+*/

@@ -1,8 +1,5 @@
 package com.nbloi.cqrses.query.service.kafkaproducer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
-import com.nbloi.cqrses.config.SerializerUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,20 +12,29 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class PaymentEventProducer {
 
-    private static final String TOPIC = "payment_events";
+    private static final String TOPIC = "payment_created_events";
+    private static final String TOPIC2 = "payment_completed_events";
     private final static long sendTimeout = 3000;
 
     @Autowired
-    private KafkaTemplate<String, PaymentCompletedEvent> kafkaTemplate;
+    private KafkaTemplate<String, String> kafkaTemplate;
 
-    public void sendPaymentEvent(@Payload String paymentEvent) {
+    public void sendPaymentCreatedEvent(@Payload String paymentEvent) {
         try {
-            // Deserialize the payload into PaymentEvent object
-            PaymentCompletedEvent paymentCompletedEvent = new ObjectMapper().readValue(paymentEvent, PaymentCompletedEvent.class);
-
-            // Send this PaymentEvent object to Kafka consumer
-            kafkaTemplate.send(TOPIC, paymentCompletedEvent).get(sendTimeout, TimeUnit.MILLISECONDS);
+            // Send this PaymentCreatedEvent object to Kafka consumer
+            kafkaTemplate.send(TOPIC, paymentEvent).get(sendTimeout, TimeUnit.MILLISECONDS);
             log.info("Sent payment event to kafka topic: " + TOPIC + " with record value: {}", paymentEvent);
+        } catch (Exception e) {
+            log.info("KafkaEventBus publish get timeout", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void sendPaymentCompletedEvent(@Payload String paymentCompletedEvent) {
+        try {
+            // Send this PaymentCompletedEvent object to Kafka consumer
+            kafkaTemplate.send(TOPIC2, paymentCompletedEvent).get(sendTimeout, TimeUnit.MILLISECONDS);
+            log.info("Sent payment completed event to kafka topic: " + TOPIC + " with record value: {}", paymentCompletedEvent);
         } catch (Exception e) {
             log.info("KafkaEventBus publish get timeout", e);
             throw new RuntimeException(e);

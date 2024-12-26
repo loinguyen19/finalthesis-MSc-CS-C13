@@ -57,7 +57,8 @@ public class OrderController {
     @PostMapping("/create-order")
     public CompletableFuture<Void> createOrder(@RequestBody CreateOrderRequestDTO request) {
         String orderId = UUID.randomUUID().toString();
-        String customerId = UUID.randomUUID().toString();
+//        String customerId = UUID.randomUUID().toString();
+        String customerId = request.getCustomerId();
         String paymentId = UUID.randomUUID().toString();
 
         List<OrderItemDTO> listOrderItemsDTO = request.getOrderItems();
@@ -80,7 +81,7 @@ public class OrderController {
             listOrderItems.add(orderItem);
             }
         CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, listOrderItems,
-                request.getTotalAmount(), customerId, paymentId));
+                request.getTotalAmount(), request.getCurrency(), request.getCustomerId(), paymentId));
 
         return orderCreated;
     }

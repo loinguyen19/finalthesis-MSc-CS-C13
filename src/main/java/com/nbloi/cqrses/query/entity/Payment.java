@@ -21,9 +21,9 @@ import java.time.LocalDateTime;
 public class Payment {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.UUID, generator = "UUID")
-//    @UuidGenerator
-//    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(strategy = GenerationType.UUID, generator = "UUID")
+    @UuidGenerator
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private String paymentId;
     private BigDecimal totalAmount;
     private PaymentStatus paymentStatus;
@@ -35,6 +35,8 @@ public class Payment {
 
     @OneToOne(mappedBy = "payment", cascade = CascadeType.ALL)
     private Order order;
+
+    //TODO: consider to add Customer into Payment entity
 
     public Payment() {
     }

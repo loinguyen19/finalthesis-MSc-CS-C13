@@ -1,5 +1,6 @@
 package com.nbloi.cqrses.query.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
@@ -13,6 +14,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -29,6 +31,13 @@ public class OrderItem {
     private BigDecimal totalPrice;
     private String currency;
 
+//    @Column(nullable = false, updatable = false)
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+//    private LocalDateTime createdAt;
+//
+//    @Column(nullable = false)
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+//    private LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
@@ -107,5 +116,16 @@ public class OrderItem {
                 ", product=" + product +
                 '}';
     }
+
+//    @PrePersist
+//    protected void onCreate() {
+//        createdAt = LocalDateTime.now();
+//        updatedAt = LocalDateTime.now();
+//    }
+//
+//    @PreUpdate
+//    protected void onUpdate() {
+//        updatedAt = LocalDateTime.now();
+//    }
 }
 

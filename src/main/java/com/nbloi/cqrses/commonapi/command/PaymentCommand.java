@@ -24,7 +24,7 @@ public class PaymentCommand {
     public PaymentCommand() {}
 
     public String getPaymentId() {return paymentId;}
-    public BigDecimal getAmount() {return amount;}
+    public BigDecimal getTotalAmount() {return amount;}
     public String getCurrency() {return currency;}
     public String getOrderItemId() {return orderId;}
 
@@ -32,7 +32,7 @@ public class PaymentCommand {
         this.paymentId = paymentId;
     }
 
-    public void setAmount(BigDecimal amount) {
+    public void setTotalAmount(BigDecimal amount) {
         this.amount = amount;
     }
 

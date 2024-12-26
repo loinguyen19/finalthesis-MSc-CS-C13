@@ -14,14 +14,17 @@ public class CreateOrderRequestDTO {
     private BigDecimal totalAmount;
     private String customerId;
     private String paymentId;
+    private String currency;
 
     // constructor, getters, equals/hashCode and toString
-    public CreateOrderRequestDTO( List<OrderItemDTO> orderItems, BigDecimal totalAmount, String customerId, String paymentId) {
+    public CreateOrderRequestDTO( List<OrderItemDTO> orderItems, BigDecimal totalAmount, String customerId, String paymentId,
+                                  String currency) {
         this.orderStatus = OrderStatus.CREATED;
         this.orderItems = orderItems;
         this.totalAmount = totalAmount;
         this.customerId = customerId;
         this.paymentId = paymentId;
+        this.currency = currency;
     }
 
     public CreateOrderRequestDTO() {}
@@ -38,6 +41,8 @@ public class CreateOrderRequestDTO {
 
     public String getPaymentId() {return this.paymentId;}
 
+    public String getCurrency() {return this.currency;}
+
     public void setOrderItems(List<OrderItemDTO> orderItems) {
         this.orderItems = orderItems;
     }
@@ -49,5 +54,7 @@ public class CreateOrderRequestDTO {
     public void setCustomerId(String customerId) {this.customerId = customerId;}
 
     public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
+
+    public void setCurrency(String currency) {this.currency = currency;}
 
 }

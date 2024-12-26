@@ -23,10 +23,10 @@ public class PaymentSummaryProjectionHandler {
 
         PaymentSummaryView view = new PaymentSummaryView();
         view.setOrderId(event.getOrderId());
-        view.setPaymentId(event.getPaymentId());
+        view.setPaymentId(event.getPaymentCompletedId());
         view.setPaymentStatus("COMPLETED");
         view.setPaymentDate(event.getPaymentDate());
-        view.setPaymentAmount(event.getAmount());
+        view.setPaymentTotalAmount(event.getTotalAmount());
         paymentSummaryViewRepository.save(view);
 
     }
