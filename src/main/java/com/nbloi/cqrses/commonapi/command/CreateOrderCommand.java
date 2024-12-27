@@ -14,7 +14,7 @@ public class CreateOrderCommand {
 
     @TargetAggregateIdentifier
     private String orderId;
-    private OrderStatus orderStatus;
+    private String orderStatus;
     private List<OrderItem> orderItems;
     private BigDecimal totalAmount;
     private String customerId;
@@ -29,7 +29,7 @@ public class CreateOrderCommand {
         public CreateOrderCommand(String orderId, List<OrderItem> orderItems, BigDecimal totalAmount, String currency,
                                   String customerId, String paymentId) {
         this.orderId = orderId;
-        this.orderStatus = OrderStatus.CREATED;
+        this.orderStatus = OrderStatus.CREATED.toString();
         this.orderItems = orderItems;
         this.totalAmount = totalAmount;
         this.customerId = customerId;
@@ -45,7 +45,7 @@ public class CreateOrderCommand {
 
     public List<OrderItem> getOrderItems() {return orderItems;}
 
-    public OrderStatus getOrderStatus() {return orderStatus;}
+    public String getOrderStatus() {return orderStatus;}
 
     public BigDecimal getTotalAmount() {return totalAmount;}
 

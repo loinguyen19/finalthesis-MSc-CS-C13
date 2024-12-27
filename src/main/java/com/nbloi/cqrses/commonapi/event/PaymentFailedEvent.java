@@ -29,7 +29,7 @@ public class PaymentFailedEvent {
         this.amount = amount;
         this.currency = currency;
         this.orderId = orderId;
-        this.type = this.getClass().getSimpleName();
+        this.type = EventType.PAYMENT_FAILED_EVENT.toString();
         this.paymentDate = LocalDateTime.now();
         this.paymentStatus = PaymentStatus.FAILED;
     }

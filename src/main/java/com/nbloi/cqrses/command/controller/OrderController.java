@@ -69,6 +69,7 @@ public class OrderController {
 
              // mapping between CreateOrderRequestDTO and Order
             OrderItem orderItem = new ObjectMapper().convertValue(oDTO, OrderItem.class);
+             orderItem.setOrderItemId(UUID.randomUUID().toString());
              orderItem.setProduct(productByIdQuery);
             listOrderItems.add(orderItem);
             }

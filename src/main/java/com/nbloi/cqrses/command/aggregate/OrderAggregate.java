@@ -27,7 +27,7 @@ public class OrderAggregate {
     @AggregateIdentifier
     private String orderId;
     private List<OrderItem> orderItems;
-    private OrderStatus orderStatus;
+    private String orderStatus;
     private BigDecimal totalAmount;
     private boolean orderConfirmed;
     private String customerId;
@@ -98,7 +98,7 @@ public class OrderAggregate {
         return orderItems;
     }
 
-    public OrderStatus getOrderStatus() {
+    public String getOrderStatus() {
         return orderStatus;
     }
 

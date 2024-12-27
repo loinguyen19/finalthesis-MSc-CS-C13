@@ -1,10 +1,10 @@
 package com.nbloi.cqrses.commonapi.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
-import com.nbloi.cqrses.query.entity.OrderItem;
-
-import java.io.Serializable;
+import jakarta.persistence.Column;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class CreateOrderRequestDTO {
@@ -14,7 +14,7 @@ public class CreateOrderRequestDTO {
     private BigDecimal totalAmount;
     private String currency;
     private String customerId;
-//    private String paymentId;
+    private String paymentId;
 
     // constructor, getters, equals/hashCode and toString
     public CreateOrderRequestDTO( List<OrderItemDTO> orderItems, BigDecimal totalAmount, String customerId, String currency) {
@@ -38,7 +38,7 @@ public class CreateOrderRequestDTO {
 
     public String getCustomerId() {return this.customerId;}
 
-//    public String getPaymentId() {return this.paymentId;}
+    public String getPaymentId() {return this.paymentId;}
 
     public String getCurrency() {return this.currency;}
 
@@ -52,7 +52,7 @@ public class CreateOrderRequestDTO {
 
     public void setCustomerId(String customerId) {this.customerId = customerId;}
 
-//    public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
+    public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
 
     public void setCurrency(String currency) {this.currency = currency;}
 

@@ -17,7 +17,9 @@ import com.nbloi.cqrses.query.service.OrderEventHandler;
 import io.grpc.netty.shaded.io.netty.util.internal.MathUtil;
 import kafka.api.IntegrationTestHarness;
 import kafka.api.test.ProducerCompressionTest;
+import org.apache.zookeeper.Op;
 import org.aspectj.lang.annotation.Before;
+import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.axonframework.test.aggregate.FixtureConfiguration;
 import org.axonframework.test.aggregate.ResultValidator;
@@ -27,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -36,13 +39,19 @@ import java.util.List;
 class CqrsEsApplicationTests {
 
 	@Autowired
-	OrderEventHandler orderEventHandler;
+	private OrderEventHandler orderEventHandler;
+
+	@Autowired
+	private CommandGateway commandGateway;
 
 	@Test
 	void contextLoads() {
 	}
 
 	private FixtureConfiguration<OrderAggregate> fixture;
+
+	private final LocalDateTime createdAt = LocalDateTime.now();
+	private LocalDateTime updatedAt = LocalDateTime.now();
 
 	@Test
 	@Before("Should produce and return the expected OrderCreatedEvent")
@@ -71,8 +80,8 @@ class CqrsEsApplicationTests {
 		Product product = new Product(productId, name, price, stock, currency);
 		Product product2 = new Product(productId2, name2, price2, stock2, currency);
 
-		OrderItem orderItem = new OrderItem(orderItemId, quantity1, price, totalPrice1, currency, null, product);
-		OrderItem orderItem2 = new OrderItem(orderItemId2, quantity2, price2, totalPrice2, currency, null, product2);
+		OrderItem orderItem = new OrderItem(orderItemId, quantity1, price, totalPrice1, currency,  null, product);
+		OrderItem orderItem2 = new OrderItem(orderItemId2, quantity2, price2, totalPrice2, currency,  null, product2);
 
 		BigDecimal totalAmount = orderItem.getTotalPrice().add(orderItem2.getTotalPrice());
 
@@ -88,10 +97,9 @@ class CqrsEsApplicationTests {
 		// then: should return the OrderCreatedEvent when producing the command successfully
 		ResultValidator<OrderAggregate> resultValidator = fixture.givenNoPriorActivity()
 				.when(new CreateOrderCommand(orderId, orderItems, totalAmount, currency, customerId, paymentId))
-				.expectEvents(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount, currency, customerId, paymentId));
+				.expectEvents(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED.toString(), totalAmount, currency, customerId, paymentId));
 
-
-		OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED, totalAmount,
+		OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED.toString(), totalAmount,
 				currency, customerId, paymentId);
 		orderEventHandler.on(orderCreatedEvent);
 		Order orderFindById = orderEventHandler.handle(new FindOrderByIdQuery(orderId));
@@ -115,7 +123,7 @@ class CqrsEsApplicationTests {
 
 		Product product = new Product(productId, name, price, stock, currency);
 
-		OrderItem orderItem = new OrderItem(orderItemId, quantity, price, totalPrice, currency, null, product);
+		OrderItem orderItem = new OrderItem(orderItemId, quantity, price, totalPrice, currency,  null, product);
 		List<OrderItem> orderItems = new ArrayList<>();
 		orderItems.add(orderItem);
 
@@ -125,7 +133,7 @@ class CqrsEsApplicationTests {
 		String customerId = UUID.randomUUID().toString();
 		String paymentId = UUID.randomUUID().toString();
 
-		fixture.given(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount,currency, customerId, paymentId))
+		fixture.given(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED.toString(), totalAmount,currency, customerId, paymentId))
 				.when(new ShipOrderCommand(orderId))
 				.expectException(UnconfirmedOrderException.class);
 	}
@@ -144,7 +152,7 @@ class CqrsEsApplicationTests {
 
 		Product product = new Product(productId, name, price, stock, currency);
 
-		OrderItem orderItem = new OrderItem(orderItemId, quantity, price, totalPrice, currency,null, product);
+		OrderItem orderItem = new OrderItem(orderItemId, quantity, price, totalPrice, currency, null, product);
 		List<OrderItem> orderItems = new ArrayList<>();
 		orderItems.add(orderItem);
 
@@ -153,7 +161,7 @@ class CqrsEsApplicationTests {
 		String orderId = UUID.randomUUID().toString();
 		String customerId = UUID.randomUUID().toString();
 		String paymentId = UUID.randomUUID().toString();
-		fixture.given(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED,totalAmount, currency, customerId, paymentId),
+		fixture.given(new OrderCreatedEvent(orderId, orderItems, OrderStatus.CREATED.toString(), totalAmount, currency, customerId, paymentId),
 						new OrderConfirmedEvent(orderId))
 				.when(new ShipOrderCommand(orderId))
 				.expectEvents(new OrderShippedEvent(orderId));

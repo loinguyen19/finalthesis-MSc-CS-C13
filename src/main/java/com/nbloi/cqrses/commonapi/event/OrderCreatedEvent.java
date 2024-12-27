@@ -7,6 +7,7 @@ import com.nbloi.cqrses.query.entity.OrderItem;
 import jakarta.persistence.Column;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import org.axonframework.eventhandling.scheduling.dbscheduler.EventSchedulerNotSuppliedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,7 +17,7 @@ import java.util.Objects;
 public class OrderCreatedEvent {
 
     private String orderId;
-    private OrderStatus orderStatus;
+    private String orderStatus;
     private List<OrderItem> orderItems;
     private BigDecimal totalAmount;
     private String customerId;
@@ -31,7 +32,7 @@ public class OrderCreatedEvent {
 
     public OrderCreatedEvent() {}
 
-    public OrderCreatedEvent(String orderId, List<OrderItem> orderItems, OrderStatus orderStatus, BigDecimal totalAmount,
+    public OrderCreatedEvent(String orderId, List<OrderItem> orderItems, String orderStatus, BigDecimal totalAmount,
                              String currency, String customerId, String paymentId) {
         this.orderId = orderId;
         this.orderItems = orderItems;
@@ -40,8 +41,8 @@ public class OrderCreatedEvent {
         this.currency = currency;
         this.customerId = customerId;
         this.paymentId = paymentId;
-        this.createdAt = LocalDateTime.now();
-        this.type = this.getClass().getSimpleName();
+//        this.createdAt = LocalDateTime.now();
+        this.type = EventType.ORDER_CREATED_EVENT.toString();
     }
 
     public String getOrderId() {
@@ -52,7 +53,7 @@ public class OrderCreatedEvent {
         return orderItems;
     }
 
-    public OrderStatus getOrderStatus() {return orderStatus;}
+    public String getOrderStatus() {return orderStatus;}
 
     public BigDecimal getTotalAmount() {return totalAmount;}
 
@@ -74,7 +75,7 @@ public class OrderCreatedEvent {
         this.orderItems = orderItems;
     }
 
-    public void setOrderStatus(OrderStatus orderStatus) {this.orderStatus = orderStatus;}
+    public void setOrderStatus(String orderStatus) {this.orderStatus = orderStatus;}
 
     public void setTotalAmount(BigDecimal totalAmount) {this.totalAmount = totalAmount;}
 
@@ -118,8 +119,8 @@ public class OrderCreatedEvent {
                 '}';
     }
 
-//    @PrePersist
-//    protected void onCreate() {
-//        createdAt = LocalDateTime.now();
-//    }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

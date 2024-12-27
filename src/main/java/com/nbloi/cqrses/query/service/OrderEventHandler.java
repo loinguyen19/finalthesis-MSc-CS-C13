@@ -67,7 +67,7 @@ public class OrderEventHandler {
 
                 Order order = new Order();
                 order.setOrderId(orderId);
-                order.setOrderCreatedStatus(OrderStatus.CREATED);
+                order.setOrderCreatedStatus(OrderStatus.CREATED.toString());
 
                 Set<OrderItem> listOfOrderItems = event.getOrderItems().stream().map(item -> {
                     OrderItem orderItem = new OrderItem();
@@ -105,15 +105,17 @@ public class OrderEventHandler {
 
                 // Instantiate a new Payment object and set it with received payment id from order created event
                 Payment payment = new Payment();
-                    payment.setPaymentId(UUID.randomUUID().toString());
+                    payment.setPaymentId(event.getPaymentId());
                     payment.setTotalAmount(event.getTotalAmount());
-                    payment.setPaymentStatus(PaymentStatus.CREATED);
+                    payment.setPaymentStatus(PaymentStatus.CREATED.toString());
+                    payment.setOrderId(orderId);
+                    payment.setCurrency(event.getCurrency());
                     payment.setOrder(order);
                 order.setPayment(payment);
                 paymentRepository.save(payment);
 
                 // Persist the Order and its OrderItems using the repository
-                log.info("Order created: {}", orderId);
+                log.info("Order created with ID: {}", orderId);
                 orderRepository.save(order);
 
                 // Save Outbox Message

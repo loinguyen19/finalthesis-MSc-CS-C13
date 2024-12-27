@@ -3,6 +3,7 @@ package com.nbloi.cqrses.commonapi.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.PrePersist;
@@ -20,7 +21,7 @@ public class PaymentCreatedEvent {
 //    @Column(nullable = false, updatable = false)
 //    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
 //    private LocalDateTime paymentDate;
-    private PaymentStatus paymentStatus;
+    private String paymentStatus;
 
     private String orderId;
 
@@ -30,11 +31,14 @@ public class PaymentCreatedEvent {
         this.totalAmount = totalAmount;
         this.currency = currency;
         this.orderId = orderId;
-        this.type = this.getClass().getSimpleName();
-        this.paymentStatus = PaymentStatus.CREATED;
+        this.type = EventType.PAYMENT_CREATED_EVENT.toString();
+        this.paymentStatus = PaymentStatus.CREATED.toString();
     }
 
-    public PaymentCreatedEvent() {}
+    public PaymentCreatedEvent() {
+        this.type = EventType.PAYMENT_CREATED_EVENT.toString();
+        this.paymentStatus = PaymentStatus.CREATED.toString();
+    }
 
     public String getPaymentId() {return paymentId;}
     public BigDecimal getTotalAmount() {return totalAmount;}
@@ -42,7 +46,7 @@ public class PaymentCreatedEvent {
     public String getOrderId() {return orderId;}
     public String getType() {return type;}
 //    public LocalDateTime getPaymentDate() {return paymentDate;}
-    public PaymentStatus getPaymentStatus() {return paymentStatus;}
+    public String getPaymentStatus() {return paymentStatus;}
 
     public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
     public void setTotalAmount(BigDecimal totalAmount) {
@@ -55,8 +59,8 @@ public class PaymentCreatedEvent {
         this.orderId = orderId;
     }
     public void setType(String type) {this.type = type;}
-    public void setPaymentDate(LocalDateTime paymentDate) {}
-    public void setPaymentStatus(PaymentStatus paymentStatus) {}
+//    public void setPaymentDate(LocalDateTime paymentDate) {}
+    public void setPaymentStatus(String paymentStatus) {}
 
     @Override
     public String toString() {

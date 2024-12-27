@@ -17,7 +17,7 @@ public class Order {
 
     @Id
     private String orderId;
-    private OrderStatus orderStatus;
+    private String orderStatus;
     private BigDecimal totalAmount;
     private String currency;
 
@@ -45,7 +45,7 @@ public class Order {
 
     public Order() {}
 
-    public Order(String orderId, OrderStatus orderStatus,BigDecimal totalAmount, LocalDateTime createdAt,
+    public Order(String orderId, String orderStatus,BigDecimal totalAmount, LocalDateTime createdAt,
                  LocalDateTime updatedAt, Set<OrderItem> orderItems) {
         this.orderId = orderId;
         this.orderStatus = orderStatus;
@@ -61,7 +61,7 @@ public class Order {
         return orderId;
     }
 
-    public OrderStatus getOrderStatus() {
+    public String getOrderStatus() {
         return orderStatus;
     }
 
@@ -93,16 +93,16 @@ public class Order {
         this.orderId = orderId;
     }
 
-    public void setOrderCreatedStatus(OrderStatus orderStatus) {
+    public void setOrderCreatedStatus(String orderStatus) {
         this.orderStatus = orderStatus;
     }
 
     public void setOrderConfirmedStatus() {
-        this.orderStatus = OrderStatus.CONFIRMED;
+        this.orderStatus = OrderStatus.CONFIRMED.toString();
     }
 
     public void setOrderShippedStatus() {
-        this.orderStatus = OrderStatus.SHIPPED;
+        this.orderStatus = OrderStatus.SHIPPED.toString();
     }
 
     public void setOrderItems(Set<OrderItem> orderItems) {

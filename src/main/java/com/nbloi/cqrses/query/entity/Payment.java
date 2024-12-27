@@ -17,11 +17,14 @@ import org.hibernate.annotations.UuidGenerator;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 @Entity
 @Data
 @Builder
-//@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Payment {
 
     @Id
@@ -30,7 +33,7 @@ public class Payment {
     @UuidGenerator
     private String paymentId;
     private BigDecimal totalAmount;
-    private PaymentStatus paymentStatus;
+    private String paymentStatus;
     private String paymentMethods;
 
     @Column(nullable = false, updatable = false)
@@ -47,26 +50,24 @@ public class Payment {
     @JsonBackReference
     private Order order;
 
-    // TODO: Message persisted in Outbox Message table: []
-    //Received Payment Event: {"orderId":"b7ef3725-7757-480a-9470-9d7d1e698035","orderStatus":"CREATED","orderItems":[{"orderItemId":"UUID-12345678912345678999","quantity":6,"price":30.00,"totalPrice":500,"currency":"VND","product":{"productId":"UUID-10","name":"Towel","price":30.00,"stock":2218,"currency":"VND"}},{"orderItemId":"UUID-12345678912345689109","quantity":2,"price":1500.00,"totalPrice":3000,"currency":"VND","product":{"productId":"UUID-2","name":"MotorBike","price":1500.00,"stock":89000,"currency":"VND"}}],"totalAmount":3500,"customerId":"UUID-C-6","paymentId":"7b74322c-567f-49fc-a78e-8530e40ab4f4","currency":"VND","type":"OrderCreatedEvent"}
-    //com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException: Unrecognized field "orderItems" (class com.nbloi.cqrses.query.entity.Payment), not marked as ignorable (9 known properties: "orderStatus", "paymentId", "paymentDate", "paymentStatus", "orderId", "totalAmount", "order", "currency", "paymentMethods"])
-    // at [Source: (String)"{"orderId":"b7ef3725-7757-480a-9470-9d7d1e698035","orderStatus":"CREATED","orderItems":[{"orderItemId":"UUID-12345678912345678999","quantity":6,"price":30.00,"totalPrice":500,"currency":"VND","product":{"productId":"UUID-10","name":"Towel","price":30.00,"stock":2218,"currency":"VND"}},{"orderItemId":"UUID-12345678912345689109","quantity":2,"price":1500.00,"totalPrice":3000,"currency":"VND","product":{"productId":"UUID-2","name":"MotorBike","price":1500.00,"stock":89000,"currency":"VND"}}],"total"[truncated 132 chars]; line: 1, column: 89] (through reference chain: com.nbloi.cqrses.query.entity.Payment["orderItems"])
-    //	at com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException.from(UnrecognizedPropertyException.java:61)
-
     //TODO: consider to add Customer into Payment entity
+    public String givenList_shouldReturnARandomElement() {
+        List<String> givenList = Arrays.asList("CASH", "DEBIT/CREDIT", "BNPL");
+        Random rand = new Random();
+        return givenList.get(rand.nextInt(givenList.size()));
+    }
 
     public Payment() {
     }
 
-    public Payment(String paymentId, BigDecimal totalAmount, PaymentStatus paymentStatus, String paymentMethods,
+    public Payment(String paymentId, BigDecimal totalAmount, String paymentStatus, String paymentMethods,
                    LocalDateTime paymentDate, String orderId, String currency, Order order) {
         this.paymentId = paymentId;
         this.totalAmount = totalAmount;
         this.paymentStatus = paymentStatus;
-        this.paymentMethods = paymentMethods;
+        this.paymentMethods = givenList_shouldReturnARandomElement();
         this.paymentDate = paymentDate;
         this.orderId = order.getOrderId();
-//        this.orderStatus = orderStatus;
         this.currency = order.getCurrency();
         this.order = order;
     }
@@ -87,11 +88,11 @@ public class Payment {
         this.totalAmount = totalAmount;
     }
 
-    public PaymentStatus getPaymentStatus() {
+    public String getPaymentStatus() {
         return paymentStatus;
     }
 
-    public void setPaymentStatus(PaymentStatus paymentStatus) {
+    public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
     }
 
