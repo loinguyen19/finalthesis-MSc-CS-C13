@@ -58,6 +58,7 @@ public class Payment {
     }
 
     public Payment() {
+        this.paymentMethods = givenList_shouldReturnARandomElement();
     }
 
     public Payment(String paymentId, BigDecimal totalAmount, String paymentStatus, String paymentMethods,

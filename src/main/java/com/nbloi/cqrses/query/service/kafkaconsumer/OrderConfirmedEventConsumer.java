@@ -43,16 +43,6 @@ public class OrderConfirmedEventConsumer {
             OrderConfirmedEvent orderConfirmedEvent = new OrderConfirmedEvent(foundOrder.getOrderId());
 
             orderEventHandler.on(orderConfirmedEvent);
-            // TODO: create sendConfirmedEvent in producer of order. Send sendConfirmedEvent() to convert to Shipped order
-//
-//            // Save Outbox Message
-//            OutboxMessage outboxMessage = new OutboxMessage(UUID.randomUUID().toString(),
-//                    orderConfirmedEvent.getOrderId(),
-//                    EventType.ORDER_CONFIRMED_EVENT.toString(),
-//                    new ObjectMapper().writeValueAsString(orderConfirmedEvent),
-//                    OutboxStatus.PENDING.toString());
-//
-//            outboxRepository.save(outboxMessage);
         } catch(Exception e){
             e.printStackTrace();
             throw new RuntimeException("Exception in handleOrderConfirmedEvent");

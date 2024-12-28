@@ -6,6 +6,7 @@ import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.PaymentFailedEvent;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OutboxMessage;
@@ -108,9 +109,12 @@ public class OutboxProcessor {
                         outboxRepository.save(message);
 
                     } else if (Objects.equals(message.getEventType(), EventType.PAYMENT_FAILED_EVENT.toString())) {
+                        PaymentFailedEvent paymentFailedEvent = new ObjectMapper().readValue(message.getPayload(), PaymentFailedEvent.class);
+                        String paymentFailedEventPayload = new ObjectMapper().writeValueAsString(paymentFailedEvent);
                         message.setStatus("PROCESSED");
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
+                        paymentEventProducer.sendPaymentFailedEvent(paymentFailedEventPayload);
                         throw new RuntimeException("Your total balance is not sufficient to pay this event");
 
                     } else if (Objects.equals(message.getEventType(), EventType.ORDER_CONFIRMED_EVENT.toString())) {
@@ -118,12 +122,21 @@ public class OutboxProcessor {
                         message.setStatus("PROCESSED");
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
+                    } else if (Objects.equals(message.getEventType(), EventType.ORDER_SHIPPED_EVENT.toString())) {
+//                        orderCreatedEventProducer.sendOrderConfirmedEvent(message.getPayload());
+                        message.setStatus("PROCESSED");
+                        message.setUpdatedAt(LocalDateTime.now());
+                        outboxRepository.save(message);
                     }
-                    // Mark message as PROCESSED
-//                    message.setStatus("PROCESSED");
-//                    message.setUpdatedAt(LocalDateTime.now());
-//                    outboxRepository.save(message);
-                    log.info("Message changed to 'PROCESSED' status persisted in Outbox Message table: {}", messages);
+                    else if (Objects.equals(message.getEventType(), EventType.ORDER_CANCELLED_EVENT.toString())) {
+                        message.setStatus("PROCESSED");
+                        message.setUpdatedAt(LocalDateTime.now());
+                        outboxRepository.save(message);
+                    }
+
+                    log.info("Message with event type {}, status {} persisted in Outbox Message table: {}",
+                            message.getEventType(), message.getStatus() ,message.getPayload());
+//                    log.info("Message changed to 'PROCESSED' status persisted in Outbox Message table: {}", message.getPayload());
                 }
             } catch (Exception e) {
                 // Handle failures (retry mechanism)

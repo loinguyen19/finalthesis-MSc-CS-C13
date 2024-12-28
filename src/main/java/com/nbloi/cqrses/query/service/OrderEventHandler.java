@@ -1,6 +1,5 @@
 package com.nbloi.cqrses.query.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
@@ -8,6 +7,7 @@ import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
 import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.OrderCancelledEvent;
 import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
 import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.transaction.Transactional;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -200,6 +199,41 @@ public class OrderEventHandler {
             );
             outboxRepository.save(outboxMessage);
             log.info("Processing 'shipped order' OutboxMessage with payload: {}", outboxMessage.getPayload());
+        } catch (Exception e){
+            // Log the error for more specific message
+            LOGGER.error("Error handling event: {}", event, e);
+        }
+
+    }
+
+    @EventHandler
+    public void on(OrderCancelledEvent event) {
+        try {
+            String orderId = event.getOrderId();
+            Order orderToCancelled = handle(new FindOrderByIdQuery(orderId));
+            if (orderToCancelled != null) {
+//            Order orderToCancelled = orderRepository.findById(orderId).get();
+
+                if (orderToCancelled.getOrderStatus().equals(OrderStatus.CREATED.toString())) {
+                    orderToCancelled.setOrderCancelledStatus();
+                } else {
+                    throw new RuntimeException("Order has not been created! Failed to revert order");
+                }
+            }
+
+            orderRepository.save(orderToCancelled);
+
+            // TODO: send message to transactional outbox pattern to manage the event state before sending to Kafka broker
+            // Save Outbox Message
+            OutboxMessage outboxMessage = new OutboxMessage(
+                    UUID.randomUUID().toString(),
+                    event.getOrderId(),
+                    EventType.ORDER_CANCELLED_EVENT.toString(),
+                    new ObjectMapper().writeValueAsString(event),
+                    OutboxStatus.PENDING.toString()
+            );
+            outboxRepository.save(outboxMessage);
+            log.info("Processing 'failed to be paid order' OutboxMessage with payload: {}", outboxMessage.getPayload());
         } catch (Exception e){
             // Log the error for more specific message
             LOGGER.error("Error handling event: {}", event, e);

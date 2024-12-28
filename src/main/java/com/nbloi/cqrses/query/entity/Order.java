@@ -105,6 +105,8 @@ public class Order {
         this.orderStatus = OrderStatus.SHIPPED.toString();
     }
 
+    public void setOrderCancelledStatus() {this.orderStatus = OrderStatus.CANCELLED.toString();}
+
     public void setOrderItems(Set<OrderItem> orderItems) {
         this.orderItems = orderItems;
     }

@@ -1,14 +1,12 @@
 package com.nbloi.cqrses.query.service.kafkaconsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.commonapi.enums.EventType;
-import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
+import com.nbloi.cqrses.commonapi.event.OrderCancelledEvent;
 import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
-import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
+import com.nbloi.cqrses.commonapi.event.PaymentFailedEvent;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
-import com.nbloi.cqrses.query.entity.OutboxMessage;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
 import com.nbloi.cqrses.query.service.OrderEventHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +14,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Service
-public class OrderShippedEventConsumer {
+public class OrderCancelledEventConsumer {
 
     @Autowired
     private OrderEventHandler orderEventHandler;
@@ -27,20 +23,22 @@ public class OrderShippedEventConsumer {
     @Autowired
     private OutboxRepository outboxRepository;
 
-    @KafkaListener(topics = "order_confirmed_events", groupId = "order_group")
-    public void handleOrderShippedEvent(@Payload String orderConfirmedEvent) {
+    @KafkaListener(topics = "payment_failed_events", groupId = "order_group")
+    public void handleOrderCancelledEvent(@Payload String paymentFailedEvent) {
         // Process the order event, e.g., store it in the database
-        System.out.println("Received Order Confirmed Event: " + orderConfirmedEvent);
+        System.out.println("Received Payment Failed Event: " + paymentFailedEvent);
 
         // Implement the logic for order confirmation processing
         try{
-            OrderConfirmedEvent event = new ObjectMapper().readValue(orderConfirmedEvent, OrderConfirmedEvent.class);
-            Order orderConfirmed = orderEventHandler.handle(new FindOrderByIdQuery(event.getOrderId()));
+            PaymentFailedEvent paymentEvent = new ObjectMapper().readValue(paymentFailedEvent, PaymentFailedEvent.class);
 
-            if (orderConfirmed == null) { throw new RuntimeException("No order found by id " + event.getOrderId()); }
-            OrderShippedEvent orderToShipEvent = new OrderShippedEvent(orderConfirmed.getOrderId());
+//            OrderCancelledEvent orderCancelledEvent = new OrderCancelledEvent(paymentEvent.getOrderId());
+//            Order orderCancelled = orderEventHandler.handle(new FindOrderByIdQuery(paymentEvent.getOrderId()));
+//
+//            if (orderCancelled == null) { throw new RuntimeException("No order found by id " + paymentEvent.getOrderId()); }
+            OrderCancelledEvent orderCancelledEvent = new OrderCancelledEvent(paymentEvent.getOrderId());
 
-            orderEventHandler.on(orderToShipEvent);
+            orderEventHandler.on(orderCancelledEvent);
 
         } catch(Exception e){
             e.printStackTrace();
