@@ -5,8 +5,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.converter.StringJsonMessageConverter;
-import org.springframework.kafka.support.mapping.DefaultJackson2JavaTypeMapper;;
+import org.springframework.kafka.support.mapping.DefaultJackson2JavaTypeMapper;
+import org.springframework.util.backoff.FixedBackOff;;
 
 @EnableKafka
 @Configuration
@@ -26,6 +28,14 @@ public class KafkaConsumerConfig {
 
         factory.setConsumerFactory(consumerFactory);
         factory.setMessageConverter(converter); // Enable JSON conversion
+        //TODO: check if by default, ConcurrentKafkaListenerContainerFactory has set for concurrency and Containers Properties??
+//        factory.setConcurrency(3);
+//        factory.getContainerProperties().setPollTimeout(3000);
+
+        // Set error handler with retry and backoff
+        factory.setCommonErrorHandler(new DefaultErrorHandler(
+                new FixedBackOff(1000L, 3) // Retry every 1 second, up to 3 times
+        ));
         return factory;
     }
 }

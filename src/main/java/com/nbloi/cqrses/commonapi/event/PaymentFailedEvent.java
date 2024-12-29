@@ -18,23 +18,27 @@ public class PaymentFailedEvent {
     @Column(nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime paymentDate;
-    private PaymentStatus paymentStatus;
+    private String paymentStatus;
+    private String paymentMethods;
 
     private String orderId;
 
     //TODO: add payment Status and payment method in this class
 
-    public PaymentFailedEvent(String paymentId, String orderId, BigDecimal amount, String currency) {
+    public PaymentFailedEvent(String paymentId, BigDecimal amount, String currency, String paymentMethods, String orderId) {
         this.paymentId = paymentId;
         this.amount = amount;
         this.currency = currency;
+        this.paymentMethods = paymentMethods;
         this.orderId = orderId;
         this.type = EventType.PAYMENT_FAILED_EVENT.toString();
         this.paymentDate = LocalDateTime.now();
-        this.paymentStatus = PaymentStatus.FAILED;
+        this.paymentStatus = PaymentStatus.FAILED.toString();
     }
 
-    public PaymentFailedEvent() {}
+    public PaymentFailedEvent() {
+        this.type = EventType.PAYMENT_FAILED_EVENT.toString();
+    }
 
     public String getPaymentId() {return paymentId;}
     public BigDecimal getTotalAmount() {return amount;}
@@ -42,7 +46,8 @@ public class PaymentFailedEvent {
     public String getOrderId() {return orderId;}
     public String getType() {return type;}
     public LocalDateTime getPaymentDate() {return paymentDate;}
-    public PaymentStatus getPaymentStatus() {return paymentStatus;}
+    public String getPaymentStatus() {return paymentStatus;}
+    public String getPaymentMethods() {return paymentMethods;}
 
     public void setPaymentId(String paymentId) {
         this.paymentId = paymentId;
@@ -57,8 +62,9 @@ public class PaymentFailedEvent {
         this.orderId = orderId;
     }
     public void setType(String type) {this.type = type;}
-    public void setPaymentDate(LocalDateTime paymentDate) {}
-    public void setPaymentStatus(PaymentStatus paymentStatus) {}
+    public void setPaymentDate(LocalDateTime paymentDate) {this.paymentDate = paymentDate;}
+    public void setPaymentStatus(String paymentStatus) {this.paymentStatus = paymentStatus;}
+    public void setPaymentMethods(String paymentMethods) {this.paymentMethods = paymentMethods;}
 
     @Override
     public String toString() {

@@ -48,17 +48,6 @@ public class OutboxProcessor {
     private final Logger log = LoggerFactory.getLogger(OutboxProcessor.class);
     @Autowired
     private PaymentEventProducer paymentEventProducer;
-    @Autowired
-    private ProductInventoryEventConsumer productInventoryEventConsumer;
-
-    @Autowired
-    private ProductInventoryEventProducer productInventoryEventProducer;
-    @Autowired
-    private OrderRepository orderRepository;
-    @Autowired
-    private OrderEventHandler orderEventHandler;
-    @Autowired
-    private PaymentRepository paymentRepository;
 
     @Transactional
     @Scheduled(fixedRate = 5000)  // Poll every 5 seconds
@@ -78,32 +67,26 @@ public class OutboxProcessor {
                     } else if (Objects.equals(message.getEventType(), EventType.PRODUCT_INVENTORY_UPDATED_EVENT.toString())) {
                         OrderCreatedEvent orderCreatedEvent = new ObjectMapper().readValue(message.getPayload(), OrderCreatedEvent.class);
 
-//                        Payment payment = paymentRepository.findById(orderCreatedEvent.getPaymentId()).orElseThrow(RuntimeException::new);
-
                         PaymentCreatedEvent paymentCreatedEvent = new PaymentCreatedEvent();
                         paymentCreatedEvent.setPaymentId(orderCreatedEvent.getPaymentId());
                         paymentCreatedEvent.setOrderId(orderCreatedEvent.getOrderId());
                         paymentCreatedEvent.setPaymentStatus(EventType.PAYMENT_CREATED_EVENT.toString());
                         paymentCreatedEvent.setTotalAmount(orderCreatedEvent.getTotalAmount());
                         paymentCreatedEvent.setCurrency(orderCreatedEvent.getCurrency());
+                        String paymentCreatedEventPayload = new ObjectMapper().writeValueAsString(paymentCreatedEvent);
 
-                        paymentEventProducer.sendPaymentCreatedEvent(message.getPayload());
+                        paymentEventProducer.sendPaymentCreatedEvent(paymentCreatedEventPayload);
                         message.setStatus("PROCESSED");
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
                     }
                     else if (Objects.equals(message.getEventType(), EventType.PAYMENT_COMPLETED_EVENT.toString())) {
-//                        Payment payment = paymentRepository.findById(message.getAggregateId()).get();
                         PaymentCompletedEvent paymentCompletedEvent = new ObjectMapper().readValue(message.getPayload(), PaymentCompletedEvent.class);
-
-//                        String orderId = paymentCompletedEvent.getOrderId();
-//                        OrderCreatedEvent event = new OrderCreatedEvent();
-//                        event.setOrderId(orderId);
-//                        event.setPaymentId(paymentCompletedEvent.getPaymentId());
 
                         String paymentCompletedEventPayload = new ObjectMapper().writeValueAsString(paymentCompletedEvent);
                         paymentEventProducer.sendPaymentCompletedEvent(paymentCompletedEventPayload);
-                        messages.remove(message);
+                        log.info("Produce PaymentCompletedEvent to topics payment_completed_events: {}", message.getPayload());
+
                         message.setStatus("PROCESSED");
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
@@ -114,16 +97,23 @@ public class OutboxProcessor {
                         message.setStatus("PROCESSED");
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
+
                         paymentEventProducer.sendPaymentFailedEvent(paymentFailedEventPayload);
+                        log.info("Produce PaymentFailedEvent to topics payment_failed_events: {}", messages);
                         throw new RuntimeException("Your total balance is not sufficient to pay this event");
 
                     } else if (Objects.equals(message.getEventType(), EventType.ORDER_CONFIRMED_EVENT.toString())) {
                         orderCreatedEventProducer.sendOrderConfirmedEvent(message.getPayload());
+                        log.info("Produce OrderConfirmedEvent to topics order_confirmed_events: {}", messages);
+
                         message.setStatus("PROCESSED");
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
-                    } else if (Objects.equals(message.getEventType(), EventType.ORDER_SHIPPED_EVENT.toString())) {
-//                        orderCreatedEventProducer.sendOrderConfirmedEvent(message.getPayload());
+                    }
+                    else if (Objects.equals(message.getEventType(), EventType.ORDER_SHIPPED_EVENT.toString())) {
+                        orderCreatedEventProducer.sendOrderShippedEvent(message.getPayload());
+                        log.info("Produce OrderShippedEvent to topics order_shipped_events: {}", messages);
+
                         message.setStatus("PROCESSED");
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
@@ -133,10 +123,14 @@ public class OutboxProcessor {
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
                     }
+                    else if (Objects.equals(message.getEventType(), EventType.PAYMENT_SUMMARIZED_EVENT.toString())){
+                        message.setStatus("PROCESSED");
+                        message.setUpdatedAt(LocalDateTime.now());
+                        outboxRepository.save(message);
+                    }
 
                     log.info("Message with event type {}, status {} persisted in Outbox Message table: {}",
                             message.getEventType(), message.getStatus() ,message.getPayload());
-//                    log.info("Message changed to 'PROCESSED' status persisted in Outbox Message table: {}", message.getPayload());
                 }
             } catch (Exception e) {
                 // Handle failures (retry mechanism)

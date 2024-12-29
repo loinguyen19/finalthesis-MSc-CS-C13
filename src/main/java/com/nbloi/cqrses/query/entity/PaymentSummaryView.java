@@ -2,6 +2,8 @@ package com.nbloi.cqrses.query.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import lombok.Builder;
+import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -9,6 +11,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
+@Data
+@Builder
 public class PaymentSummaryView {
 
     @Id

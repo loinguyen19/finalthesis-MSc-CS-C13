@@ -14,6 +14,7 @@ public class OrderCreatedEventProducer {
 
     private static final String TOPIC = "order_created_events";
     private static final String TOPIC2 = "order_confirmed_events";
+    private static final String TOPIC3 = "order_shipped_events";
     private final static long sendTimeout = 3000;
 
     Logger log = Logger.getLogger(OrderCreatedEventProducer.class.getSimpleName());
@@ -36,6 +37,16 @@ public class OrderCreatedEventProducer {
         try {
             kafkaTemplate.send(TOPIC2, orderConfirmedEvent).get(sendTimeout, TimeUnit.MILLISECONDS);
             LOGGER.info("Sent order confirmed event to kafka topic: " + TOPIC + " with record value: {}", orderConfirmedEvent);
+        } catch (Exception e) {
+            LOGGER.info("KafkaEventBus publish get timeout", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void sendOrderShippedEvent(@Payload String orderShippedEvent) {
+        try {
+            kafkaTemplate.send(TOPIC3, orderShippedEvent).get(sendTimeout, TimeUnit.MILLISECONDS);
+            LOGGER.info("Sent order shipped event to kafka topic: " + TOPIC + " with record value: {}", orderShippedEvent);
         } catch (Exception e) {
             LOGGER.info("KafkaEventBus publish get timeout", e);
             throw new RuntimeException(e);

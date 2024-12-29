@@ -1,5 +1,6 @@
 package com.nbloi.cqrses.query.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -7,6 +8,7 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.validator.constraints.UUID;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -20,19 +22,31 @@ public class Customer {
     private String phoneNumber;
     private BigDecimal balance;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Column(nullable = false, updatable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Set<Order> orders;
 
-    public Customer(String customerId, String name, String email, String phoneNumber, BigDecimal balance) {
+    public Customer(String customerId, String name, String email, String phoneNumber, BigDecimal balance,
+                    LocalDateTime createdAt) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.balance = balance;
+        this.createdAt = createdAt;
     }
 
     public Customer() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     public String getCustomerId() {
@@ -67,6 +81,10 @@ public class Customer {
         return email;
     }
 
+    public LocalDateTime getCreatedAt() {return createdAt;}
+
+    public LocalDateTime getUpdatedAt() {return updatedAt;}
+
     public void setEmail(String email) {
         this.email = email;
     }
@@ -83,6 +101,14 @@ public class Customer {
         this.balance = balance;
     }
 
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     @Override
     public String toString() {
         return "Customer{" +
@@ -92,5 +118,16 @@ public class Customer {
                 ", phoneNumber='" + phoneNumber + '\'' +
 //                ", orders=" + orders +
                 '}';
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

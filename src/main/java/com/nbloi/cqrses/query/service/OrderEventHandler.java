@@ -37,8 +37,6 @@ public class OrderEventHandler {
     @Autowired
     private OrderRepository orderRepository;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(OrderEventHandler.class);
-
     @Autowired
     private OutboxRepository outboxRepository;
     @Autowired
@@ -136,13 +134,13 @@ public class OrderEventHandler {
                 MailMessage message = new MailMessage("Order %s created".formatted(orderId),
                         "Your order is marked as 'created' in our system and will be processed to confirmed status.",
                         "orderCreated");
-                LOGGER.info("Sending email for created order {}", orderId);
+                log.info("Sending email for created order {}", orderId);
                 mailGateway.sendMail(message);*/
 //            }
 
         } catch (Exception e){
             // Log the error for more specific message
-            LOGGER.error("Error handling event: {}", event, e);
+            log.error("Error handling event: {}", event, e);
         }
 
     }
@@ -170,7 +168,7 @@ public class OrderEventHandler {
             log.info("Processing 'confirmed order' OutboxMessage with payload: {}", outboxMessage.getPayload());
         } catch (Exception e){
             // Log the error for more specific message
-            LOGGER.error("Error handling event: {}", event, e);
+            log.error("Error handling event: {}", event, e);
         }
     }
 
@@ -201,7 +199,7 @@ public class OrderEventHandler {
             log.info("Processing 'shipped order' OutboxMessage with payload: {}", outboxMessage.getPayload());
         } catch (Exception e){
             // Log the error for more specific message
-            LOGGER.error("Error handling event: {}", event, e);
+            log.error("Error handling event: {}", event, e);
         }
 
     }
@@ -236,7 +234,7 @@ public class OrderEventHandler {
             log.info("Processing 'failed to be paid order' OutboxMessage with payload: {}", outboxMessage.getPayload());
         } catch (Exception e){
             // Log the error for more specific message
-            LOGGER.error("Error handling event: {}", event, e);
+            log.error("Error handling event: {}", event, e);
         }
 
     }

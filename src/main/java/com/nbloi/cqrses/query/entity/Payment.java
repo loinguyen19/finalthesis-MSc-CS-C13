@@ -66,7 +66,7 @@ public class Payment {
         this.paymentId = paymentId;
         this.totalAmount = totalAmount;
         this.paymentStatus = paymentStatus;
-        this.paymentMethods = givenList_shouldReturnARandomElement();
+        this.paymentMethods = paymentMethods;
         this.paymentDate = paymentDate;
         this.orderId = order.getOrderId();
         this.currency = order.getCurrency();

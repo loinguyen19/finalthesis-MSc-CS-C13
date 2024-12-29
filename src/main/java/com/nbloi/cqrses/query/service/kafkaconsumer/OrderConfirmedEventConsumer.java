@@ -27,7 +27,7 @@ public class OrderConfirmedEventConsumer {
     @Autowired
     private OutboxRepository outboxRepository;
 
-    @KafkaListener(topics = "payment_completed_events", groupId = "payment_group")
+    @KafkaListener(topics = "payment_completed_events", groupId = "order_group")
     public void handleOrderConfirmedEvent(@Payload String paymentCompletedEvent) {
         // Process the order event, e.g., store it in the database
         System.out.println("Received Payment Event in OrderConfirmedEventConsumer: " + paymentCompletedEvent);
@@ -41,8 +41,8 @@ public class OrderConfirmedEventConsumer {
                 throw new RuntimeException("No order found by id " + paymentEvent.getOrderId());
             }
             OrderConfirmedEvent orderConfirmedEvent = new OrderConfirmedEvent(foundOrder.getOrderId());
-
             orderEventHandler.on(orderConfirmedEvent);
+
         } catch(Exception e){
             e.printStackTrace();
             throw new RuntimeException("Exception in handleOrderConfirmedEvent");

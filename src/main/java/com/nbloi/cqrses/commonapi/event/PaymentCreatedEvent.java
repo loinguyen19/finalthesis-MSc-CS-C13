@@ -10,6 +10,11 @@ import jakarta.persistence.PrePersist;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentCreatedEvent {
 
@@ -22,6 +27,13 @@ public class PaymentCreatedEvent {
 //    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
 //    private LocalDateTime paymentDate;
     private String paymentStatus;
+    private String paymentMethods;
+
+    public String givenList_shouldReturnARandomElement() {
+        List<String> givenList = Arrays.asList("CASH", "DEBIT/CREDIT", "BNPL");
+        Random rand = new Random();
+        return givenList.get(rand.nextInt(givenList.size()));
+    }
 
     private String orderId;
 
@@ -30,6 +42,7 @@ public class PaymentCreatedEvent {
         this.paymentId = paymentId;
         this.totalAmount = totalAmount;
         this.currency = currency;
+        this.paymentMethods = givenList_shouldReturnARandomElement();
         this.orderId = orderId;
         this.type = EventType.PAYMENT_CREATED_EVENT.toString();
         this.paymentStatus = PaymentStatus.CREATED.toString();
@@ -38,6 +51,7 @@ public class PaymentCreatedEvent {
     public PaymentCreatedEvent() {
         this.type = EventType.PAYMENT_CREATED_EVENT.toString();
         this.paymentStatus = PaymentStatus.CREATED.toString();
+        this.paymentMethods = givenList_shouldReturnARandomElement();
     }
 
     public String getPaymentId() {return paymentId;}
@@ -47,6 +61,7 @@ public class PaymentCreatedEvent {
     public String getType() {return type;}
 //    public LocalDateTime getPaymentDate() {return paymentDate;}
     public String getPaymentStatus() {return paymentStatus;}
+    public String getPaymentMethods() {return paymentMethods;}
 
     public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
     public void setTotalAmount(BigDecimal totalAmount) {
@@ -61,6 +76,7 @@ public class PaymentCreatedEvent {
     public void setType(String type) {this.type = type;}
 //    public void setPaymentDate(LocalDateTime paymentDate) {}
     public void setPaymentStatus(String paymentStatus) {}
+    public void setPaymentMethods(String paymentMethods) {}
 
     @Override
     public String toString() {

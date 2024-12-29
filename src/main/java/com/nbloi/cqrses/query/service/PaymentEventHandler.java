@@ -50,14 +50,20 @@ public class PaymentEventHandler {
         Customer customer = customerRepository.findById(order.getCustomer().getCustomerId()).get();
         Payment payment = order.getPayment();
         BigDecimal remain = customer.getBalance().subtract(event.getTotalAmount());
+        double remain2 = customer.getBalance().doubleValue() - event.getTotalAmount().doubleValue();
         if ( remain.doubleValue() >= 0) {
-            customer.setBalance(customer.getBalance().subtract(event.getTotalAmount()));
+            customer.setBalance(BigDecimal.valueOf(remain2));
             customerRepository.save(customer);
 
             payment.setPaymentStatus(PaymentStatus.COMPLETED.toString());
             paymentRepository.save(payment);
 
-            PaymentCompletedEvent paymentCompletedEvent = new ObjectMapper().convertValue(event, PaymentCompletedEvent.class);
+            PaymentCompletedEvent paymentCompletedEvent = new PaymentCompletedEvent();
+            paymentCompletedEvent.setPaymentId(event.getPaymentId());
+            paymentCompletedEvent.setOrderId(event.getOrderId());
+            paymentCompletedEvent.setTotalAmount(event.getTotalAmount());
+            paymentCompletedEvent.setPaymentStatus(payment.getPaymentStatus());
+            paymentCompletedEvent.setCurrency(event.getCurrency());
 
             // Save Outbox Message
             OutboxMessage outboxMessage = new OutboxMessage(UUID.randomUUID().toString(),
@@ -68,10 +74,15 @@ public class PaymentEventHandler {
 
             outboxRepository.save(outboxMessage);
         } else if (remain.doubleValue() < 0) {
-            PaymentFailedEvent paymentFailedEvent = new ObjectMapper().convertValue(event, PaymentFailedEvent.class);
-
             payment.setPaymentStatus(PaymentStatus.FAILED.toString());
             paymentRepository.save(payment);
+
+            PaymentFailedEvent paymentFailedEvent = new PaymentFailedEvent();
+            paymentFailedEvent.setPaymentId(event.getPaymentId());
+            paymentFailedEvent.setOrderId(event.getOrderId());
+            paymentFailedEvent.setTotalAmount(event.getTotalAmount());
+            paymentFailedEvent.setPaymentStatus(payment.getPaymentStatus());
+            paymentFailedEvent.setCurrency(event.getCurrency());
 
             // Save Outbox Message
             OutboxMessage outboxMessage = new OutboxMessage(UUID.randomUUID().toString(),

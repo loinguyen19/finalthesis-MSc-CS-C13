@@ -1,15 +1,26 @@
 package com.nbloi.cqrses.query.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nbloi.cqrses.commonapi.enums.EventType;
+import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
 import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentFailedEvent;
+import com.nbloi.cqrses.query.entity.OutboxMessage;
 import com.nbloi.cqrses.query.entity.PaymentSummaryView;
+import com.nbloi.cqrses.query.repository.OutboxRepository;
 import com.nbloi.cqrses.query.repository.PaymentSummaryViewRepository;
 import org.axonframework.eventhandling.EventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -17,24 +28,63 @@ public class PaymentSummaryProjectionHandler {
 
     @Autowired
     private PaymentSummaryViewRepository paymentSummaryViewRepository;
+    @Autowired
+    private OutboxRepository outboxRepository;
+    private final Logger log = LoggerFactory.getLogger(PaymentSummaryProjectionHandler.class);
 
     @EventHandler
-    public void on(PaymentCompletedEvent event) {
+    public void onPaymentSummarize(PaymentCompletedEvent event) throws JsonProcessingException {
+        PaymentSummaryView view = generatePaymentSummaryView(event.getOrderId(), event.getPaymentId(),
+                event.getPaymentStatus(), event.getPaymentDate(), event.getTotalAmount());
 
-        PaymentSummaryView view = new PaymentSummaryView();
-        view.setOrderId(event.getOrderId());
-        view.setPaymentId(event.getPaymentId());
-        view.setPaymentStatus("COMPLETED");
-        view.setPaymentDate(event.getPaymentDate());
-        view.setPaymentTotalAmount(event.getTotalAmount());
-        paymentSummaryViewRepository.save(view);
+        String paymentSummaryEventPayload = new ObjectMapper().writeValueAsString(view);
 
+        // Create message for outbox message
+        OutboxMessage outboxMessage = new OutboxMessage(UUID.randomUUID().toString(),
+                view.getPaymentSummaryId(),
+                EventType.PAYMENT_SUMMARIZED_EVENT.toString(),
+                new ObjectMapper().writeValueAsString(paymentSummaryEventPayload),
+                OutboxStatus.PENDING.toString());
+
+        // Send message to Outbox message queue for Product Inventory Event
+        outboxRepository.save(outboxMessage);
+        log.info("Processing message PaymentCompletedEvent in PaymentSummaryView in OutboxMessage with payload: {}",
+                outboxMessage.getPayload());
     }
 
     @EventHandler
-    public void on(PaymentFailedEvent event) {
-        PaymentSummaryView view = paymentSummaryViewRepository.findById(event.getPaymentId()).get();
-        view.setPaymentStatus(PaymentStatus.FAILED.toString());
-        paymentSummaryViewRepository.save(view);
+    public void onPaymentSummarize(PaymentFailedEvent event) throws JsonProcessingException {
+        PaymentSummaryView viewForPaymentFailedEvent = generatePaymentSummaryView(event.getOrderId(), event.getPaymentId(),
+                event.getPaymentStatus(), event.getPaymentDate(), event.getTotalAmount());
+
+//        view.setPaymentStatus(PaymentStatus.FAILED.toString());
+
+        String paymentSummaryEventPayload = new ObjectMapper().writeValueAsString(viewForPaymentFailedEvent);
+
+        // Create message for outbox message
+        OutboxMessage outboxMessage = new OutboxMessage(UUID.randomUUID().toString(),
+                viewForPaymentFailedEvent.getPaymentSummaryId(),
+                EventType.PAYMENT_SUMMARIZED_EVENT.toString(),
+                new ObjectMapper().writeValueAsString(paymentSummaryEventPayload),
+                OutboxStatus.PENDING.toString());
+
+        // Send message to Outbox message queue for Product Inventory Event
+        outboxRepository.save(outboxMessage);
+        log.info("Processing message PaymentFailedEvent in PaymentSummaryView in OutboxMessage with payload: {}",
+                outboxMessage.getPayload());
+    }
+
+    private PaymentSummaryView generatePaymentSummaryView(String orderId, String paymentId, String PaymentStatus,
+                                            LocalDateTime paymentDate, BigDecimal totalAmount) {
+        PaymentSummaryView paymentSummaryView = new PaymentSummaryView();
+        paymentSummaryView.setPaymentSummaryId(UUID.randomUUID().toString());
+        paymentSummaryView.setOrderId(orderId);
+        paymentSummaryView.setPaymentId(paymentId);
+        paymentSummaryView.setPaymentStatus(PaymentStatus);
+        paymentSummaryView.setPaymentDate(paymentDate);
+        paymentSummaryView.setPaymentTotalAmount(totalAmount);
+        paymentSummaryViewRepository.save(paymentSummaryView);
+
+        return paymentSummaryView;
     }
 }
