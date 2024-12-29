@@ -1,4 +1,4 @@
-package com.nbloi.cqrses.command.controller;
+package com.nbloi.cqrses.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.dto.ProductDTO;
