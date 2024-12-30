@@ -1,5 +1,6 @@
 package com.nbloi.conventional.eda.service;
 
+import com.nbloi.conventional.eda.event.ProductCreatedEvent;
 import com.nbloi.conventional.eda.event.ProductInventoryEvent;
 import com.nbloi.conventional.eda.entity.Product;
 import com.nbloi.conventional.eda.repository.ProductRepository;
@@ -22,6 +23,16 @@ public class ProductInventoryEventHandler {
         this.productRepository = productRepository;
     }
 
+    public void on(ProductCreatedEvent event) {
+        Product product = new Product(
+                event.getProductId(),
+                event.getName(),
+                event.getPrice(),
+                event.getStock(),
+                event.getCurrency()
+        );
+        productRepository.save(product);
+    }
 
     public void on(ProductInventoryEvent event) {
         Product product = productRepository.findById(event.getProductId()).get();
