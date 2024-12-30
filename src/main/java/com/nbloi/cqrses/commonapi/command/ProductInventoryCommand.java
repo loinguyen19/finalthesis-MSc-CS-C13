@@ -13,10 +13,10 @@ public class ProductInventoryCommand {
     private BigDecimal price;
     private String currency;
 
-    public ProductInventoryCommand(String name, int Stock, String productId, BigDecimal price, String currency) {
+    public ProductInventoryCommand(String productId, String name, int stock, BigDecimal price, String currency) {
         this.productId = productId;
         this.name = name;
-        this.stock = Stock;
+        this.stock = stock;
         this.price = price;
         this.currency = currency;
     }

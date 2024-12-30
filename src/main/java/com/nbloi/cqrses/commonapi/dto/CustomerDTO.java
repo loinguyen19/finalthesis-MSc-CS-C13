@@ -1,13 +1,12 @@
-package com.nbloi.cqrses.commonapi.event;
+package com.nbloi.cqrses.commonapi.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
-import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class CustomerCreatedEvent {
+public class CustomerDTO {
 
     private String customerId;
     private String name;
@@ -19,18 +18,17 @@ public class CustomerCreatedEvent {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 
-    public CustomerCreatedEvent() {
+    public CustomerDTO() {
         this.createdAt = LocalDateTime.now();
     }
 
-    public CustomerCreatedEvent(String customerId, String name, String email, String phoneNumber, BigDecimal balance,
-                                 LocalDateTime createdAt) {
+    public CustomerDTO(String customerId, String name, String email, String phoneNumber, BigDecimal balance) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.balance = balance;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
     }
 
     public String getCustomerId() {

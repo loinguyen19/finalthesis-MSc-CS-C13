@@ -1,6 +1,8 @@
 package com.nbloi.cqrses.query.service;
 
+import com.nbloi.cqrses.commonapi.event.ProductCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.ProductInventoryEvent;
+import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllProductsQuery;
 import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Product;
@@ -27,6 +29,19 @@ public class ProductInventoryEventHandler {
     }
 
     @EventHandler
+    public void on(ProductCreatedEvent event) {
+        Product product = new Product(
+                event.getProductId(),
+                event.getName(),
+                event.getPrice(),
+                event.getStock(),
+                event.getCurrency()
+        );
+
+        productRepository.save(product);
+    }
+
+    @EventHandler
     public void on(ProductInventoryEvent event) {
         Product product = productRepository.findById(event.getProductId()).get();
 
@@ -40,7 +55,7 @@ public class ProductInventoryEventHandler {
     @EventHandler
     public void off(ProductInventoryEvent event) {
         Product product = productRepository.findById(event.getProductId()).orElse(null);
-        assert product != null;
+        if (product == null) {throw new UnfoundEntityException(event.getProductId(), Product.class.getName());}
         productRepository.delete(product);
     }
 

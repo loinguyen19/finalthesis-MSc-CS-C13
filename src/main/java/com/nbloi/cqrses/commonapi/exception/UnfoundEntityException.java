@@ -7,6 +7,6 @@ public class UnfoundEntityException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     public UnfoundEntityException(String entityId, String entityType) {
-        super(String.format("%s entity with id: '%s' not found. Please check the order id again", entityType, entityId));
+        super(String.format("%s entity with id: '%s' not found. Please check the %s id again", entityType, entityId, entityType));
     }
 }

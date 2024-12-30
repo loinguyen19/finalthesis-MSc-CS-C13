@@ -1,20 +1,11 @@
-package com.nbloi.cqrses.commonapi.command;
+package com.nbloi.cqrses.commonapi.command.customer;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.nbloi.cqrses.commonapi.enums.OrderStatus;
-import com.nbloi.cqrses.query.entity.Order;
-import com.nbloi.cqrses.query.entity.OrderItem;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
 
 public class CreateCustomerCommand {
 
@@ -27,7 +18,7 @@ public class CreateCustomerCommand {
 
     @Column(nullable = false, updatable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime createdAt;
+    private final LocalDateTime createdAt;
 
     public CreateCustomerCommand() {
         this.createdAt = LocalDateTime.now();
@@ -87,8 +78,8 @@ public class CreateCustomerCommand {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+//    public void setCreatedAt(LocalDateTime createdAt) {
+//        this.createdAt = createdAt;
+//    }
 
 }

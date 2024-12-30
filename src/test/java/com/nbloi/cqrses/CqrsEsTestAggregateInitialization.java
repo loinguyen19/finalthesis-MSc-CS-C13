@@ -1,23 +1,21 @@
 package com.nbloi.cqrses;
 
+import com.nbloi.cqrses.command.aggregate.CustomerAggregate;
 import com.nbloi.cqrses.command.aggregate.OrderAggregate;
 import com.nbloi.cqrses.commonapi.command.CreateOrderCommand;
 import com.nbloi.cqrses.commonapi.command.ShipOrderCommand;
+import com.nbloi.cqrses.commonapi.command.customer.UpdateCustomerCommand;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
+import com.nbloi.cqrses.commonapi.event.customer.CustomerUpdatedEvent;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OrderItem;
 import com.nbloi.cqrses.query.entity.Product;
-import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.service.OrderEventHandler;
-import io.grpc.netty.shaded.io.netty.util.internal.MathUtil;
-import kafka.api.IntegrationTestHarness;
-import kafka.api.test.ProducerCompressionTest;
-import org.apache.zookeeper.Op;
 import org.aspectj.lang.annotation.Before;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.test.aggregate.AggregateTestFixture;
@@ -31,12 +29,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.UUID;
 import java.util.List;
 
 @SpringBootTest
-class CqrsEsApplicationTests {
+class CqrsEsTestAggregateInitialization {
 
 	@Autowired
 	private OrderEventHandler orderEventHandler;
@@ -165,5 +162,20 @@ class CqrsEsApplicationTests {
 						new OrderConfirmedEvent(orderId))
 				.when(new ShipOrderCommand(orderId))
 				.expectEvents(new OrderShippedEvent(orderId));
+	}
+
+	@Test
+	public void testAggregateInitialization() {
+		String customerId = "123";
+		String name = "John Doe";
+		String email = "john.doe@example.com";
+		String phoneNumber = "123456789";
+		BigDecimal balance = new BigDecimal("100.00");
+
+		FixtureConfiguration<CustomerAggregate> fixture = new AggregateTestFixture<>(CustomerAggregate.class);
+
+		fixture.givenNoPriorActivity()
+				.when(new UpdateCustomerCommand(customerId, name, email, phoneNumber, balance))
+				.expectEvents(new CustomerUpdatedEvent(customerId, name, email, phoneNumber, balance));
 	}
 }

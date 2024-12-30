@@ -17,9 +17,9 @@ import java.util.Set;
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID, generator = "UUID")
-    @UuidGenerator
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+//    @GeneratedValue(strategy = GenerationType.UUID, generator = "UUID")
+//    @UuidGenerator
+//    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private String productId;
 
     private String name;

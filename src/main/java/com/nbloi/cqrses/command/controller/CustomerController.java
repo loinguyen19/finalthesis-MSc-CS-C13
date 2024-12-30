@@ -1,16 +1,14 @@
 package com.nbloi.cqrses.command.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.commonapi.command.CreateCustomerCommand;
-import com.nbloi.cqrses.commonapi.dto.CreateCustomerRequestDTO;
-import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
+import com.nbloi.cqrses.commonapi.command.customer.CreateCustomerCommand;
+import com.nbloi.cqrses.commonapi.command.customer.UpdateCustomerCommand;
+import com.nbloi.cqrses.commonapi.dto.CustomerDTO;
+import com.nbloi.cqrses.commonapi.event.customer.CustomerDeletedEvent;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllCustomersQuery;
 import com.nbloi.cqrses.commonapi.query.FindCustomerByIdQuery;
-import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Customer;
-import com.nbloi.cqrses.query.entity.Product;
-import com.nbloi.cqrses.query.service.ProductInventoryEventHandler;
+import com.nbloi.cqrses.query.service.CustomerEventHandler;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.EventProcessingModule;
 import org.axonframework.eventsourcing.eventstore.EventStore;
@@ -18,12 +16,14 @@ import org.axonframework.messaging.Message;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -39,6 +39,8 @@ public class CustomerController {
 
     @Autowired
     private EventProcessingModule eventProcessingModule;
+    @Autowired
+    private CustomerEventHandler customerEventHandler;
 
 
     // Autowiring constructor and POST/GET endpoints
@@ -49,7 +51,7 @@ public class CustomerController {
     }
 
     @PostMapping("/create-customer")
-    public CompletableFuture<Void> createCustomer(@RequestBody CreateCustomerRequestDTO request) {
+    public ResponseEntity<CustomerDTO> createCustomer(@RequestBody CustomerDTO request) {
         String customerId = UUID.randomUUID().toString();
         String name = request.getName();
         String email = request.getEmail();
@@ -60,13 +62,13 @@ public class CustomerController {
         CompletableFuture<Void> customerCreated = commandGateway.send(new CreateCustomerCommand(customerId, name,
                email, phoneNumber, balance, createdAt));
 
-        return customerCreated;
+        return new ResponseEntity<>(request, HttpStatus.CREATED);
     }
 
     @PostMapping("/create-listofcustomers")
-    public List<CreateCustomerRequestDTO> createListOfCustomer(@RequestBody CreateCustomerRequestDTO []requestList) {
-        List<CreateCustomerRequestDTO> customersCreatedList = new ArrayList<>();
-        for (CreateCustomerRequestDTO request : requestList) {
+    public ResponseEntity<List<CustomerDTO>> createListOfCustomer(@RequestBody CustomerDTO []requestList) {
+        List<CustomerDTO> customersCreatedList = new ArrayList<>();
+        for (CustomerDTO request : requestList) {
             String customerId = UUID.randomUUID().toString();
             String name = request.getName();
             String email = request.getEmail();
@@ -81,18 +83,45 @@ public class CustomerController {
                 customersCreatedList.add(request);
             }
         }
-        return customersCreatedList;
+        return new ResponseEntity<>(customersCreatedList, HttpStatus.CREATED);
     }
 
+    @PutMapping("/update/{customerId}")
+    public ResponseEntity<Customer> updateCustomer(@PathVariable String customerId, @Validated @RequestBody CustomerDTO customerToUpdate) {
+        commandGateway.send(new UpdateCustomerCommand(
+                customerId,
+                customerToUpdate.getName(),
+                customerToUpdate.getEmail(),
+                customerToUpdate.getPhoneNumber(),
+                customerToUpdate.getBalance()
+        ));
+
+        Customer updatedCustomer = queryGateway.query(new FindCustomerByIdQuery(customerId), ResponseTypes.instanceOf(Customer.class)).join();
+        if (updatedCustomer == null) {throw new UnfoundEntityException(customerId, Customer.class.toString());}
+
+        return new ResponseEntity<>(updatedCustomer, HttpStatus.OK);
+    }
 
     @GetMapping("/all-customers")
-    public CompletableFuture<List<Customer>> findAllCustomers() {
-        return queryGateway.query(new FindAllCustomersQuery(), ResponseTypes.multipleInstancesOf(Customer.class));
+    public ResponseEntity findAllCustomers() {
+        try {
+            List<Customer> customerList = queryGateway.query(new FindAllCustomersQuery(), ResponseTypes.multipleInstancesOf(Customer.class)).join();
+            return new ResponseEntity<>(customerList, HttpStatus.OK);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<>(String.format("An error happened: %s", e.getMessage()), HttpStatus.OK);
+        }
     }
 
     @GetMapping("/findbyid/{customerId}")
-    public CompletableFuture<Customer> findCustomerById(@PathVariable String customerId) {
-        return queryGateway.query(new FindCustomerByIdQuery(customerId), ResponseTypes.instanceOf(Customer.class));
+    public ResponseEntity findCustomerById(@PathVariable String customerId) {
+        try {
+            Customer customer = queryGateway.query(new FindCustomerByIdQuery(customerId), ResponseTypes.instanceOf(Customer.class)).join();
+            return new ResponseEntity<Customer>(customer, HttpStatus.OK);
+        }
+        catch (Exception e) {
+            return new ResponseEntity<String>(String.format("Customer with id: %s can not be found!!!", customerId), HttpStatus.NOT_FOUND);
+        }
     }
 
 
@@ -102,5 +131,19 @@ public class CustomerController {
                 .asStream() // Convert the event store into a stream
                 .map(Message::getPayload) // Extract the payload of each event
                 .collect(Collectors.toList()); // Convert them from stream into the list
+    }
+
+    @DeleteMapping("/delete/{customerId}")
+    public ResponseEntity<String> deleteCustomer(@PathVariable String customerId) {
+//        commandGateway.send(new CustomerDeletedEvent(customerId));
+
+        CustomerDeletedEvent customerDeletedEvent = new CustomerDeletedEvent(customerId);
+        customerEventHandler.delete(customerDeletedEvent);
+
+        return new ResponseEntity<>(customerId, HttpStatus.NO_CONTENT);
+    }
+
+    public boolean aggregateExists(String aggregateId) {
+        return eventStore.readEvents(aggregateId).asStream().findAny().isPresent();
     }
 }

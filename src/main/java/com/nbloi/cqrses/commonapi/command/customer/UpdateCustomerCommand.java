@@ -1,35 +1,27 @@
-package com.nbloi.cqrses.commonapi.dto;
+package com.nbloi.cqrses.commonapi.command.customer;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
+import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-public class CreateCustomerRequestDTO {
+public class UpdateCustomerCommand {
 
+    @TargetAggregateIdentifier
     private String customerId;
     private String name;
     private String email;
     private String phoneNumber;
     private BigDecimal balance;
 
-    @Column(nullable = false, updatable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime createdAt;
-
-    public CreateCustomerRequestDTO() {
-        this.createdAt = LocalDateTime.now();
+    public UpdateCustomerCommand() {
     }
 
-    public CreateCustomerRequestDTO(String customerId, String name, String email, String phoneNumber, BigDecimal balance,
-                                LocalDateTime createdAt) {
+    public UpdateCustomerCommand(String customerId, String name, String email, String phoneNumber, BigDecimal balance) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.balance = balance;
-        this.createdAt = LocalDateTime.now();
     }
 
     public String getCustomerId() {
@@ -70,14 +62,6 @@ public class CreateCustomerRequestDTO {
 
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 
 }
