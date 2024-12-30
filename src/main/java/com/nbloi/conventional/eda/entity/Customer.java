@@ -1,5 +1,6 @@
 package com.nbloi.conventional.eda.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -7,6 +8,7 @@ import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.validator.constraints.UUID;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -19,6 +21,14 @@ public class Customer {
     private String email;
     private String phoneNumber;
     private BigDecimal balance;
+
+    @Column(nullable = false, updatable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
@@ -33,6 +43,8 @@ public class Customer {
     }
 
     public Customer() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     public String getCustomerId() {
@@ -45,10 +57,6 @@ public class Customer {
 
     public String getName() {
         return name;
-    }
-
-    public BigDecimal getBalance() {
-        return balance;
     }
 
     public void setName(String name) {
@@ -79,9 +87,21 @@ public class Customer {
         this.phoneNumber = phoneNumber;
     }
 
+    public BigDecimal getBalance() {
+        return balance;
+    }
+
     public void setBalance(BigDecimal balance) {
         this.balance = balance;
     }
+
+    public LocalDateTime getCreatedAt() {return createdAt;}
+
+    public void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
+
+    public LocalDateTime getUpdatedAt() {return updatedAt;}
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {this.updatedAt = updatedAt;}
 
     @Override
     public String toString() {
@@ -92,5 +112,17 @@ public class Customer {
                 ", phoneNumber='" + phoneNumber + '\'' +
 //                ", orders=" + orders +
                 '}';
+    }
+
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

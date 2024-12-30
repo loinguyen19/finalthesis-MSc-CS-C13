@@ -1,5 +1,6 @@
 package com.nbloi.conventional.eda.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.conventional.eda.dto.CreateOrderRequestDTO;
 import com.nbloi.conventional.eda.dto.OrderItemDTO;
@@ -105,14 +106,9 @@ public class OrderController {
     }
 
     @GetMapping("/all-orders")
-    public List<CreateOrderRequestDTO> findAllOrders() {
+    public List<Order> findAllOrders() {
         List<Order> listOrder = orderEventHandler.readAllOrders();
-        List<CreateOrderRequestDTO> listCreateOrderRequestDTOList = new ArrayList<>();
-        for (Order order : listOrder) {
-            CreateOrderRequestDTO orderRequestDTO = new ObjectMapper().convertValue(order, CreateOrderRequestDTO.class);
-            listCreateOrderRequestDTOList.add(orderRequestDTO);
-        }
-        return listCreateOrderRequestDTOList;
+        return listOrder;
     }
 
     @GetMapping("/findbyid/{orderId}")

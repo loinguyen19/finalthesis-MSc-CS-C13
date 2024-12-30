@@ -1,8 +1,11 @@
 package com.nbloi.conventional.eda.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nbloi.conventional.eda.enums.OrderStatus;
+import jakarta.persistence.Column;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class CreateOrderRequestDTO {
@@ -13,6 +16,14 @@ public class CreateOrderRequestDTO {
     private String currency;
     private String customerId;
     private String paymentId;
+
+    @Column(nullable = false, updatable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updatedAt;
 
     // constructor, getters, equals/hashCode and toString
     public CreateOrderRequestDTO( List<OrderItemDTO> orderItems, BigDecimal totalAmount, String customerId, String currency) {
@@ -40,6 +51,10 @@ public class CreateOrderRequestDTO {
 
     public String getCurrency() {return this.currency;}
 
+    public LocalDateTime getCreatedAt() {return this.createdAt;}
+
+    public LocalDateTime getUpdatedAt() {return this.updatedAt;}
+
     public void setOrderItems(List<OrderItemDTO> orderItems) {
         this.orderItems = orderItems;
     }
@@ -53,5 +68,9 @@ public class CreateOrderRequestDTO {
     public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
 
     public void setCurrency(String currency) {this.currency = currency;}
+
+    public void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {this.updatedAt = updatedAt;}
 
 }

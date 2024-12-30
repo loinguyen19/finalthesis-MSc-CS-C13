@@ -24,15 +24,15 @@ public class EDAApplication {
 	}
 
 
-	@Bean
-	public ObjectMapper objectMapper() {
-		ObjectMapper objectMapper = new ObjectMapper();
-
-		// Register the JavaTimeModule to handle Java 8 date/time types
-		objectMapper.registerModule(new JavaTimeModule());
-
-		// Disable writing dates as timestamps
-		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-		return objectMapper;
-	}
+//	@Bean
+//	public ObjectMapper objectMapper() {
+//		ObjectMapper objectMapper = new ObjectMapper();
+//
+//		// Register the JavaTimeModule to handle Java 8 date/time types
+//		objectMapper.registerModule(new JavaTimeModule());
+//
+//		// Disable writing dates as timestamps
+//		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+//		return objectMapper;
+//	}
 }
