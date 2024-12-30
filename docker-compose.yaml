@@ -1,19 +1,5 @@
 version: '3.3'
 services:
-  axonserver-1:
-    image: axoniq/axonserver:2023.1.0-jdk-17-dev
-    hostname: axonserver-1
-    volumes:
-      - axonserver-data:/axonserver/data
-      - axonserver-events:/axonserver/events
-      - axonserver-log:/axonserver/log
-#      - ./axonserver.properties:/config/axonserver.properties
-    ports:
-      - '8024:8024'
-      - '8124:8124'
-      - '8224:8224'
-    networks:
-      - axon-demo
 
 #  db:
 #    image: mysql:8.0.40-oracle
@@ -106,28 +92,8 @@ services:
     networks:
         - kafka-net
 
-volumes:
-  axonserver-data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/data
-      o: bind
-  axonserver-events:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/events
-      o: bind
-  axonserver-log:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${PWD}/log
-      o: bind
 
 networks:
-  axon-demo:
   kafka-net:
     driver: bridge
 

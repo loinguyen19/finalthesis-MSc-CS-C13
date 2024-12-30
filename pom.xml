@@ -10,10 +10,10 @@
 	</parent>
 
 	<groupId>com.nbloi.finalthesis</groupId>
-	<artifactId>cqrs-es</artifactId>
+	<artifactId>conventional-eda</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>nbloi-cqrs-es</name>
-	<description>Architecture Microservice CQRS Event Sourcing And Axon</description>
+	<description>Conventional Event-driven Architecture Application</description>
 	<properties>
 		<java.version>21</java.version>
 	</properties>
@@ -57,30 +57,6 @@
 			<artifactId>modelmapper</artifactId>
 			<version>2.3.5</version>
 		</dependency>
-		<!-- Axon  -->
-		<!-- https://mvnrepository.com/artifact/org.axonframework/axon-spring-boot-autoconfigure -->
-		<dependency>
-			<groupId>org.axonframework</groupId>
-			<artifactId>axon-spring-boot-starter</artifactId>
-			<version>4.9.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.axonframework</groupId>
-			<artifactId>axon-test</artifactId>
-			<scope>test</scope>
-			<version>4.9.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.axonframework</groupId>
-			<artifactId>axon-server-connector</artifactId>
-			<version>4.9.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.axonframework</groupId>
-			<artifactId>axon-configuration</artifactId>
-			<version>4.9.3</version>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/log4j/log4j -->
 		<dependency>
 			<groupId>log4j</groupId>
@@ -139,18 +115,6 @@
 			<version>1.18.36</version>
 			<scope>provided</scope>
 		</dependency>
-
-<!--		&lt;!&ndash;- Flyway &ndash;&gt;-->
-<!--		<dependency>-->
-<!--			<groupId>org.flywaydb</groupId>-->
-<!--			<artifactId>flyway-core</artifactId>-->
-<!--			<version>9.22.3</version>-->
-<!--		</dependency>-->
-<!--		<dependency>-->
-<!--			<groupId>org.flywaydb</groupId>-->
-<!--			<artifactId>flyway-mysql</artifactId>-->
-<!--			<version>9.22.3</version>-->
-<!--		</dependency>-->
 		<!-- Swagger -->
 		<dependency>
 			<groupId>io.springfox</groupId>
