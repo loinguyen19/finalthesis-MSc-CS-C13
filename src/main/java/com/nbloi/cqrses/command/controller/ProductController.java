@@ -66,44 +66,57 @@ public class ProductController {
     }
 
     @PostMapping("/create-listofproducts")
-    public ResponseEntity<List<ProductDTO>> createListOfProduct(@RequestBody ProductDTO []requestList) {
-        List<ProductDTO> productsCreatedList = new ArrayList<>();
-        for (ProductDTO request : requestList) {
-            String productId = UUID.randomUUID().toString();
-            String name = request.getName();
-            BigDecimal price = request.getPrice();
-            int stock = request.getStock();
-            String currency = request.getCurrency();
+    public ResponseEntity createListOfProduct(@RequestBody ProductDTO []requestList) {
+        try {
+            List<ProductDTO> productsCreatedList = new ArrayList<>();
+            for (ProductDTO request : requestList) {
+                String productId = UUID.randomUUID().toString();
+                String name = request.getName();
+                BigDecimal price = request.getPrice();
+                int stock = request.getStock();
+                String currency = request.getCurrency();
 
-            CompletableFuture<Void> productCreated = commandGateway.send(new CreateProductCommand(productId, name,
-                    price, stock, currency));
-            if (productCreated != null) {
-                request.setProductId(productId);
-                productsCreatedList.add(request);
+                CompletableFuture<Void> productCreated = commandGateway.send(new CreateProductCommand(productId, name,
+                        price, stock, currency));
+                if (productCreated != null) {
+                    request.setProductId(productId);
+                    productsCreatedList.add(request);
+                }
             }
+            return new ResponseEntity<>(productsCreatedList, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Your product requests can not be processed. Please review request payload",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(productsCreatedList, HttpStatus.CREATED);
     }
 
     @GetMapping("/all-products")
-    public List<ProductDTO> findAllProducts() {
-        List<Product> listProduct = queryGateway.query(new FindAllProductsQuery(),
-                ResponseTypes.multipleInstancesOf(Product.class)).join();
+    public ResponseEntity findAllProducts() {
+        try {
+            List<Product> listProduct = queryGateway.query(new FindAllProductsQuery(),
+                    ResponseTypes.multipleInstancesOf(Product.class)).join();
 
-        List<ProductDTO> listProductDTO = new ArrayList<>();
-        for (Product product : listProduct){
-            ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
-            listProductDTO.add(productDTO);
+            List<ProductDTO> listProductDTO = new ArrayList<>();
+            for (Product product : listProduct) {
+                ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
+                listProductDTO.add(productDTO);
+            }
+            return new ResponseEntity<>(listProductDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(String.format("An error happened: %s", e.getMessage()), HttpStatus.OK);
         }
-        return listProductDTO;
     }
 
     @GetMapping("/findbyid/{productId}")
     @ResponseBody
-    public ProductDTO getProductById(@PathVariable String productId) {
-        Product product = queryGateway.query(new FindProductByIdQuery(productId), ResponseTypes.instanceOf(Product.class))
-                .join();
-        return modelMapper.map(product, ProductDTO.class);
+    public ResponseEntity getProductById(@PathVariable String productId) {
+        try {
+            Product product = queryGateway.query(new FindProductByIdQuery(productId), ResponseTypes.instanceOf(Product.class))
+                    .join();
+            return new ResponseEntity(modelMapper.map(product, ProductDTO.class), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<String>(String.format("Product with id: %s can not be found!!!", productId), HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/eventStore/{productId}")
@@ -113,34 +126,43 @@ public class ProductController {
     }
 
     @PutMapping("/update/{productId}")
-    public String updateProduct(@PathVariable String productId, @Validated @RequestBody ProductDTO request) {
-        Product product = queryGateway.query(new FindProductByIdQuery(productId),
-                ResponseTypes.instanceOf(Product.class)).join();
-        if (product == null) {
-            throw new RuntimeException("Product not found");
+    public ResponseEntity updateProduct(@PathVariable String productId, @Validated @RequestBody ProductDTO request) {
+        try {
+            Product product = queryGateway.query(new FindProductByIdQuery(productId),
+                    ResponseTypes.instanceOf(Product.class)).join();
+            if (product == null) {
+                throw new RuntimeException("Product not found");
+            }
+
+            ProductInventoryEvent productInventoryEvent = new ObjectMapper().convertValue(request, ProductInventoryEvent.class);
+
+            commandGateway.send(new ProductInventoryEvent(productId, request.getName(),
+                    request.getStock(), request.getPrice(), request.getCurrency()));
+
+            productInventoryEventHandler.on(productInventoryEvent);
+            Product productUpdated = queryGateway.query(new FindProductByIdQuery(productId),
+                    ResponseTypes.instanceOf(Product.class)).join();
+
+            return new ResponseEntity(productUpdated, HttpStatus.OK);
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(String.format("Product with id: %s can not be found!!!", productId), HttpStatus.NOT_FOUND);
         }
-
-        ProductInventoryEvent productInventoryEvent = new ObjectMapper().convertValue(request, ProductInventoryEvent.class);
-
-        commandGateway.send(new ProductInventoryEvent(productId, request.getName(),
-                request.getStock(), request.getPrice(), request.getCurrency()));
-
-        productInventoryEventHandler.on(productInventoryEvent);
-        Product productUpdated = queryGateway.query(new FindProductByIdQuery(productId),
-                ResponseTypes.instanceOf(Product.class)).join();
-
-        return "Product with id: " + productId + " and " + " name: " + productUpdated.getName() + " was successfully updated";
     }
 
     @DeleteMapping("/delete/{productId}")
-    public String deleteProduct(@PathVariable String productId) {
-        Product product = queryGateway.query(new FindProductByIdQuery(productId),
-                ResponseTypes.instanceOf(Product.class)).join();
-        if (product == null) {
-            throw new RuntimeException("Product not found");
+    public ResponseEntity<String> deleteProduct(@PathVariable String productId) {
+        try {
+            Product product = queryGateway.query(new FindProductByIdQuery(productId),
+                    ResponseTypes.instanceOf(Product.class)).join();
+            if (product == null) {
+                throw new RuntimeException("Product not found");
+            }
+            ProductInventoryEvent productInventoryEvent = new ObjectMapper().convertValue(product, ProductInventoryEvent.class);
+            productInventoryEventHandler.off(productInventoryEvent);
+            return new ResponseEntity<>(String.format("Product with id: %s has been deleted successfully!", productId), HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(String.format("Product with id: %s can not be found!!!", productId), HttpStatus.NOT_FOUND);
         }
-        ProductInventoryEvent productInventoryEvent = new ObjectMapper().convertValue(product, ProductInventoryEvent.class);
-        productInventoryEventHandler.off(productInventoryEvent);
-        return "Product with id: " + productId + " and name: " + product.getName() + " was successfully deleted";
     }
 }

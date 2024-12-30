@@ -51,55 +51,66 @@ public class CustomerController {
     }
 
     @PostMapping("/create-customer")
-    public ResponseEntity<CustomerDTO> createCustomer(@RequestBody CustomerDTO request) {
+    public ResponseEntity createCustomer(@RequestBody CustomerDTO request) {
         String customerId = UUID.randomUUID().toString();
         String name = request.getName();
         String email = request.getEmail();
         String phoneNumber = request.getPhoneNumber();
         BigDecimal balance = request.getBalance();
         LocalDateTime createdAt = LocalDateTime.now();
-
-        CompletableFuture<Void> customerCreated = commandGateway.send(new CreateCustomerCommand(customerId, name,
-               email, phoneNumber, balance, createdAt));
-
-        return new ResponseEntity<>(request, HttpStatus.CREATED);
+        try {
+            CompletableFuture<Void> customerCreated = commandGateway.send(new CreateCustomerCommand(customerId, name,
+                    email, phoneNumber, balance, createdAt));
+            request.setCustomerId(customerId);
+            return new ResponseEntity<>(request, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Your customer request can not be processed. Please review request payload",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PostMapping("/create-listofcustomers")
-    public ResponseEntity<List<CustomerDTO>> createListOfCustomer(@RequestBody CustomerDTO []requestList) {
-        List<CustomerDTO> customersCreatedList = new ArrayList<>();
-        for (CustomerDTO request : requestList) {
-            String customerId = UUID.randomUUID().toString();
-            String name = request.getName();
-            String email = request.getEmail();
-            String phoneNumber = request.getPhoneNumber();
-            BigDecimal balance = request.getBalance();
-            LocalDateTime createdAt = LocalDateTime.now();
+    public ResponseEntity createListOfCustomer(@RequestBody CustomerDTO []requestList) {
+        try {
+            List<CustomerDTO> customersCreatedList = new ArrayList<>();
+            for (CustomerDTO request : requestList) {
+                String customerId = UUID.randomUUID().toString();
+                String name = request.getName();
+                String email = request.getEmail();
+                String phoneNumber = request.getPhoneNumber();
+                BigDecimal balance = request.getBalance();
+                LocalDateTime createdAt = LocalDateTime.now();
 
-            CompletableFuture<Void> customerCreated = commandGateway.send(new CreateCustomerCommand(customerId, name,
-                    email, phoneNumber, balance, createdAt));
-            if (customerCreated != null) {
-                request.setCustomerId(customerId);
-                customersCreatedList.add(request);
+                CompletableFuture<Void> customerCreated = commandGateway.send(new CreateCustomerCommand(customerId, name,
+                        email, phoneNumber, balance, createdAt));
+                if (customerCreated != null) {
+                    request.setCustomerId(customerId);
+                    customersCreatedList.add(request);
+                }
             }
+            return new ResponseEntity<>(customersCreatedList, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Your customer requests can not be processed. Please review request payload",
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(customersCreatedList, HttpStatus.CREATED);
     }
 
     @PutMapping("/update/{customerId}")
-    public ResponseEntity<Customer> updateCustomer(@PathVariable String customerId, @Validated @RequestBody CustomerDTO customerToUpdate) {
-        commandGateway.send(new UpdateCustomerCommand(
-                customerId,
-                customerToUpdate.getName(),
-                customerToUpdate.getEmail(),
-                customerToUpdate.getPhoneNumber(),
-                customerToUpdate.getBalance()
-        ));
+    public ResponseEntity updateCustomer(@PathVariable String customerId, @Validated @RequestBody CustomerDTO customerToUpdate) {
+        try {
+            commandGateway.send(new UpdateCustomerCommand(
+                    customerId,
+                    customerToUpdate.getName(),
+                    customerToUpdate.getEmail(),
+                    customerToUpdate.getPhoneNumber(),
+                    customerToUpdate.getBalance()
+            ));
+            Customer updatedCustomer = queryGateway.query(new FindCustomerByIdQuery(customerId), ResponseTypes.instanceOf(Customer.class)).join();
+            return new ResponseEntity<>(updatedCustomer, HttpStatus.OK);
 
-        Customer updatedCustomer = queryGateway.query(new FindCustomerByIdQuery(customerId), ResponseTypes.instanceOf(Customer.class)).join();
-        if (updatedCustomer == null) {throw new UnfoundEntityException(customerId, Customer.class.toString());}
-
-        return new ResponseEntity<>(updatedCustomer, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(String.format("Customer with id: %s can not be found!!!", customerId), HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/all-customers")
@@ -135,12 +146,14 @@ public class CustomerController {
 
     @DeleteMapping("/delete/{customerId}")
     public ResponseEntity<String> deleteCustomer(@PathVariable String customerId) {
-//        commandGateway.send(new CustomerDeletedEvent(customerId));
+        try {
+            CustomerDeletedEvent customerDeletedEvent = new CustomerDeletedEvent(customerId);
+            customerEventHandler.delete(customerDeletedEvent);
 
-        CustomerDeletedEvent customerDeletedEvent = new CustomerDeletedEvent(customerId);
-        customerEventHandler.delete(customerDeletedEvent);
-
-        return new ResponseEntity<>(customerId, HttpStatus.NO_CONTENT);
+            return new ResponseEntity<>(customerId, HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return new ResponseEntity<>(String.format("Customer with id: %s can not be found to remove!!!", customerId), HttpStatus.NOT_FOUND);
+        }
     }
 
     public boolean aggregateExists(String aggregateId) {

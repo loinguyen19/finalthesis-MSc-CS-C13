@@ -28,8 +28,6 @@ public class CustomerEventHandler {
 
     @Autowired
     private CustomerRepository customerRepository;
-    @Autowired
-    private View error;
 
     @EventHandler
     public void on(CustomerCreatedEvent event) {
