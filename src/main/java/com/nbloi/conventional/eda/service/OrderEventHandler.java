@@ -56,74 +56,73 @@ public class OrderEventHandler {
         this.customerRepository = customerRepository;
     }
 
-    public Order on(OrderCreatedEvent event) {
-        Order order = new Order();
+    public void on(OrderCreatedEvent event) {
         try {
-                String orderId = event.getOrderId();
+            String orderId = event.getOrderId();
 
-//                Order order = new Order();
-                order.setOrderId(orderId);
-                order.setOrderCreatedStatus(OrderStatus.CREATED.toString());
+            Order order = new Order();
+            order.setOrderId(orderId);
+            order.setOrderCreatedStatus(OrderStatus.CREATED.toString());
 
-                Set<OrderItem> listOfOrderItems = event.getOrderItems().stream().map(item -> {
-                    OrderItem orderItem = new OrderItem();
-                    orderItem.setOrderItemId(item.getOrderItemId());
-                    orderItem.setQuantity(item.getQuantity());
-                    orderItem.setPrice(item.getPrice());
-                    orderItem.setTotalPrice(item.getTotalPrice());
-                    orderItem.setCurrency(item.getCurrency());
-                    orderItem.setOrder(order); // Properly assign the parent order
+            Set<OrderItem> listOfOrderItems = event.getOrderItems().stream().map(item -> {
+                OrderItem orderItem = new OrderItem();
+                orderItem.setOrderItemId(item.getOrderItemId());
+                orderItem.setQuantity(item.getQuantity());
+                orderItem.setPrice(item.getPrice());
+                orderItem.setTotalPrice(item.getTotalPrice());
+                orderItem.setCurrency(item.getCurrency());
+                orderItem.setOrder(order); // Properly assign the parent order
 
-                    // check if the product in each order item exists. Then, check if product inventory still has enough stock
-                    Product product = productRepository.findById(item.getProduct().getProductId()).orElse(null);
-                    if (product == null) {
-                        throw new UnfoundEntityException(item.getProduct().getProductId(), Product.class.getSimpleName());
-                    } else {
-                        if (product.getStock() < item.getQuantity()) {
-                            throw new OutOfProductStockException();
-                        }
+                // check if the product in each order item exists. Then, check if product inventory still has enough stock
+                Product product = productRepository.findById(item.getProduct().getProductId()).orElse(null);
+                if (product == null) {
+                    throw new UnfoundEntityException(item.getProduct().getProductId(), Product.class.getSimpleName());
+                } else {
+                    if (product.getStock() < item.getQuantity()) {
+                        throw new OutOfProductStockException();
                     }
-                    // will update product inventory in ProductInventoryEventConsumer
-                    // whenever OrderEventHandler publish the event to broker successfully
+                }
+                // will update product inventory in ProductInventoryEventConsumer
+                // whenever OrderEventHandler publish the event to broker successfully
 
-                    orderItem.setProduct(product);
+                orderItem.setProduct(product);
 
-                    return orderItem;
-                }).collect(Collectors.toSet());
+                return orderItem;
+            }).collect(Collectors.toSet());
 
-                order.setOrderItems(listOfOrderItems);
-                order.setTotalAmount(event.getTotalAmount());
-                order.setCurrency(event.getCurrency());
+            order.setOrderItems(listOfOrderItems);
+            order.setTotalAmount(event.getTotalAmount());
+            order.setCurrency(event.getCurrency());
 
-                // Find the customer in database and set them into order
-                Customer customer = customerRepository.findById(event.getCustomerId()).orElse(null);
-                order.setCustomer(customer);
+            // Find the customer in database and set them into order
+            Customer customer = customerRepository.findById(event.getCustomerId()).orElse(null);
+            order.setCustomer(customer);
 
-                // Instantiate a new Payment object and set it with received payment id from order created event
-                Payment payment = new Payment();
-                    payment.setPaymentId(event.getPaymentId());
-                    payment.setTotalAmount(event.getTotalAmount());
-                    payment.setPaymentStatus(PaymentStatus.CREATED.toString());
-                    payment.setOrderId(orderId);
-                    payment.setCurrency(event.getCurrency());
-                    payment.setOrder(order);
-                order.setPayment(payment);
-                paymentRepository.save(payment);
+            // Instantiate a new Payment object and set it with received payment id from order created event
+            Payment payment = new Payment();
+                payment.setPaymentId(event.getPaymentId());
+                payment.setTotalAmount(event.getTotalAmount());
+                payment.setPaymentStatus(PaymentStatus.CREATED.toString());
+                payment.setOrderId(orderId);
+                payment.setCurrency(event.getCurrency());
+                payment.setOrder(order);
+            order.setPayment(payment);
+            paymentRepository.save(payment);
 
-                // Persist the Order and its OrderItems using the repository
-                log.info("Order created with ID: {}", orderId);
-                orderRepository.save(order);
+            // Persist the Order and its OrderItems using the repository
+            log.info("Order created with ID: {}", orderId);
+            orderRepository.save(order);
 
-                String orderCreatedEventPayload = new ObjectMapper().writeValueAsString(event);
-                // Publish the order created event into Kafka broker
-                orderCreatedEventProducer.sendOrderEvent(orderCreatedEventPayload);
-                log.info("Send Order Created Event with payload: {}", orderCreatedEventPayload);
+            String orderCreatedEventPayload = new ObjectMapper().writeValueAsString(event);
+
+            // Publish the order created event into Kafka broker
+            orderCreatedEventProducer.sendOrderEvent(orderCreatedEventPayload);
+            log.info("Send Order Created Event with payload: {}", orderCreatedEventPayload);
 
         } catch (Exception e){
             // Log the error for more specific message
             LOGGER.error("Error handling event: {}", event, e);
         }
-        return order;
     }
 
 

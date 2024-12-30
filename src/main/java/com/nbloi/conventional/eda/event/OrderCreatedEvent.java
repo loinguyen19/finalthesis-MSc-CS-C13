@@ -22,9 +22,9 @@ public class OrderCreatedEvent {
     private String paymentId;
     private String currency;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+//    @Column(nullable = false)
+//    private LocalDateTime createdAt;
 
     private String type;
 
@@ -39,7 +39,6 @@ public class OrderCreatedEvent {
         this.currency = currency;
         this.customerId = customerId;
         this.paymentId = paymentId;
-//        this.createdAt = LocalDateTime.now();
         this.type = EventType.ORDER_CREATED_EVENT.toString();
     }
 
@@ -59,7 +58,7 @@ public class OrderCreatedEvent {
 
     public String getPaymentId() {return paymentId;}
 
-    public LocalDateTime getCreatedAt() {return createdAt;}
+//    public LocalDateTime getCreatedAt() {return createdAt;}
 
     public String getCurrency() {return currency;}
 
@@ -81,7 +80,7 @@ public class OrderCreatedEvent {
 
     public void setPaymentId(String paymentId) {this.paymentId = paymentId;}
 
-    public void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
+//    public void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
 
     public void setCurrency(String currency) {this.currency = currency;}
 
@@ -115,10 +114,5 @@ public class OrderCreatedEvent {
                 ", paymentId='" + paymentId + '\'' +
                 ", currency='" + currency + '\'' +
                 '}';
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
     }
 }

@@ -7,7 +7,7 @@ import java.util.List;
 
 public class CreateOrderRequestDTO {
 
-    private OrderStatus orderStatus;
+    private String orderStatus;
     private List<OrderItemDTO> orderItems;
     private BigDecimal totalAmount;
     private String currency;
@@ -16,7 +16,7 @@ public class CreateOrderRequestDTO {
 
     // constructor, getters, equals/hashCode and toString
     public CreateOrderRequestDTO( List<OrderItemDTO> orderItems, BigDecimal totalAmount, String customerId, String currency) {
-        this.orderStatus = OrderStatus.CREATED;
+        this.orderStatus = OrderStatus.CREATED.toString();
         this.orderItems = orderItems;
         this.totalAmount = totalAmount;
         this.customerId = customerId;
@@ -30,7 +30,7 @@ public class CreateOrderRequestDTO {
         return orderItems;
     }
 
-    public OrderStatus getOrderStatus() {return this.orderStatus;}
+    public String getOrderStatus() {return this.orderStatus;}
 
     public BigDecimal getTotalAmount() {return this.totalAmount;}
 
@@ -44,7 +44,7 @@ public class CreateOrderRequestDTO {
         this.orderItems = orderItems;
     }
 
-    public void setOrderStatus(OrderStatus orderStatus) {this.orderStatus = orderStatus;}
+    public void setOrderStatus(String orderStatus) {this.orderStatus = orderStatus;}
 
     public void setTotalAmount(BigDecimal totalAmount) {this.totalAmount = totalAmount;}
 
