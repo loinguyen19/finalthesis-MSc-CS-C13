@@ -6,6 +6,7 @@ import com.nbloi.cqrses.commonapi.command.CreateOrderCommand;
 import com.nbloi.cqrses.commonapi.command.ShipOrderCommand;
 import com.nbloi.cqrses.commonapi.command.customer.UpdateCustomerCommand;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
+import com.nbloi.cqrses.commonapi.enums.SystemDefault;
 import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;

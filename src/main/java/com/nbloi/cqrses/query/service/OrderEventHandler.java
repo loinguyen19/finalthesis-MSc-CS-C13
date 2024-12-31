@@ -1,6 +1,7 @@
 package com.nbloi.cqrses.query.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
@@ -84,8 +85,6 @@ public class OrderEventHandler {
                             throw new OutOfProductStockException();
                         }
                     }
-                    // will update product inventory in ProductInventoryEventConsumer
-                    // whenever OrderEventHandler publish the event to broker successfully
 
                     orderItem.setProduct(product);
 

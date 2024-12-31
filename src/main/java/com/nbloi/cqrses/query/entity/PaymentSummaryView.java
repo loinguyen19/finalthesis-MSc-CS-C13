@@ -32,6 +32,7 @@ public class PaymentSummaryView {
 
 
     public PaymentSummaryView() {
+        paymentDate = LocalDateTime.now();
     }
 
     public PaymentSummaryView(String paymentSummaryId, String orderId, String paymentId, String paymentStatus,
@@ -103,10 +104,10 @@ public class PaymentSummaryView {
                 ", paymentTotalAmount=" + paymentTotalAmount +
                 '}';
     }
-
-    @PrePersist
-    protected void onCreate() {
-        paymentDate = LocalDateTime.now();
-    }
+//
+//    @PrePersist
+//    protected void onCreate() {
+//        paymentDate = LocalDateTime.now();
+//    }
 
 }

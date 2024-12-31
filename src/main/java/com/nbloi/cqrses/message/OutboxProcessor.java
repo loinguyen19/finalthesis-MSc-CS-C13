@@ -3,10 +3,7 @@ package com.nbloi.cqrses.message;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
-import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
-import com.nbloi.cqrses.commonapi.event.PaymentCreatedEvent;
-import com.nbloi.cqrses.commonapi.event.PaymentFailedEvent;
+import com.nbloi.cqrses.commonapi.event.*;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OutboxMessage;
@@ -103,7 +100,9 @@ public class OutboxProcessor {
                         throw new RuntimeException("Your total balance is not sufficient to pay this event");
 
                     } else if (Objects.equals(message.getEventType(), EventType.ORDER_CONFIRMED_EVENT.toString())) {
-                        orderCreatedEventProducer.sendOrderConfirmedEvent(message.getPayload());
+                        OrderConfirmedEvent orderConfirmedEvent = new ObjectMapper().readValue(message.getPayload(), OrderConfirmedEvent.class);
+                        String orderConfirmedEventPayload = new ObjectMapper().writeValueAsString(orderConfirmedEvent);
+                        orderCreatedEventProducer.sendOrderConfirmedEvent(orderConfirmedEventPayload);
                         log.info("Produce OrderConfirmedEvent to topics order_confirmed_events: {}", messages);
 
                         message.setStatus("PROCESSED");
@@ -128,7 +127,13 @@ public class OutboxProcessor {
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
                     }
-
+                    else if (Objects.equals(message.getEventType(), EventType.CUSTOMER_CREATED_EVENT.toString()) ||
+                        Objects.equals(message.getEventType(), EventType.CUSTOMER_UPDATED_EVENT.toString()) ||
+                            Objects.equals(message.getEventType(), EventType.CUSTOMER_DELETED_EVENT.toString())) {
+                        message.setStatus("PROCESSED");
+                        message.setUpdatedAt(LocalDateTime.now());
+                        outboxRepository.save(message);
+                    }
                     log.info("Message with event type {}, status {} persisted in Outbox Message table: {}",
                             message.getEventType(), message.getStatus() ,message.getPayload());
                 }

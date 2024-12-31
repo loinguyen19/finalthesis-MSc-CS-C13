@@ -46,7 +46,7 @@ public class PaymentSummarizedEventConsumer {
         log.info("Received Order Shipped Event: {} to send to Payment Summarized View", orderShippedEvent);
         OrderShippedEvent shippedEvent = new ObjectMapper().readValue(orderShippedEvent, OrderShippedEvent.class);
         Order order = orderRepository.findById(shippedEvent.getOrderId()).get();
-        Payment payment =order.getPayment();
+        Payment payment = order.getPayment();
         String paymentStatus = payment.getPaymentStatus();
 
         if (paymentStatus.contains(PaymentStatus.COMPLETED.toString())) {

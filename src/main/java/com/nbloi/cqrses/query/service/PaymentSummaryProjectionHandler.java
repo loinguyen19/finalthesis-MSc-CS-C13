@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
@@ -36,8 +37,9 @@ public class PaymentSummaryProjectionHandler {
     public void onPaymentSummarize(PaymentCompletedEvent event) throws JsonProcessingException {
         PaymentSummaryView view = generatePaymentSummaryView(event.getOrderId(), event.getPaymentId(),
                 event.getPaymentStatus(), event.getPaymentDate(), event.getTotalAmount());
-
-        String paymentSummaryEventPayload = new ObjectMapper().writeValueAsString(view);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        String paymentSummaryEventPayload = objectMapper.writeValueAsString(view);
 
         // Create message for outbox message
         OutboxMessage outboxMessage = new OutboxMessage(UUID.randomUUID().toString(),
@@ -49,7 +51,7 @@ public class PaymentSummaryProjectionHandler {
         // Send message to Outbox message queue for Product Inventory Event
         outboxRepository.save(outboxMessage);
         log.info("Processing message PaymentCompletedEvent in PaymentSummaryView in OutboxMessage with payload: {}",
-                outboxMessage.getPayload());
+                paymentSummaryEventPayload);
     }
 
     @EventHandler
@@ -76,13 +78,13 @@ public class PaymentSummaryProjectionHandler {
 
     private PaymentSummaryView generatePaymentSummaryView(String orderId, String paymentId, String PaymentStatus,
                                             LocalDateTime paymentDate, BigDecimal totalAmount) {
-        PaymentSummaryView paymentSummaryView = new PaymentSummaryView();
-        paymentSummaryView.setPaymentSummaryId(UUID.randomUUID().toString());
-        paymentSummaryView.setOrderId(orderId);
-        paymentSummaryView.setPaymentId(paymentId);
-        paymentSummaryView.setPaymentStatus(PaymentStatus);
-        paymentSummaryView.setPaymentDate(paymentDate);
-        paymentSummaryView.setPaymentTotalAmount(totalAmount);
+        PaymentSummaryView paymentSummaryView = new PaymentSummaryView(
+            UUID.randomUUID().toString(),
+            orderId,
+            paymentId,
+            PaymentStatus,
+            paymentDate,
+            totalAmount);
         paymentSummaryViewRepository.save(paymentSummaryView);
 
         return paymentSummaryView;

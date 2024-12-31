@@ -44,7 +44,7 @@ public class OrderShippedEventConsumer {
 
         } catch(Exception e){
             e.printStackTrace();
-            throw new RuntimeException("Exception in handleOrderConfirmedEvent");
+            throw new RuntimeException("Exception in handleOrderShippedEvent");
         }
     }
 }

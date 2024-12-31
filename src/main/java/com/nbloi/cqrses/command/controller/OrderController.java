@@ -20,6 +20,8 @@ import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.queryhandling.QueryGateway;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = "/api/orders")
+@RequestMapping(path = "/api/v1/orders")
 public class OrderController {
 
     private final CommandGateway commandGateway;
@@ -48,35 +50,39 @@ public class OrderController {
     }
 
     @PostMapping("/create-order")
-    public CompletableFuture<Void> createOrder(@RequestBody CreateOrderRequestDTO request) {
-        String orderId = UUID.randomUUID().toString();
-        String customerId = request.getCustomerId();
-        String paymentId = UUID.randomUUID().toString();
+    public ResponseEntity<CompletableFuture<Void>> createOrder(@RequestBody CreateOrderRequestDTO request) {
+        try {
+            String orderId = UUID.randomUUID().toString();
+            String customerId = request.getCustomerId();
+            String paymentId = UUID.randomUUID().toString();
 
-        List<OrderItemDTO> listOrderItemsDTO = request.getOrderItems();
-        List<OrderItem> listOrderItems = new ArrayList<>();
+            List<OrderItemDTO> listOrderItemsDTO = request.getOrderItems();
+            List<OrderItem> listOrderItems = new ArrayList<>();
 
             for (OrderItemDTO oDTO : listOrderItemsDTO) {
-            Product productByIdQuery = productInventoryEventHandler.handle(new FindProductByIdQuery(oDTO.getProductId()));
+                Product productByIdQuery = productInventoryEventHandler.handle(new FindProductByIdQuery(oDTO.getProductId()));
 
-            if (productByIdQuery.equals(new Product())) {
-                throw new UnfoundEntityException(oDTO.getProductId(), "Product");
-            }
-            // Update the quantity of product by id
-             else if (productByIdQuery.getStock() < oDTO.getQuantity()) {
-                throw new OutOfProductStockException();
-            }
+                if (productByIdQuery.equals(new Product())) {
+                    throw new UnfoundEntityException(oDTO.getProductId(), "Product");
+                }
+                // Update the quantity of product by id
+                else if (productByIdQuery.getStock() < oDTO.getQuantity()) {
+                    throw new OutOfProductStockException();
+                }
 
-             // mapping between CreateOrderRequestDTO and Order
-            OrderItem orderItem = new ObjectMapper().convertValue(oDTO, OrderItem.class);
-             orderItem.setOrderItemId(UUID.randomUUID().toString());
-             orderItem.setProduct(productByIdQuery);
-            listOrderItems.add(orderItem);
+                // mapping between CreateOrderRequestDTO and Order
+                OrderItem orderItem = new ObjectMapper().convertValue(oDTO, OrderItem.class);
+                orderItem.setOrderItemId(UUID.randomUUID().toString());
+                orderItem.setProduct(productByIdQuery);
+                listOrderItems.add(orderItem);
             }
-        CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, listOrderItems,
-                request.getTotalAmount(), request.getCurrency(), customerId, paymentId));
+            CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, listOrderItems,
+                    request.getTotalAmount(), request.getCurrency(), customerId, paymentId));
 
-        return orderCreated;
+            return new ResponseEntity<>(orderCreated, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // we can not implement "confirm-order" on the interface because it should be done in the backend and after order being created and paid succesfully

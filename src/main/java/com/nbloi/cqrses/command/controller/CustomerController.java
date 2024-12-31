@@ -4,6 +4,7 @@ import com.nbloi.cqrses.commonapi.command.customer.CreateCustomerCommand;
 import com.nbloi.cqrses.commonapi.command.customer.UpdateCustomerCommand;
 import com.nbloi.cqrses.commonapi.dto.CustomerDTO;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerDeletedEvent;
+import com.nbloi.cqrses.commonapi.event.customer.CustomerUpdatedEvent;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllCustomersQuery;
 import com.nbloi.cqrses.commonapi.query.FindCustomerByIdQuery;
@@ -30,7 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(path = "/api/customers")
+@RequestMapping(path = "/api/v1/customers")
 public class CustomerController {
 
     private final CommandGateway commandGateway;
@@ -98,13 +99,14 @@ public class CustomerController {
     @PutMapping("/update/{customerId}")
     public ResponseEntity updateCustomer(@PathVariable String customerId, @Validated @RequestBody CustomerDTO customerToUpdate) {
         try {
-            commandGateway.send(new UpdateCustomerCommand(
+            CustomerUpdatedEvent event = new CustomerUpdatedEvent(
                     customerId,
                     customerToUpdate.getName(),
                     customerToUpdate.getEmail(),
                     customerToUpdate.getPhoneNumber(),
                     customerToUpdate.getBalance()
-            ));
+            );
+            customerEventHandler.on(event);
             Customer updatedCustomer = queryGateway.query(new FindCustomerByIdQuery(customerId), ResponseTypes.instanceOf(Customer.class)).join();
             return new ResponseEntity<>(updatedCustomer, HttpStatus.OK);
 

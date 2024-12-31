@@ -37,7 +37,7 @@ public class CustomerOrderProjectionHandler {
         customerOrderView.setCustomerOrderViewId(UUID.randomUUID().toString());
         customerOrderView.setCustomerId(event.getCustomerId());
         customerOrderView.setOrderId(event.getOrderId());
-        customerOrderView.setOrderId(event.getOrderId());
+        customerOrderView.setOrderStatus(event.getOrderStatus());
         customerOrderView.setOrderDate(event.getCreatedAt());
         customerOrderView.setCustomerName(customer.getName());
         customerOrderView.setTotalOrderAmount(event.getTotalAmount());

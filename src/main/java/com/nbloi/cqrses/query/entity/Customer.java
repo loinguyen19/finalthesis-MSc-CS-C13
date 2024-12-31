@@ -35,13 +35,14 @@ public class Customer {
     private Set<Order> orders;
 
     public Customer(String customerId, String name, String email, String phoneNumber, BigDecimal balance,
-                    LocalDateTime createdAt) {
+                    LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.balance = balance;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public Customer() {

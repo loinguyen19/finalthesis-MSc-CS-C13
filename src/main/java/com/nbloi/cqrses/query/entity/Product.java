@@ -1,16 +1,20 @@
 package com.nbloi.cqrses.query.entity;
 
-import lombok.Builder;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.nbloi.cqrses.commonapi.enums.SystemDefault;
+import lombok.*;
 //import javax.persistence.*;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
+@Getter
+@Setter
 @Data
 @Builder
 @Entity

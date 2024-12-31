@@ -1,0 +1,22 @@
+{
+  "customer": [
+    {
+      "name": "test1",
+      "email": "test1@gmail.com"
+    },
+    {
+      "name": "test2",
+      "email": "test2@gmail.com"
+    }
+  ],
+
+  "orderItem": [
+      {
+        "productId": "UUID-6",
+        "quantity": "5",
+        "price": "15.2",
+        "totalPrice": "76",
+        "currency": "VND"
+      }
+    ]
+}

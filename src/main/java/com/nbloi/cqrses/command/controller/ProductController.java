@@ -29,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/api/v1/products")
 public class ProductController {
 
     private final QueryGateway queryGateway;

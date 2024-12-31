@@ -1,12 +1,16 @@
 package com.nbloi.cqrses.query.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
 @Entity
 public class ProductSalesView {
 
@@ -20,15 +24,28 @@ public class ProductSalesView {
     private int totalQuantitySold;
     private double totalRevenue;
 
+    @Column(nullable = false, updatable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime updatedAt;
+
 
     public ProductSalesView() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
-    public ProductSalesView(String productId, String productName, int totalQuantitySold, double totalRevenue) {
+    public ProductSalesView(String productId, String productName, int totalQuantitySold, double totalRevenue,
+                            LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.productId = productId;
         this.productName = productName;
         this.totalQuantitySold = totalQuantitySold;
         this.totalRevenue = totalRevenue;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     public String getProductSalesViewId() {
@@ -80,5 +97,16 @@ public class ProductSalesView {
                 ", totalQuantitySold='" + totalQuantitySold + '\'' +
                 ", totalRevenue='" + totalRevenue + '\'' +
                 '}';
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

@@ -1,11 +1,15 @@
 package com.nbloi.cqrses.query.service;
 
+import com.nbloi.cqrses.commonapi.event.PaymentFailedEvent;
 import com.nbloi.cqrses.commonapi.event.ProductCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.ProductInventoryEvent;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllProductsQuery;
 import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
+import com.nbloi.cqrses.query.entity.Order;
+import com.nbloi.cqrses.query.entity.OrderItem;
 import com.nbloi.cqrses.query.entity.Product;
+import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.repository.ProductRepository;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
@@ -13,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +27,9 @@ import java.util.List;
 public class ProductInventoryEventHandler {
 
     @Autowired
-    ProductRepository productRepository;
+    private ProductRepository productRepository;
+    @Autowired
+    private OrderRepository orderRepository;
 
     public ProductInventoryEventHandler(ProductRepository productRepository) {
         super();
@@ -57,6 +65,29 @@ public class ProductInventoryEventHandler {
         Product product = productRepository.findById(event.getProductId()).orElse(null);
         if (product == null) {throw new UnfoundEntityException(event.getProductId(), Product.class.getName());}
         productRepository.delete(product);
+    }
+
+    @EventHandler
+    public void on(PaymentFailedEvent event) {
+        if (event != null) {
+            String orderId = event.getOrderId();
+            Order order = orderRepository.findById(orderId).orElse(null);
+        if (order == null) {throw new UnfoundEntityException(orderId, Order.class.getName());}
+
+            for (OrderItem orderItem : order.getOrderItems()) {
+                String productId = orderItem.getProduct().getProductId();
+                String productName = orderItem.getProduct().getName();
+                int quantity = orderItem.getProduct().getStock();
+                BigDecimal productPrice = orderItem.getProduct().getPrice();
+
+                Product product = productRepository.findById(productId).
+                        orElse(null);
+
+                if (product == null) {throw new UnfoundEntityException(productId, Product.class.getName());}
+                product.setStock(product.getStock() + quantity);
+                productRepository.save(product);
+            }
+        }
     }
 
     @QueryHandler

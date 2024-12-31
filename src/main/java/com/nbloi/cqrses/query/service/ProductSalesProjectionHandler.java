@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Service
 @Transactional
@@ -29,7 +30,6 @@ public class ProductSalesProjectionHandler {
 
     @EventHandler
     public void on(OrderCreatedEvent event){
-        // TODO: consider to convert OrderItemAddedEvent to OrderCreatedEVent to trigger when there is any order created
         for (OrderItem orderItem : event.getOrderItems()) {
             String productId = orderItem.getProduct().getProductId();
             String productName = orderItem.getProduct().getName();
@@ -37,10 +37,11 @@ public class ProductSalesProjectionHandler {
             int quantity = orderItem.getQuantity();
 
             ProductSalesView productSalesView = productSalesViewRespository.findById(productId).
-                    orElse(new ProductSalesView(productId, productName, 0, 0.0));
+                    orElse(new ProductSalesView(productId, productName, 0, 0.0, null, null));
 
             productSalesView.setTotalQuantitySold(productSalesView.getTotalQuantitySold() + quantity);
             productSalesView.setTotalRevenue(productSalesView.getTotalRevenue() + productPrice.doubleValue());
+            productSalesView.setCreatedAt(event.getCreatedAt());
             productSalesViewRespository.save(productSalesView);
         }
     }
@@ -61,10 +62,11 @@ public class ProductSalesProjectionHandler {
                 BigDecimal productPrice = orderItem.getProduct().getPrice();
 
                 ProductSalesView productSalesView = productSalesViewRespository.findById(productId).
-                        orElse(new ProductSalesView(productId, productName, 0, 0.0));
+                        orElse(new ProductSalesView(productId, productName, 0, 0.0, null, null));
 
                 productSalesView.setTotalQuantitySold(productSalesView.getTotalQuantitySold() - quantity);
                 productSalesView.setTotalRevenue(productSalesView.getTotalRevenue() - productPrice.doubleValue());
+                productSalesView.setUpdatedAt(LocalDateTime.now());
                 productSalesViewRespository.save(productSalesView);
             }
         }

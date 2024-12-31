@@ -17,6 +17,8 @@ CREATE TABLE ProductSalesView (
                                   product_name VARCHAR(255),
                                   total_quantity_sold INT,
                                   total_revenue DECIMAL(10, 2),
+                                  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                                   UNIQUE KEY (product_id)
 );
 

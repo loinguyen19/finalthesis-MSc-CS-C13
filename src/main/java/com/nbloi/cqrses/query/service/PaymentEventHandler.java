@@ -8,7 +8,9 @@ import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
 import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentFailedEvent;
+import com.nbloi.cqrses.commonapi.event.customer.CustomerUpdatedEvent;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
+import com.nbloi.cqrses.commonapi.query.FindCustomerByIdQuery;
 import com.nbloi.cqrses.query.entity.Customer;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OutboxMessage;
@@ -24,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -47,13 +50,17 @@ public class PaymentEventHandler {
         // TODO: send message to outbox message. Then confirm payment is successful or failed.
         logger.info("Payment created in PaymentEventHandler: {}", event);
         Order order = orderRepository.findById(event.getOrderId()).get();
-        Customer customer = customerRepository.findById(order.getCustomer().getCustomerId()).get();
+
+        String customerId = order.getCustomer().getCustomerId();
+        Customer customer = order.getCustomer();
+        if (customer == null) {throw new UnfoundEntityException(customerId, Customer.class.getSimpleName());}
+
         Payment payment = order.getPayment();
         BigDecimal remain = customer.getBalance().subtract(event.getTotalAmount());
-        double remain2 = customer.getBalance().doubleValue() - event.getTotalAmount().doubleValue();
         if ( remain.doubleValue() >= 0) {
-            customer.setBalance(BigDecimal.valueOf(remain2));
-            customerRepository.save(customer);
+//            customer.setBalance(remain);
+//            customer.setUpdatedAt(LocalDateTime.now());
+//            customerRepository.save(customer);
 
             payment.setPaymentStatus(PaymentStatus.COMPLETED.toString());
             paymentRepository.save(payment);
