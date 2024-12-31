@@ -5,6 +5,7 @@ import com.nbloi.cqrses.commonapi.event.ProductCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.ProductInventoryEvent;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllProductsQuery;
+import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OrderItem;
@@ -30,6 +31,8 @@ public class ProductInventoryEventHandler {
     private ProductRepository productRepository;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private OrderEventHandler orderEventHandler;
 
     public ProductInventoryEventHandler(ProductRepository productRepository) {
         super();
@@ -68,25 +71,22 @@ public class ProductInventoryEventHandler {
     }
 
     @EventHandler
-    public void on(PaymentFailedEvent event) {
-        if (event != null) {
-            String orderId = event.getOrderId();
-            Order order = orderRepository.findById(orderId).orElse(null);
-        if (order == null) {throw new UnfoundEntityException(orderId, Order.class.getName());}
+    public void revertProductBalance(PaymentFailedEvent event) {
+        Order order = orderEventHandler.handle(new FindOrderByIdQuery(event.getOrderId()));
+        if (order == null) {
+            throw new UnfoundEntityException(event.getOrderId(), Order.class.getName());
+        }
 
-            for (OrderItem orderItem : order.getOrderItems()) {
-                String productId = orderItem.getProduct().getProductId();
-                String productName = orderItem.getProduct().getName();
-                int quantity = orderItem.getProduct().getStock();
-                BigDecimal productPrice = orderItem.getProduct().getPrice();
+        for (OrderItem orderItem : order.getOrderItems()) {
+            String productId = orderItem.getProduct().getProductId();
+            int quantity = orderItem.getQuantity();
 
-                Product product = productRepository.findById(productId).
-                        orElse(null);
-
-                if (product == null) {throw new UnfoundEntityException(productId, Product.class.getName());}
-                product.setStock(product.getStock() + quantity);
-                productRepository.save(product);
+            Product product = productRepository.findById(productId).orElse(null);
+            if (product == null) {
+                throw new UnfoundEntityException(productId, Product.class.getName());
             }
+            product.setStock(product.getStock() + quantity);
+            productRepository.save(product);
         }
     }
 

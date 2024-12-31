@@ -50,7 +50,7 @@ public class OrderController {
     }
 
     @PostMapping("/create-order")
-    public ResponseEntity<CompletableFuture<Void>> createOrder(@RequestBody CreateOrderRequestDTO request) {
+    public ResponseEntity createOrder(@RequestBody CreateOrderRequestDTO request) {
         try {
             String orderId = UUID.randomUUID().toString();
             String customerId = request.getCustomerId();
@@ -79,9 +79,12 @@ public class OrderController {
             CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, listOrderItems,
                     request.getTotalAmount(), request.getCurrency(), customerId, paymentId));
 
+            queryGateway.query(new FindOrderByIdQuery(orderId), ResponseTypes.instanceOf(Order.class)).join();
+
             return new ResponseEntity<>(orderCreated, HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Your order request failed to create. Please re-check your request attributes"
+                    ,HttpStatus.CONFLICT);
         }
     }
 
@@ -104,14 +107,6 @@ public class OrderController {
 
     @GetMapping("/all-orders")
     public CompletableFuture<List<Order>> findAllOrders() {
-//        List<OrderDetails> listOrderDetails = queryGateway.query(new FindAllOrderedProductsQuery(),
-//                ResponseTypes.multipleInstancesOf(OrderDetails.class)).join();
-//
-//        List<OrderDetailsDTO> listOrderDetailsDTO = new ArrayList<>();
-//        for (OrderDetails orderDetails : listOrderDetails) {
-//            listOrderDetailsDTO.add(modelMapper.map(orderDetails, OrderDetailsDTO.class));
-//        }
-
         return queryGateway.query(new FindAllOrdersQuery(), ResponseTypes.multipleInstancesOf(Order.class));
     }
 

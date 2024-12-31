@@ -1,17 +1,21 @@
 package com.nbloi.cqrses.query.service.kafkaconsumer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
 import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.PaymentCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.PaymentFailedEvent;
 import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
+import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.*;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
 import com.nbloi.cqrses.query.repository.PaymentRepository;
 import com.nbloi.cqrses.query.repository.ProductRepository;
+import com.nbloi.cqrses.query.service.OrderEventHandler;
 import com.nbloi.cqrses.query.service.ProductInventoryEventHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +24,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 import java.io.DataInput;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +44,7 @@ public class ProductInventoryEventConsumer {
     @Autowired
     private OutboxRepository outboxRepository;
     @Autowired
-    private PaymentRepository paymentRepository;
+    private OrderEventHandler orderEventHandler;
 
     @KafkaListener(topics = "order_created_events", groupId = "product_group")
     public void handleProductInventoryEvent(@Payload String orderCreatedEvent) {
@@ -77,6 +82,19 @@ public class ProductInventoryEventConsumer {
             // Send message to Outbox message queue for Product Inventory Event
             outboxRepository.save(outboxMessage);
             log.info("Processing ProductInventoryEvent OutboxMessage with PaymentCreatedEvent payload: {}", outboxMessage.getPayload());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    @KafkaListener(topics = "payment_failed_events", groupId = "product_group")
+    public void revertProductInventoryEvent(@Payload String paymentFailedEvent) {
+        try {
+            PaymentFailedEvent paymentEvent = new ObjectMapper().readValue(paymentFailedEvent, PaymentFailedEvent.class);
+            productInventoryEventHandler.revertProductBalance(paymentEvent);
+            log.info("Received PaymentFailedEvent payload: {} to revert Product balance to lastest state", paymentEvent);
 
         } catch (Exception e) {
             e.printStackTrace();
