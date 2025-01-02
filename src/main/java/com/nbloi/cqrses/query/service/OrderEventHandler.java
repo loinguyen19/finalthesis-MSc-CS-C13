@@ -10,6 +10,7 @@ import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
+import com.nbloi.cqrses.commonapi.query.FindOrderByCustomerIdQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
 import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
@@ -81,6 +82,7 @@ public class OrderEventHandler {
                         if (product.getStock() < item.getQuantity()) {
                             throw new OutOfProductStockException();
                         }
+//                        product.setStock(product.getStock() - item.getQuantity());
                     }
 
                     orderItem.setProduct(product);
@@ -271,6 +273,13 @@ public class OrderEventHandler {
     public Order handle(FindOrderByIdQuery query) {
         Order order = orderRepository.findById(query.getOrderId()).orElse(null);
         if (order == null) {throw new UnfoundEntityException(query.getOrderId(), Order.class.getSimpleName());}
+        return order;
+    }
+
+    @QueryHandler
+    public Order handle(FindOrderByCustomerIdQuery query) {
+        Order order = orderRepository.findById(query.getCustomerId()).orElse(null);
+        if (order == null) {throw new UnfoundEntityException(query.getCustomerId(), Order.class.getSimpleName());}
         return order;
     }
 }

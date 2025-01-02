@@ -38,6 +38,8 @@ public class PaymentEventHandler {
 
     @Autowired
     private OutboxRepository outboxRepository;
+    @Autowired
+    private CustomerRepository customerRepository;
 
     public PaymentEventHandler(PaymentRepository paymentRepository, OrderEventHandler orderEventHandler, OutboxRepository outboxRepository) {
         super();
@@ -61,6 +63,7 @@ public class PaymentEventHandler {
         Payment payment = order.getPayment();
         BigDecimal remain = customer.getBalance().subtract(event.getTotalAmount());
         if ( remain.doubleValue() >= 0) {
+
             payment.setPaymentStatus(PaymentStatus.COMPLETED.toString());
             paymentRepository.save(payment);
 

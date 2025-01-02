@@ -78,41 +78,6 @@ public class ProductEventHandler {
     }
 
     @EventHandler
-    public void updateProductInventory(OrderCreatedEvent event) {
-        try {
-            List<OrderItem> orderItems = event.getOrderItems();
-
-            for (OrderItem o : orderItems) {
-                Product productFoundById = handle(new FindProductByIdQuery(o.getProduct().getProductId()));
-                if (productFoundById.equals(new Product())) {
-                    throw new UnfoundEntityException(o.getProduct().getProductId(), "Product");
-                } else {
-                    productFoundById.setStock(productFoundById.getStock() - o.getQuantity());
-                    // Save the update stock of each product
-                    productRepository.save(productFoundById);
-                    // Convert OrderCreatedEvent to PaymentCreatedEvent
-                    log.info("Completely updating product inventory with product id: {}", productFoundById.getProductId());
-                }
-            }
-
-            // Create message for outbox message
-            OutboxMessage outboxMessage = new OutboxMessage(UUID.randomUUID().toString(),
-                    event.getOrderId(),
-                    EventType.PRODUCT_INVENTORY_UPDATED_EVENT.toString(),
-                    new ObjectMapper().writeValueAsString(event),
-                    OutboxStatus.PENDING.toString());
-
-            // Send message to Outbox message queue for Product Inventory Event
-            outboxRepository.save(outboxMessage);
-            log.info("Processing ProductInventoryEvent OutboxMessage with PaymentCreatedEvent payload: {}", outboxMessage.getPayload());
-        }
-        catch (Exception e) {
-            log.error(e.getMessage(), e);
-            log.info("There is some error in updating product inventory {}", e.getMessage());
-        }
-    }
-
-    @EventHandler
     public void delete(ProductDeletedEvent event) {
         try {
             Product product = productRepository.findById(event.getProductId()).orElse(null);

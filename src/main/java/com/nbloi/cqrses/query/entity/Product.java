@@ -2,6 +2,9 @@ package com.nbloi.cqrses.query.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 //import javax.persistence.*;
 import jakarta.persistence.*;
@@ -21,15 +24,22 @@ import java.util.Set;
 public class Product {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.UUID, generator = "UUID")
-//    @UuidGenerator
-//    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private String productId;
 
+    @NotBlank(message = "name can not be blank.")
+    @Column(unique = true, nullable = false)
     private String name;
+
+    @NotNull(message = "price can not be blank.")
     private BigDecimal price;
+
+    @NotNull (message = "stock can not be blank.")
     private int stock;
-    private String currency;
+
+    @NotEmpty(message = "currency can not be blank.")
+    private String currency = "VND";
+
+    @NotEmpty (message = "product status can not be blank.")
     private String productStatus;
 
 //    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

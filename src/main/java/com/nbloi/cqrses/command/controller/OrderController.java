@@ -8,6 +8,7 @@ import com.nbloi.cqrses.commonapi.dto.OrderItemDTO;
 import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
+import com.nbloi.cqrses.commonapi.query.FindOrderByCustomerIdQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
@@ -112,6 +113,11 @@ public class OrderController {
     @GetMapping("/findbyid/{orderId}")
     public CompletableFuture<Order> findOrderById(@PathVariable String orderId) {
         return queryGateway.query(new FindOrderByIdQuery(orderId), ResponseTypes.instanceOf(Order.class));
+    }
+
+    @GetMapping("/findbycustomerid/{customerId}")
+    public CompletableFuture<Order> findOrderByCustomerId(@PathVariable String customerId) {
+        return queryGateway.query(new FindOrderByCustomerIdQuery(customerId), ResponseTypes.instanceOf(Order.class));
     }
 
 

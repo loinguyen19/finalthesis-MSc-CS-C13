@@ -78,7 +78,7 @@ public class CustomerEventHandler {
     @EventHandler
     public void on(CustomerUpdatedEvent event) throws JsonProcessingException {
         String customerId = event.getCustomerId();
-        Customer existingCustomer = handle(new FindCustomerByIdQuery(event.getCustomerId()));
+        Customer existingCustomer = handle(new FindCustomerByIdQuery(customerId));
         if (existingCustomer == null) {throw new UnfoundEntityException(customerId, Customer.class.getSimpleName());}
 
         existingCustomer.setName(event.getName());
