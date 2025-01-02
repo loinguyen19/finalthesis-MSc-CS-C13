@@ -1,20 +1,18 @@
 package com.nbloi.cqrses.query.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
-import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderCancelledEvent;
-import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
+import com.nbloi.cqrses.commonapi.event.order.*;
 import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
+import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
+import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.*;
 import com.nbloi.cqrses.query.repository.*;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +20,7 @@ import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Set;
@@ -41,21 +38,21 @@ public class OrderEventHandler {
     @Autowired
     private OutboxRepository outboxRepository;
     @Autowired
-    private ProductRepository productRepository;
+    private ProductEventHandler productEventHandler;
     @Autowired
     private PaymentRepository paymentRepository;
     @Autowired
-    private CustomerRepository customerRepository;
+    private CustomerEventHandler customerEventHandler;
 
 
-    public OrderEventHandler(OrderRepository orderRepository, OutboxRepository outboxRepository, ProductRepository productRepository,
-                             PaymentRepository paymentRepository, CustomerRepository customerRepository) {
+    public OrderEventHandler(OrderRepository orderRepository, OutboxRepository outboxRepository, ProductEventHandler productEventHandler,
+                             PaymentRepository paymentRepository, CustomerEventHandler customerEventHandler) {
         super();
         this.orderRepository = orderRepository;
         this.outboxRepository = outboxRepository;
-        this.productRepository = productRepository;
+        this.productEventHandler = productEventHandler;
         this.paymentRepository = paymentRepository;
-        this.customerRepository = customerRepository;
+        this.customerEventHandler = customerEventHandler;
     }
 
     @EventHandler
@@ -77,7 +74,7 @@ public class OrderEventHandler {
                     orderItem.setOrder(order); // Properly assign the parent order
 
                     // check if the product in each order item exists. Then, check if product inventory still has enough stock
-                    Product product = productRepository.findById(item.getProduct().getProductId()).orElse(null);
+                    Product product = productEventHandler.handle(new FindProductByIdQuery(item.getProduct().getProductId()));
                     if (product == null) {
                         throw new UnfoundEntityException(item.getProduct().getProductId(), Product.class.getSimpleName());
                     } else {
@@ -96,7 +93,7 @@ public class OrderEventHandler {
                 order.setCurrency(event.getCurrency());
 
                 // Find the customer in database and set them into order
-                Customer customer = customerRepository.findById(event.getCustomerId()).orElse(null);
+                Customer customer = customerEventHandler.handle(new FindCustomerByIdQuery(event.getCustomerId()));
                 order.setCustomer(customer);
 
                 // Instantiate a new Payment object and set it with received payment id from order created event
@@ -238,6 +235,32 @@ public class OrderEventHandler {
 
     }
 
+    @EventHandler
+    public void on(OrderDeletedEvent event) {
+        try {
+            String orderId = event.getOrderId();
+            Order orderToDelete = handle(new FindOrderByIdQuery(orderId));
+
+            orderRepository.delete(orderToDelete);
+
+            // TODO: send message to transactional outbox pattern to manage the event state before sending to Kafka broker
+            // Save Outbox Message
+            OutboxMessage outboxMessage = new OutboxMessage(
+                    UUID.randomUUID().toString(),
+                    event.getOrderId(),
+                    EventType.ORDER_DELETED_EVENT.toString(),
+                    new ObjectMapper().writeValueAsString(event),
+                    OutboxStatus.PENDING.toString()
+            );
+            outboxRepository.save(outboxMessage);
+            log.info("Processing Deleted Event OutboxMessage with payload: {}", outboxMessage.getPayload());
+        } catch (Exception e){
+            // Log the error for more specific message
+            log.error("Error handling event: {}", event, e);
+        }
+
+    }
+
 
     @QueryHandler
     public List<Order> handle(FindAllOrdersQuery query) {
@@ -246,7 +269,8 @@ public class OrderEventHandler {
 
     @QueryHandler
     public Order handle(FindOrderByIdQuery query) {
-        return orderRepository.findById(query.getOrderId()).get();
+        Order order = orderRepository.findById(query.getOrderId()).orElse(null);
+        if (order == null) {throw new UnfoundEntityException(query.getOrderId(), Order.class.getSimpleName());}
+        return order;
     }
-
 }

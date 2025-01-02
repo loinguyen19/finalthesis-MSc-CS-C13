@@ -2,20 +2,17 @@ package com.nbloi.cqrses.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.enums.EventType;
-import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
-import com.nbloi.cqrses.commonapi.event.*;
-import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
-import com.nbloi.cqrses.query.entity.Order;
+import com.nbloi.cqrses.commonapi.event.order.OrderConfirmedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentCompletedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentFailedEvent;
 import com.nbloi.cqrses.query.entity.OutboxMessage;
-import com.nbloi.cqrses.query.entity.Payment;
-import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
-import com.nbloi.cqrses.query.repository.PaymentRepository;
-import com.nbloi.cqrses.query.service.OrderEventHandler;
-import com.nbloi.cqrses.query.service.kafkaconsumer.ProductInventoryEventConsumer;
+import com.nbloi.cqrses.query.service.kafkaproducer.CustomerEventProducer;
 import com.nbloi.cqrses.query.service.kafkaproducer.OrderCreatedEventProducer;
 import com.nbloi.cqrses.query.service.kafkaproducer.PaymentEventProducer;
-import com.nbloi.cqrses.query.service.kafkaproducer.ProductInventoryEventProducer;
+import com.nbloi.cqrses.query.service.kafkaproducer.ProductEventProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-
-import static com.nbloi.cqrses.commonapi.enums.EventType.ORDER_CREATED_EVENT;
 
 @Component
 public class OutboxProcessor {
@@ -45,6 +40,10 @@ public class OutboxProcessor {
     private final Logger log = LoggerFactory.getLogger(OutboxProcessor.class);
     @Autowired
     private PaymentEventProducer paymentEventProducer;
+    @Autowired
+    private CustomerEventProducer customerEventProducer;
+    @Autowired
+    private ProductEventProducer productEventProducer;
 
     @Transactional
     @Scheduled(fixedRate = 5000)  // Poll every 5 seconds
@@ -61,7 +60,8 @@ public class OutboxProcessor {
                         message.setStatus("PROCESSED");
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
-                    } else if (Objects.equals(message.getEventType(), EventType.PRODUCT_INVENTORY_UPDATED_EVENT.toString())) {
+                    }
+                    else if (Objects.equals(message.getEventType(), EventType.PRODUCT_INVENTORY_UPDATED_EVENT.toString())) {
                         OrderCreatedEvent orderCreatedEvent = new ObjectMapper().readValue(message.getPayload(), OrderCreatedEvent.class);
 
                         PaymentCreatedEvent paymentCreatedEvent = new PaymentCreatedEvent();
@@ -88,7 +88,8 @@ public class OutboxProcessor {
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
 
-                    } else if (Objects.equals(message.getEventType(), EventType.PAYMENT_FAILED_EVENT.toString())) {
+                    }
+                    else if (Objects.equals(message.getEventType(), EventType.PAYMENT_FAILED_EVENT.toString())) {
                         PaymentFailedEvent paymentFailedEvent = new ObjectMapper().readValue(message.getPayload(), PaymentFailedEvent.class);
                         String paymentFailedEventPayload = new ObjectMapper().writeValueAsString(paymentFailedEvent);
                         message.setStatus("PROCESSED");
@@ -99,7 +100,8 @@ public class OutboxProcessor {
                         log.info("Produce PaymentFailedEvent to topics payment_failed_events: {}", messages);
                         throw new RuntimeException("Your total balance is not sufficient to pay this event");
 
-                    } else if (Objects.equals(message.getEventType(), EventType.ORDER_CONFIRMED_EVENT.toString())) {
+                    }
+                    else if (Objects.equals(message.getEventType(), EventType.ORDER_CONFIRMED_EVENT.toString())) {
                         OrderConfirmedEvent orderConfirmedEvent = new ObjectMapper().readValue(message.getPayload(), OrderConfirmedEvent.class);
                         String orderConfirmedEventPayload = new ObjectMapper().writeValueAsString(orderConfirmedEvent);
                         orderCreatedEventProducer.sendOrderConfirmedEvent(orderConfirmedEventPayload);
@@ -122,14 +124,40 @@ public class OutboxProcessor {
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
                     }
+                    else if (Objects.equals(message.getEventType(), EventType.ORDER_DELETED_EVENT.toString())) {
+                        message.setStatus("PROCESSED");
+                        message.setUpdatedAt(LocalDateTime.now());
+                        outboxRepository.save(message);
+                    }
                     else if (Objects.equals(message.getEventType(), EventType.PAYMENT_SUMMARIZED_EVENT.toString())){
                         message.setStatus("PROCESSED");
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);
                     }
-                    else if (Objects.equals(message.getEventType(), EventType.CUSTOMER_CREATED_EVENT.toString()) ||
-                        Objects.equals(message.getEventType(), EventType.CUSTOMER_UPDATED_EVENT.toString()) ||
-                            Objects.equals(message.getEventType(), EventType.CUSTOMER_DELETED_EVENT.toString())) {
+                    else if (Objects.equals(message.getEventType(), EventType.CUSTOMER_CREATED_EVENT.toString())) {
+                        message.setStatus("PROCESSED");
+                        message.setUpdatedAt(LocalDateTime.now());
+                        outboxRepository.save(message);
+                    }
+                    else if (Objects.equals(message.getEventType(), EventType.CUSTOMER_UPDATED_EVENT.toString())) {
+                        message.setStatus("PROCESSED");
+                        message.setUpdatedAt(LocalDateTime.now());
+                        outboxRepository.save(message);
+                    }
+                    else if (Objects.equals(message.getEventType(), EventType.CUSTOMER_DELETED_EVENT.toString())) {
+                        // Get payload from message is CustomerDeletedEvent and send it to Kafka broker
+                        String customerDeletedEventPayload = new ObjectMapper().writeValueAsString(message.getPayload());
+                        customerEventProducer.sendCustomerDeletedEvent(customerDeletedEventPayload);
+
+                        message.setStatus("PROCESSED");
+                        message.setUpdatedAt(LocalDateTime.now());
+                        outboxRepository.save(message);
+                    }
+                    else if (Objects.equals(message.getEventType(), EventType.PRODUCT_DELETED_EVENT.toString())) {
+                        // Get payload from message is ProductDeletedEvent and send it to Kafka broker
+                        String productDeletedEventPayload = new ObjectMapper().writeValueAsString(message.getPayload());
+                        productEventProducer.sendProductDeletedEvent(productDeletedEventPayload);
+
                         message.setStatus("PROCESSED");
                         message.setUpdatedAt(LocalDateTime.now());
                         outboxRepository.save(message);

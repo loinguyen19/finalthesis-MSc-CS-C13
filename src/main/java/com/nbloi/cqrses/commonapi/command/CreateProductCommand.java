@@ -1,5 +1,6 @@
 package com.nbloi.cqrses.commonapi.command;
 
+import com.nbloi.cqrses.commonapi.enums.ProductStatus;
 import lombok.Getter;
 import lombok.Setter;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
@@ -16,6 +17,7 @@ public class CreateProductCommand {
     private int stock;
     private BigDecimal price;
     private String currency;
+    private String productStatus;
 
     public CreateProductCommand(String productId, String name, BigDecimal price, int stock, String currency) {
         this.productId = productId;
@@ -23,6 +25,7 @@ public class CreateProductCommand {
         this.price = price;
         this.stock = stock;
         this.currency = currency;
+        this.productStatus = ProductStatus.ACTIVE.toString();
     }
 
     public CreateProductCommand() {}

@@ -1,22 +1,16 @@
-package com.nbloi.cqrses.query.service.kafkaconsumer;
+package com.nbloi.cqrses.query.service.kafkaconsumer.orderconsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.commonapi.enums.EventType;
-import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
-import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
-import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderConfirmedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderShippedEvent;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
-import com.nbloi.cqrses.query.entity.OutboxMessage;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
 import com.nbloi.cqrses.query.service.OrderEventHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 public class OrderShippedEventConsumer {

@@ -1,13 +1,12 @@
 package com.nbloi.cqrses.command.controller;
 
 import com.nbloi.cqrses.commonapi.command.customer.CreateCustomerCommand;
-import com.nbloi.cqrses.commonapi.command.customer.UpdateCustomerCommand;
 import com.nbloi.cqrses.commonapi.dto.CustomerDTO;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerDeletedEvent;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerUpdatedEvent;
-import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
-import com.nbloi.cqrses.commonapi.query.FindAllCustomersQuery;
-import com.nbloi.cqrses.commonapi.query.FindCustomerByIdQuery;
+import com.nbloi.cqrses.commonapi.query.customer.FindAllCustomersQuery;
+import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdAndStatusActiveQuery;
+import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
 import com.nbloi.cqrses.query.entity.Customer;
 import com.nbloi.cqrses.query.service.CustomerEventHandler;
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -58,10 +57,9 @@ public class CustomerController {
         String email = request.getEmail();
         String phoneNumber = request.getPhoneNumber();
         BigDecimal balance = request.getBalance();
-        LocalDateTime createdAt = LocalDateTime.now();
         try {
             CompletableFuture<Void> customerCreated = commandGateway.send(new CreateCustomerCommand(customerId, name,
-                    email, phoneNumber, balance, createdAt));
+                    email, phoneNumber, balance));
             request.setCustomerId(customerId);
             return new ResponseEntity<>(request, HttpStatus.CREATED);
         } catch (Exception e) {
@@ -71,7 +69,7 @@ public class CustomerController {
     }
 
     @PostMapping("/create-listofcustomers")
-    public ResponseEntity createListOfCustomer(@RequestBody CustomerDTO []requestList) {
+    public ResponseEntity createListOfCustomer(@RequestBody List<CustomerDTO> requestList) {
         try {
             List<CustomerDTO> customersCreatedList = new ArrayList<>();
             for (CustomerDTO request : requestList) {
@@ -83,7 +81,7 @@ public class CustomerController {
                 LocalDateTime createdAt = LocalDateTime.now();
 
                 CompletableFuture<Void> customerCreated = commandGateway.send(new CreateCustomerCommand(customerId, name,
-                        email, phoneNumber, balance, createdAt));
+                        email, phoneNumber, balance));
                 if (customerCreated != null) {
                     request.setCustomerId(customerId);
                     customersCreatedList.add(request);
@@ -161,4 +159,5 @@ public class CustomerController {
     public boolean aggregateExists(String aggregateId) {
         return eventStore.readEvents(aggregateId).asStream().findAny().isPresent();
     }
+
 }

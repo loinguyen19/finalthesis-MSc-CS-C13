@@ -1,10 +1,14 @@
 package com.nbloi.cqrses.commonapi.dto;
 
 import com.nbloi.cqrses.query.entity.Product;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 
+@Getter
+@Setter
 public class OrderItemDTO {
 
     private String orderItemId;
@@ -15,12 +19,12 @@ public class OrderItemDTO {
     private String currency;
 
 
-    public OrderItemDTO(String orderItemId, String productId, int quantity, BigDecimal price,String currency) {
+    public OrderItemDTO(String orderItemId, String productId, int quantity, BigDecimal price, BigDecimal totalPrice ,String currency) {
         this.orderItemId = orderItemId;
         this.productId = productId;
         this.quantity = quantity;
         this.price = price;
-        this.totalPrice = price.multiply(BigDecimal.valueOf(quantity));
+        this.totalPrice = totalPrice;
         this.currency = currency;
     }
 

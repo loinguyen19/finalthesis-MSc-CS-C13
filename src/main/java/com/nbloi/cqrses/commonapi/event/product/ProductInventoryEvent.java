@@ -1,4 +1,4 @@
-package com.nbloi.cqrses.commonapi.event;
+package com.nbloi.cqrses.commonapi.event.product;
 
 import com.nbloi.cqrses.commonapi.enums.EventType;
 

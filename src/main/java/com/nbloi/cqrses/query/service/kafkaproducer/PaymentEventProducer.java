@@ -1,6 +1,5 @@
 package com.nbloi.cqrses.query.service.kafkaproducer;
 
-import com.nbloi.cqrses.commonapi.event.PaymentCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;

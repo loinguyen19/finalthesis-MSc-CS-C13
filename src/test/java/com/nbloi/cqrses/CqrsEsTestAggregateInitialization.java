@@ -6,10 +6,10 @@ import com.nbloi.cqrses.commonapi.command.CreateOrderCommand;
 import com.nbloi.cqrses.commonapi.command.ShipOrderCommand;
 import com.nbloi.cqrses.commonapi.command.customer.UpdateCustomerCommand;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
-import com.nbloi.cqrses.commonapi.enums.SystemDefault;
-import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
+import com.nbloi.cqrses.commonapi.enums.ProductStatus;
+import com.nbloi.cqrses.commonapi.event.order.OrderConfirmedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderShippedEvent;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerUpdatedEvent;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
@@ -74,9 +74,10 @@ class CqrsEsTestAggregateInitialization {
 		int quantity2 = 5;
 		BigDecimal totalPrice2 = price2.multiply(BigDecimal.valueOf(quantity2));
 		int stock2 = 780;
+		String productStatus = ProductStatus.ACTIVE.toString();
 
-		Product product = new Product(productId, name, price, stock, currency);
-		Product product2 = new Product(productId2, name2, price2, stock2, currency);
+		Product product = new Product(productId, name, price, stock, currency, productStatus);
+		Product product2 = new Product(productId2, name2, price2, stock2, currency, productStatus);
 
 		OrderItem orderItem = new OrderItem(orderItemId, quantity1, price, totalPrice1, currency,  null, product);
 		OrderItem orderItem2 = new OrderItem(orderItemId2, quantity2, price2, totalPrice2, currency,  null, product2);
@@ -118,8 +119,9 @@ class CqrsEsTestAggregateInitialization {
 		BigDecimal totalPrice = price.multiply(BigDecimal.valueOf(quantity));
 		int stock = 650;
 		String currency = "VND";
+		String productStatus = ProductStatus.ACTIVE.toString();
 
-		Product product = new Product(productId, name, price, stock, currency);
+		Product product = new Product(productId, name, price, stock, currency, productStatus);
 
 		OrderItem orderItem = new OrderItem(orderItemId, quantity, price, totalPrice, currency,  null, product);
 		List<OrderItem> orderItems = new ArrayList<>();
@@ -147,8 +149,9 @@ class CqrsEsTestAggregateInitialization {
 		BigDecimal totalPrice = price.multiply(BigDecimal.valueOf(quantity));
 		int stock = 2253;
 		String currency = "VND";
+		String productStatus = ProductStatus.ACTIVE.toString();
 
-		Product product = new Product(productId, name, price, stock, currency);
+		Product product = new Product(productId, name, price, stock, currency, productStatus);
 
 		OrderItem orderItem = new OrderItem(orderItemId, quantity, price, totalPrice, currency, null, product);
 		List<OrderItem> orderItems = new ArrayList<>();

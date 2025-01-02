@@ -1,5 +1,4 @@
-package com.nbloi.cqrses.commonapi.event;
-
+package com.nbloi.cqrses.commonapi.event.payment;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nbloi.cqrses.commonapi.enums.EventType;
@@ -9,14 +8,14 @@ import jakarta.persistence.Column;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class PaymentCompletedEvent {
+public class PaymentFailedEvent {
 
     private String paymentId;
-    private BigDecimal totalAmount;
+    private BigDecimal amount;
     private String currency;
     private String type;
 
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime paymentDate;
     private String paymentStatus;
@@ -24,24 +23,25 @@ public class PaymentCompletedEvent {
 
     private String orderId;
 
+    //TODO: add payment Status and payment method in this class
 
-    public PaymentCompletedEvent(String paymentId, BigDecimal totalAmount, String currency,String paymentMethods, String orderId) {
+    public PaymentFailedEvent(String paymentId, BigDecimal amount, String currency, String paymentMethods, String orderId) {
         this.paymentId = paymentId;
-        this.totalAmount = totalAmount;
+        this.amount = amount;
         this.currency = currency;
         this.paymentMethods = paymentMethods;
         this.orderId = orderId;
-        this.type = EventType.PAYMENT_COMPLETED_EVENT.toString();
+        this.type = EventType.PAYMENT_FAILED_EVENT.toString();
         this.paymentDate = LocalDateTime.now();
-        this.paymentStatus = PaymentStatus.CREATED.toString();
+        this.paymentStatus = PaymentStatus.FAILED.toString();
     }
 
-    public PaymentCompletedEvent() {
-        this.type = EventType.PAYMENT_COMPLETED_EVENT.toString();
+    public PaymentFailedEvent() {
+        this.type = EventType.PAYMENT_FAILED_EVENT.toString();
     }
 
     public String getPaymentId() {return paymentId;}
-    public BigDecimal getTotalAmount() {return totalAmount;}
+    public BigDecimal getTotalAmount() {return amount;}
     public String getCurrency() {return currency;}
     public String getOrderId() {return orderId;}
     public String getType() {return type;}
@@ -52,8 +52,8 @@ public class PaymentCompletedEvent {
     public void setPaymentId(String paymentId) {
         this.paymentId = paymentId;
     }
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
+    public void setTotalAmount(BigDecimal amount) {
+        this.amount = amount;
     }
     public void setCurrency(String currency) {
         this.currency = currency;
@@ -70,12 +70,11 @@ public class PaymentCompletedEvent {
     public String toString() {
         return "PaymentEvent{" +
                 "paymentId='" + paymentId + '\'' +
-                ", totalAmount=" + totalAmount +
+                ", amount=" + amount +
                 ", currency='" + currency + '\'' +
                 ", type='" + type + '\'' +
                 ", orderId='" + orderId + '\'' +
                 ", paymentDate=" + paymentDate +
                 '}';
     }
-
 }

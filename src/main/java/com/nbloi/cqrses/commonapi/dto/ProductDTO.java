@@ -5,15 +5,19 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-
+@Getter
+@Setter
 public class ProductDTO{
 
     private String productId;
 
     @NotBlank (message = "name can not be blank.")
+    @Column(unique = true, nullable = false)
     private String name;
 
     @NotNull (message = "price can not be blank.")
@@ -25,12 +29,16 @@ public class ProductDTO{
     @NotEmpty (message = "currency can not be blank.")
     private String currency = "VND";
 
-    public ProductDTO(String name, int productQuantity, String productId, BigDecimal price, String currency) {
+    @NotEmpty (message = "product status can not be blank.")
+    private String productStatus;
+
+    public ProductDTO(String name, int productQuantity, String productId, BigDecimal price, String currency, String productStatus) {
         this.name = name;
         this.stock = productQuantity;
         this.productId = productId;
         this.price = price;
         this.currency = currency;
+        this.productStatus = productStatus;
     }
 
     public ProductDTO() {}
@@ -40,26 +48,24 @@ public class ProductDTO{
     public String getProductId() {return productId;}
     public BigDecimal getPrice() {return price;}
     public String getCurrency() {return currency;}
+    public String getProductStatus() {return productStatus;}
 
     public void setProductId(String productId) {
         this.productId = productId;
     }
-
     public void setName(String name) {
         this.name = name;
     }
-
     public void setPrice(BigDecimal price) {
         this.price = price;
     }
-
     public void setStock(int stock) {
         this.stock = stock;
     }
-
     public void setCurrency(String currency) {
         this.currency = currency;
     }
+    public void setProductStatus(String productStatus) {this.productStatus = productStatus;}
 
     @Override
     public String toString() {
@@ -69,6 +75,7 @@ public class ProductDTO{
                 ", price=" + price +
                 ", productStock=" + stock +
                 ", currency='" + currency + '\'' +
+                ", productStatus='" + productStatus + '\'' +
                 '}';
     }
 }

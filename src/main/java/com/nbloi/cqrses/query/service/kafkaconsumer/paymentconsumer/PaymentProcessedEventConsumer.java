@@ -1,7 +1,7 @@
-package com.nbloi.cqrses.query.service.kafkaconsumer;
+package com.nbloi.cqrses.query.service.kafkaconsumer.paymentconsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.commonapi.event.PaymentCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentCreatedEvent;
 import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.service.OrderEventHandler;
 import com.nbloi.cqrses.query.service.PaymentEventHandler;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class PaymentProcessingEventConsumer {
+public class PaymentProcessedEventConsumer {
 
     @Autowired
     private OrderRepository orderRepository;

@@ -1,6 +1,8 @@
 package com.nbloi.cqrses.commonapi.event.customer;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 
 import java.math.BigDecimal;
@@ -13,6 +15,7 @@ public class CustomerCreatedEvent {
     private String email;
     private String phoneNumber;
     private BigDecimal balance;
+    private String customerStatus;
 
     @Column(nullable = false, updatable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -22,14 +25,21 @@ public class CustomerCreatedEvent {
         this.createdAt = LocalDateTime.now();
     }
 
-    public CustomerCreatedEvent(String customerId, String name, String email, String phoneNumber, BigDecimal balance,
-                                 LocalDateTime createdAt) {
+    @JsonCreator
+    public CustomerCreatedEvent(@JsonProperty("customerId") String customerId,
+                                @JsonProperty("name") String name,
+                                @JsonProperty("email") String email,
+                                @JsonProperty("phoneNumber") String phoneNumber,
+                                @JsonProperty("balance") BigDecimal balance,
+                                @JsonProperty("createdAt") LocalDateTime createdAt,
+                                @JsonProperty("customerStatus") String customerStatus) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.balance = balance;
         this.createdAt = createdAt;
+        this.customerStatus = customerStatus;
     }
 
     public String getCustomerId() {
@@ -80,4 +90,11 @@ public class CustomerCreatedEvent {
         this.createdAt = createdAt;
     }
 
+    public String getCustomerStatus() {
+        return customerStatus;
+    }
+
+    public void setCustomerStatus(String customerStatus) {
+        this.customerStatus = customerStatus;
+    }
 }

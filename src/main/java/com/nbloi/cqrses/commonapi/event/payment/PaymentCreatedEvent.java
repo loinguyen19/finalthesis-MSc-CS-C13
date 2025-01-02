@@ -1,19 +1,14 @@
-package com.nbloi.cqrses.commonapi.event;
+package com.nbloi.cqrses.commonapi.event.payment;
 
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.PrePersist;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentCreatedEvent {

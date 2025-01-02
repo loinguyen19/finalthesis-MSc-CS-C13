@@ -1,6 +1,8 @@
 package com.nbloi.cqrses.commonapi.command.customer;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.nbloi.cqrses.commonapi.enums.CustomerStatus;
+import com.nbloi.cqrses.query.entity.Customer;
 import jakarta.persistence.Column;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
@@ -15,6 +17,7 @@ public class CreateCustomerCommand {
     private String email;
     private String phoneNumber;
     private BigDecimal balance;
+    private String customerStatus;
 
     @Column(nullable = false, updatable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -24,14 +27,14 @@ public class CreateCustomerCommand {
         this.createdAt = LocalDateTime.now();
     }
 
-    public CreateCustomerCommand(String customerId, String name, String email, String phoneNumber, BigDecimal balance,
-                                 LocalDateTime createdAt) {
+    public CreateCustomerCommand(String customerId, String name, String email, String phoneNumber, BigDecimal balance) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.balance = balance;
         this.createdAt = LocalDateTime.now();
+        this.customerStatus = CustomerStatus.ACTIVE.toString();
     }
 
     public String getCustomerId() {
@@ -78,7 +81,13 @@ public class CreateCustomerCommand {
         return createdAt;
     }
 
-//    public void setCreatedAt(LocalDateTime createdAt) {
+    public String getCustomerStatus() {
+        return customerStatus;
+    }
+
+    public void setCustomerStatus(String customerStatus) {this.customerStatus = customerStatus;}
+
+    //    public void setCreatedAt(LocalDateTime createdAt) {
 //        this.createdAt = createdAt;
 //    }
 

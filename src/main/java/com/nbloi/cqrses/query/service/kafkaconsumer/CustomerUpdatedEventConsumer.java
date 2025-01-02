@@ -1,9 +1,7 @@
 package com.nbloi.cqrses.query.service.kafkaconsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
-import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentCompletedEvent;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerUpdatedEvent;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;

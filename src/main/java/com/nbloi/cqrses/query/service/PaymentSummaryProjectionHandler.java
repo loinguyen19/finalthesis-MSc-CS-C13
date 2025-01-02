@@ -4,12 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
-import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
-import com.nbloi.cqrses.commonapi.event.PaymentCompletedEvent;
-import com.nbloi.cqrses.commonapi.event.PaymentFailedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentCompletedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentFailedEvent;
 import com.nbloi.cqrses.query.entity.OutboxMessage;
 import com.nbloi.cqrses.query.entity.PaymentSummaryView;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
+import com.nbloi.cqrses.query.repository.PaymentRepository;
 import com.nbloi.cqrses.query.repository.PaymentSummaryViewRepository;
 import org.axonframework.eventhandling.EventHandler;
 import org.slf4j.Logger;
@@ -32,6 +32,12 @@ public class PaymentSummaryProjectionHandler {
     @Autowired
     private OutboxRepository outboxRepository;
     private final Logger log = LoggerFactory.getLogger(PaymentSummaryProjectionHandler.class);
+
+    public PaymentSummaryProjectionHandler(PaymentSummaryViewRepository paymentSummaryViewRepository, OutboxRepository outboxRepository) {
+        super();
+        this.paymentSummaryViewRepository = paymentSummaryViewRepository;
+        this.outboxRepository = outboxRepository;
+    }
 
     @EventHandler
     public void onPaymentSummarize(PaymentCompletedEvent event) throws JsonProcessingException {

@@ -3,6 +3,10 @@ package com.nbloi.cqrses.query.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.validator.constraints.UUID;
@@ -11,7 +15,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
 @Entity
 public class Customer {
 
@@ -21,6 +28,7 @@ public class Customer {
     private String email;
     private String phoneNumber;
     private BigDecimal balance;
+    private String customerStatus;
 
     @Column(nullable = false, updatable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -30,19 +38,20 @@ public class Customer {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Set<Order> orders;
 
     public Customer(String customerId, String name, String email, String phoneNumber, BigDecimal balance,
-                    LocalDateTime createdAt, LocalDateTime updatedAt) {
+                    LocalDateTime createdAt, String customerStatus) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.balance = balance;
         this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.updatedAt = LocalDateTime.now();;
+        this.customerStatus = customerStatus;
     }
 
     public Customer() {
@@ -53,7 +62,6 @@ public class Customer {
     public String getCustomerId() {
         return customerId;
     }
-
     public void setCustomerId(String customerId) {
         this.customerId = customerId;
     }
@@ -61,19 +69,20 @@ public class Customer {
     public String getName() {
         return name;
     }
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public BigDecimal getBalance() {
         return balance;
     }
-
-    public void setName(String name) {
-        this.name = name;
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
     }
 
     public Set<Order> getOrders() {
         return orders;
     }
-
     public void setOrders(Set<Order> orders) {
         this.orders = orders;
     }
@@ -81,11 +90,6 @@ public class Customer {
     public String getEmail() {
         return email;
     }
-
-    public LocalDateTime getCreatedAt() {return createdAt;}
-
-    public LocalDateTime getUpdatedAt() {return updatedAt;}
-
     public void setEmail(String email) {
         this.email = email;
     }
@@ -93,22 +97,22 @@ public class Customer {
     public String getPhoneNumber() {
         return phoneNumber;
     }
-
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
-    }
+    public LocalDateTime getCreatedAt() {return createdAt;}
+    public LocalDateTime getUpdatedAt() {return updatedAt;}
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public String getCustomerStatus() {return customerStatus;}
+    public void setCustomerStatus(String customerStatus) {this.customerStatus = customerStatus;}
 
     @Override
     public String toString() {
@@ -117,6 +121,10 @@ public class Customer {
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
+                ", balance=" + balance +
+                ", customerStatus='" + customerStatus + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
 //                ", orders=" + orders +
                 '}';
     }

@@ -5,6 +5,7 @@ import com.nbloi.cqrses.command.controller.CustomerController;
 import com.nbloi.cqrses.commonapi.command.customer.CreateCustomerCommand;
 import com.nbloi.cqrses.commonapi.command.customer.DeleteCustomerCommand;
 import com.nbloi.cqrses.commonapi.command.customer.UpdateCustomerCommand;
+import com.nbloi.cqrses.commonapi.enums.CustomerStatus;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerDeletedEvent;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerUpdatedEvent;
@@ -19,9 +20,13 @@ import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
 import org.springframework.data.annotation.Version;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Setter
 @Getter
@@ -35,6 +40,7 @@ public class CustomerAggregate {
     private String email;
     private String phoneNumber;
     private BigDecimal balance;
+    private String customerStatus;
 
     @Column(nullable = false, updatable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
@@ -58,7 +64,8 @@ public class CustomerAggregate {
                 command.getEmail(),
                 command.getPhoneNumber(),
                 command.getBalance(),
-                command.getCreatedAt()
+                command.getCreatedAt(),
+                command.getCustomerStatus()
         ));
     }
 
@@ -118,6 +125,8 @@ public class CustomerAggregate {
 
     @EventSourcingHandler
     public void on(CustomerDeletedEvent event) {
-        this.customerId = null;
+        this.customerId = event.getCustomerId();
+        this.customerStatus = CustomerStatus.DELETED.toString();
     }
+
 }

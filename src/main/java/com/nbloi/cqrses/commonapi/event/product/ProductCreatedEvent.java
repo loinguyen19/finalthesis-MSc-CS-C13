@@ -1,4 +1,4 @@
-package com.nbloi.cqrses.commonapi.event;
+package com.nbloi.cqrses.commonapi.event.product;
 
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import lombok.Getter;
@@ -16,14 +16,16 @@ public class ProductCreatedEvent {
     private BigDecimal price;
     private String currency;
     private String type;
+    private String productStatus;
 
-    public ProductCreatedEvent(String productId, String name, BigDecimal price, int stock, String currency) {
+    public ProductCreatedEvent(String productId, String name, BigDecimal price, int stock, String currency, String productStatus) {
         this.productId = productId;
         this.name = name;
         this.price = price;
         this.stock = stock;
         this.currency = currency;
         this.type = EventType.PRODUCT_CREATED_EVENT.toString();
+        this.productStatus = productStatus;
     }
 
     public ProductCreatedEvent() {}

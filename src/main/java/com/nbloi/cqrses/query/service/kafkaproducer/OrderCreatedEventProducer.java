@@ -17,7 +17,6 @@ public class OrderCreatedEventProducer {
     private static final String TOPIC3 = "order_shipped_events";
     private final static long sendTimeout = 3000;
 
-    Logger log = Logger.getLogger(OrderCreatedEventProducer.class.getSimpleName());
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(OrderCreatedEventProducer.class);
 
     @Autowired

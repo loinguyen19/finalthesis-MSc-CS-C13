@@ -1,11 +1,12 @@
 package com.nbloi.cqrses.query.service;
 
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
-import com.nbloi.cqrses.commonapi.event.PaymentFailedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentFailedEvent;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OrderItem;
 import com.nbloi.cqrses.query.entity.ProductSalesView;
 import com.nbloi.cqrses.query.repository.OrderRepository;
+import com.nbloi.cqrses.query.repository.OutboxRepository;
 import com.nbloi.cqrses.query.repository.ProductRepository;
 import com.nbloi.cqrses.query.repository.ProductSalesViewRespository;
 import org.axonframework.eventhandling.EventHandler;
@@ -22,11 +23,14 @@ public class ProductSalesProjectionHandler {
 
     @Autowired
     private ProductSalesViewRespository productSalesViewRespository;
-
-    @Autowired
-    private ProductRepository productRepository;
     @Autowired
     private OrderRepository orderRepository;
+
+    public ProductSalesProjectionHandler(ProductSalesViewRespository productSalesViewRespository, OrderRepository orderRepository) {
+        super();
+        this.productSalesViewRespository = productSalesViewRespository;
+        this.orderRepository = orderRepository;
+    }
 
     @EventHandler
     public void on(OrderCreatedEvent event){

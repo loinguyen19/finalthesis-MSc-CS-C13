@@ -1,9 +1,9 @@
 package com.nbloi.cqrses.query.service;
 
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
-import com.nbloi.cqrses.commonapi.event.OrderConfirmedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderCreatedEvent;
-import com.nbloi.cqrses.commonapi.event.OrderShippedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderConfirmedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderShippedEvent;
 import com.nbloi.cqrses.query.entity.Customer;
 import com.nbloi.cqrses.query.entity.CustomerOrderView;
 import com.nbloi.cqrses.query.repository.CustomerOrderRepository;

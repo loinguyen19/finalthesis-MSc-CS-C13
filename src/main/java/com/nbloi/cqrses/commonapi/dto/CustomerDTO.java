@@ -9,8 +9,13 @@ import java.time.LocalDateTime;
 public class CustomerDTO {
 
     private String customerId;
+    @Column(unique = true, nullable = false)
     private String name;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(unique = true, nullable = false)
     private String phoneNumber;
     private BigDecimal balance;
 

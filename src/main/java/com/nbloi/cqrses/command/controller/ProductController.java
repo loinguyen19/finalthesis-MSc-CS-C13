@@ -3,12 +3,14 @@ package com.nbloi.cqrses.command.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.command.CreateProductCommand;
 import com.nbloi.cqrses.commonapi.dto.ProductDTO;
-import com.nbloi.cqrses.commonapi.event.ProductInventoryEvent;
-import com.nbloi.cqrses.commonapi.query.FindAllProductsQuery;
-import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
+import com.nbloi.cqrses.commonapi.enums.ProductStatus;
+import com.nbloi.cqrses.commonapi.event.product.ProductDeletedEvent;
+import com.nbloi.cqrses.commonapi.event.product.ProductInventoryEvent;
+import com.nbloi.cqrses.commonapi.query.product.FindAllProductsQuery;
+import com.nbloi.cqrses.commonapi.query.product.FindProductByIdAndStatusActiveQuery;
+import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Product;
-import com.nbloi.cqrses.query.repository.ProductRepository;
-import com.nbloi.cqrses.query.service.ProductInventoryEventHandler;
+import com.nbloi.cqrses.query.service.ProductEventHandler;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
@@ -21,7 +23,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -41,7 +42,7 @@ public class ProductController {
     private CommandGateway commandGateway;
 
     @Autowired
-    private ProductInventoryEventHandler productInventoryEventHandler;
+    private ProductEventHandler productInventoryEventHandler;
 
     public ProductController(QueryGateway queryGateway, EventStore eventStore, ModelMapper modelMapper) {
         this.queryGateway = queryGateway;
@@ -66,7 +67,7 @@ public class ProductController {
     }
 
     @PostMapping("/create-listofproducts")
-    public ResponseEntity createListOfProduct(@RequestBody ProductDTO []requestList) {
+    public ResponseEntity createListOfProduct(@RequestBody List<ProductDTO> requestList) {
         try {
             List<ProductDTO> productsCreatedList = new ArrayList<>();
             for (ProductDTO request : requestList) {
@@ -109,7 +110,7 @@ public class ProductController {
 
     @GetMapping("/findbyid/{productId}")
     @ResponseBody
-    public ResponseEntity getProductById(@PathVariable String productId) {
+    public ResponseEntity findProductById(@PathVariable String productId) {
         try {
             Product product = queryGateway.query(new FindProductByIdQuery(productId), ResponseTypes.instanceOf(Product.class))
                     .join();
@@ -158,8 +159,8 @@ public class ProductController {
             if (product == null) {
                 throw new RuntimeException("Product not found");
             }
-            ProductInventoryEvent productInventoryEvent = new ObjectMapper().convertValue(product, ProductInventoryEvent.class);
-            productInventoryEventHandler.off(productInventoryEvent);
+            ProductDeletedEvent productDeletedEvent = new ObjectMapper().convertValue(product, ProductDeletedEvent.class);
+            productInventoryEventHandler.delete(productDeletedEvent);
             return new ResponseEntity<>(String.format("Product with id: %s has been deleted successfully!", productId), HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(String.format("Product with id: %s can not be found!!!", productId), HttpStatus.NOT_FOUND);

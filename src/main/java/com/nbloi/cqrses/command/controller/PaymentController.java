@@ -1,7 +1,7 @@
 package com.nbloi.cqrses.command.controller;
 
 import com.nbloi.cqrses.commonapi.command.PaymentCommand;
-import com.nbloi.cqrses.commonapi.event.PaymentCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentCreatedEvent;
 import com.nbloi.cqrses.query.service.kafkaproducer.PaymentEventProducer;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.beans.factory.annotation.Autowired;

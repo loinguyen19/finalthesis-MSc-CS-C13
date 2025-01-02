@@ -1,12 +1,11 @@
 package com.nbloi.cqrses.command.aggregate;
 
 import com.nbloi.cqrses.commonapi.command.*;
-import com.nbloi.cqrses.commonapi.enums.OrderStatus;
-import com.nbloi.cqrses.commonapi.event.*;
+import com.nbloi.cqrses.commonapi.event.order.OrderConfirmedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.order.OrderShippedEvent;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
-import com.nbloi.cqrses.commonapi.exception.UncreatedOrderException;
 import com.nbloi.cqrses.query.entity.OrderItem;
-import com.nbloi.cqrses.query.entity.Product;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
@@ -15,10 +14,7 @@ import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
 
 import java.math.BigDecimal;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 @Aggregate
 @Slf4j

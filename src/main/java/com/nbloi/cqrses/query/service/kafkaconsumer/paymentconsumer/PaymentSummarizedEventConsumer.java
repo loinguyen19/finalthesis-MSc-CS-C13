@@ -1,30 +1,22 @@
-package com.nbloi.cqrses.query.service.kafkaconsumer;
+package com.nbloi.cqrses.query.service.kafkaconsumer.paymentconsumer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.commonapi.enums.EventType;
-import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
 import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
-import com.nbloi.cqrses.commonapi.event.*;
-import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
-import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
+import com.nbloi.cqrses.commonapi.event.order.OrderShippedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentCompletedEvent;
+import com.nbloi.cqrses.commonapi.event.payment.PaymentFailedEvent;
 import com.nbloi.cqrses.query.entity.Order;
-import com.nbloi.cqrses.query.entity.OutboxMessage;
 import com.nbloi.cqrses.query.entity.Payment;
 import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
 import com.nbloi.cqrses.query.repository.PaymentRepository;
-import com.nbloi.cqrses.query.service.OrderEventHandler;
-import com.nbloi.cqrses.query.service.PaymentEventHandler;
 import com.nbloi.cqrses.query.service.PaymentSummaryProjectionHandler;
-import com.nbloi.cqrses.query.service.kafkaproducer.PaymentEventProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 @Slf4j

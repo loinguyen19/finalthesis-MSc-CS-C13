@@ -2,8 +2,8 @@ package com.nbloi.cqrses.command.aggregate;
 
 import com.nbloi.cqrses.commonapi.command.CreateProductCommand;
 import com.nbloi.cqrses.commonapi.command.ProductInventoryCommand;
-import com.nbloi.cqrses.commonapi.event.ProductCreatedEvent;
-import com.nbloi.cqrses.commonapi.event.ProductInventoryEvent;
+import com.nbloi.cqrses.commonapi.event.product.ProductCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.product.ProductInventoryEvent;
 import com.nbloi.cqrses.commonapi.exception.UncreatedOrderException;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,6 +26,7 @@ public class ProductAggregate {
     private int stock;
     private BigDecimal price;
     private String currency;
+    private String productStatus;
     private boolean orderCreated;
     private boolean productInventoryUpdated;
 
@@ -40,7 +41,8 @@ public class ProductAggregate {
                 command.getName(),
                 command.getPrice(),
                 command.getStock(),
-                command.getCurrency()
+                command.getCurrency(),
+                command.getProductStatus()
         ));
     }
 
@@ -51,6 +53,7 @@ public class ProductAggregate {
         this.stock = event.getStock();
         this.price = event.getPrice();
         this.currency = event.getCurrency();
+        this.productStatus = event.getProductStatus();
     }
 
     @CommandHandler

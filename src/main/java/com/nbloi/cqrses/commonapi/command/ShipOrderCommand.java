@@ -1,6 +1,5 @@
 package com.nbloi.cqrses.commonapi.command;
 
-import com.nbloi.cqrses.commonapi.dto.ShipOrderRequestDTO;
 import org.axonframework.modelling.command.TargetAggregateIdentifier;
 
 public class ShipOrderCommand {

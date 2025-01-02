@@ -1,7 +1,7 @@
 package com.nbloi.cqrses.query.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.nbloi.cqrses.commonapi.enums.SystemDefault;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 //import javax.persistence.*;
 import jakarta.persistence.*;
@@ -30,17 +30,20 @@ public class Product {
     private BigDecimal price;
     private int stock;
     private String currency;
+    private String productStatus;
 
-//    @OneToMany(mappedBy = "product")
+//    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 //    private Set<OrderItem> orderItems;
 
-    public Product(String productId, String name, BigDecimal price, int stock, String currency) {
+    public Product(String productId, String name, BigDecimal price, int stock, String currency, String productStatus) {
         this.productId = productId;
         this.name = name;
         this.price = price;
         this.stock = stock;
         this.currency = currency;
 //        this.orderItems = orderItems;
+        this.productStatus = productStatus;
     }
 
     public Product() {}
@@ -60,6 +63,8 @@ public class Product {
     }
 
     public String getCurrency() {return currency;}
+
+    public String getProductStatus() {return productStatus;}
 
 //    public Set<OrderItem> getOrderItems() {return orderItems;}
 
@@ -82,6 +87,8 @@ public class Product {
 
     public void setCurrency(String currency) {this.currency = currency;}
 
+    public void setProductStatus(String productStatus) {this.productStatus = productStatus;}
+
 //    public void setOrderItems(Set<OrderItem> orderItems) {
 //        this.orderItems = orderItems;
 //    }
@@ -94,6 +101,7 @@ public class Product {
                 ", price=" + price +
                 ", stock=" + stock +
                 ", currency='" + currency + '\'' +
+                ", productStatus='" + productStatus + '\'' +
 //                ", orderItems=" + orderItems +
                 '}';
     }

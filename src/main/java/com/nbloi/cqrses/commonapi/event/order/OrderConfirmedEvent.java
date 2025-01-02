@@ -1,4 +1,4 @@
-package com.nbloi.cqrses.commonapi.event;
+package com.nbloi.cqrses.commonapi.event.order;
 
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import lombok.Getter;
@@ -6,16 +6,17 @@ import lombok.Getter;
 import java.util.Objects;
 
 @Getter
-public class OrderCancelledEvent {
+public class OrderConfirmedEvent {
+
     private String orderId;
     private String type;
 
-    public OrderCancelledEvent(String orderId) {
+    public OrderConfirmedEvent(String orderId) {
         this.orderId = orderId;
-        this.type = EventType.ORDER_CANCELLED_EVENT.toString();
+        this.type = EventType.ORDER_CONFIRMED_EVENT.toString();
     }
 
-    public OrderCancelledEvent() {}
+    public OrderConfirmedEvent() {}
 
     public String getOrderId() {return orderId;}
 
@@ -30,7 +31,7 @@ public class OrderCancelledEvent {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        OrderCancelledEvent that = (OrderCancelledEvent) o;
+        OrderConfirmedEvent that = (OrderConfirmedEvent) o;
         return Objects.equals(orderId, that.orderId) && Objects.equals(type, that.type);
     }
 
@@ -41,7 +42,7 @@ public class OrderCancelledEvent {
 
     @Override
     public String toString() {
-        return "OrderFailedToBePaidEvent{" +
+        return "OrderConfirmedEvent{" +
                 "orderId='" + orderId + '\'' +
                 ", type='" + type + '\'' +
                 '}';

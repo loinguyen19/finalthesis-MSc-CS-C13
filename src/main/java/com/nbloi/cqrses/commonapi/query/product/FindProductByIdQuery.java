@@ -1,4 +1,4 @@
-package com.nbloi.cqrses.commonapi.query;
+package com.nbloi.cqrses.commonapi.query.product;
 
 public class FindProductByIdQuery {
 

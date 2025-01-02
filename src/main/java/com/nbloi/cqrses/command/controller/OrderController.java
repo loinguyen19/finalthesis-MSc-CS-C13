@@ -9,11 +9,12 @@ import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
-import com.nbloi.cqrses.commonapi.query.FindProductByIdQuery;
+import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OrderItem;
 import com.nbloi.cqrses.query.entity.Product;
-import com.nbloi.cqrses.query.service.ProductInventoryEventHandler;
+import com.nbloi.cqrses.query.service.ProductEventHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.EventProcessingModule;
 import org.axonframework.eventsourcing.eventstore.EventStore;
@@ -29,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping(path = "/api/v1/orders")
 public class OrderController {
@@ -40,7 +42,7 @@ public class OrderController {
     @Autowired
     private EventProcessingModule eventProcessingModule;
     @Autowired
-    private ProductInventoryEventHandler productInventoryEventHandler;
+    private ProductEventHandler productInventoryEventHandler;
 
     // Autowiring constructor and POST/GET endpoints
     public OrderController(CommandGateway commandGateway, QueryGateway queryGateway, EventStore eventStore) {
@@ -50,7 +52,7 @@ public class OrderController {
     }
 
     @PostMapping("/create-order")
-    public ResponseEntity createOrder(@RequestBody CreateOrderRequestDTO request) {
+    public ResponseEntity<String> createOrder(@RequestBody CreateOrderRequestDTO request) {
         try {
             String orderId = UUID.randomUUID().toString();
             String customerId = request.getCustomerId();
@@ -79,12 +81,9 @@ public class OrderController {
             CompletableFuture<Void> orderCreated = commandGateway.send(new CreateOrderCommand(orderId, listOrderItems,
                     request.getTotalAmount(), request.getCurrency(), customerId, paymentId));
 
-            queryGateway.query(new FindOrderByIdQuery(orderId), ResponseTypes.instanceOf(Order.class)).join();
-
-            return new ResponseEntity<>(orderCreated, HttpStatus.CREATED);
+            return new ResponseEntity<>(orderId, HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>("Your order request failed to create. Please re-check your request attributes"
-                    ,HttpStatus.CONFLICT);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
         }
     }
 
