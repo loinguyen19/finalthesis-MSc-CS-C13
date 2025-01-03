@@ -1,10 +1,15 @@
 package com.nbloi.cqrses.command.aggregate;
 
 import com.nbloi.cqrses.commonapi.command.CreateProductCommand;
+import com.nbloi.cqrses.commonapi.command.DeleteProductCommand;
 import com.nbloi.cqrses.commonapi.command.ProductInventoryCommand;
+import com.nbloi.cqrses.commonapi.enums.ProductStatus;
 import com.nbloi.cqrses.commonapi.event.product.ProductCreatedEvent;
+import com.nbloi.cqrses.commonapi.event.product.ProductDeletedEvent;
 import com.nbloi.cqrses.commonapi.event.product.ProductInventoryEvent;
 import com.nbloi.cqrses.commonapi.exception.UncreatedOrderException;
+import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
+import com.nbloi.cqrses.query.entity.Product;
 import lombok.Getter;
 import lombok.Setter;
 import org.axonframework.commandhandling.CommandHandler;
@@ -27,7 +32,7 @@ public class ProductAggregate {
     private BigDecimal price;
     private String currency;
     private String productStatus;
-    private boolean orderCreated;
+    private boolean productCreated;
     private boolean productInventoryUpdated;
 
     public ProductAggregate() {
@@ -57,9 +62,22 @@ public class ProductAggregate {
     }
 
     @CommandHandler
+    public void handle(DeleteProductCommand command) {
+        AggregateLifecycle.apply(new ProductDeletedEvent(
+                command.getProductId()
+        ));
+    }
+
+    @EventSourcingHandler
+    public void on(ProductDeletedEvent event){
+        this.productId = event.getProductId();
+        this.productStatus = ProductStatus.DELETED.toString();
+    }
+
+    @CommandHandler
     public void handle(ProductInventoryCommand command) {
-        if (!orderCreated){
-            throw new UncreatedOrderException();
+        if (!productCreated){
+            throw new UnfoundEntityException(command.getProductId(), Product.class.getSimpleName());
         }
         AggregateLifecycle.apply(new ProductInventoryEvent(command.getProductId(), command.getName(),
                 command.getStock(), command.getPrice(), command.getCurrency()));
@@ -68,6 +86,11 @@ public class ProductAggregate {
     @EventSourcingHandler
     public void on(ProductInventoryEvent event) {
         this.productId = event.getProductId();
+        this.name = event.getName();
+        this.stock = event.getStock();
+        this.price = event.getPrice();
+        this.currency = event.getCurrency();
+        this.productStatus = ProductStatus.UPDATED.toString();
         productInventoryUpdated = true;
     }
 }

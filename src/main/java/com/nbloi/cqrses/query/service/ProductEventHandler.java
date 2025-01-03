@@ -4,16 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.enums.EventType;
 import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
 import com.nbloi.cqrses.commonapi.enums.ProductStatus;
-import com.nbloi.cqrses.commonapi.event.order.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.payment.PaymentFailedEvent;
 import com.nbloi.cqrses.commonapi.event.product.ProductCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.product.ProductDeletedEvent;
 import com.nbloi.cqrses.commonapi.event.product.ProductInventoryEvent;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.product.FindAllProductsQuery;
-import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
-import com.nbloi.cqrses.commonapi.query.product.FindProductByIdAndStatusActiveQuery;
-import com.nbloi.cqrses.commonapi.query.product.FindProductByIdAndStatusQuery;
 import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OrderItem;
@@ -81,10 +77,11 @@ public class ProductEventHandler {
     public void delete(ProductDeletedEvent event) {
         try {
             Product product = productRepository.findById(event.getProductId()).orElse(null);
-            if (product == null) {
-                throw new UnfoundEntityException(event.getProductId(), Product.class.getName());
-            }
-            product.setProductStatus(ProductStatus.DELETED.toString());
+            if (product ==null){
+                throw new UnfoundEntityException(event.getProductId(), Product.class.getName());}
+
+//            productRepository.delete(product);
+            product.setProductStatus(event.getProductStatus());
             productRepository.save(product);
 
             // Save Outbox Message
@@ -125,27 +122,13 @@ public class ProductEventHandler {
 
     @QueryHandler
     public List<Product> handle(FindAllProductsQuery query) {
-        return new ArrayList<>(productRepository.findAll());
+        return new ArrayList<>(productRepository.findAllActiveProduct());
     }
 
     @QueryHandler
     public Product handle(FindProductByIdQuery query) {
-        Product product = productRepository.findById(query.getProductById()).orElse(null);
+        Product product = productRepository.findActiveProductById(query.getProductById());
         if (product == null) {throw new UnfoundEntityException(query.getProductById(), Product.class.getName());}
-        return product;
-    }
-
-    @QueryHandler
-    public Product handle(FindProductByIdAndStatusQuery query) {
-        Product product = productRepository.findByProductIdAndProductStatus(query.getProductId(), query.getProductStatus());
-        if (product == null) {throw new UnfoundEntityException(query.getProductId(), Product.class.getName());}
-        return product;
-    }
-
-    @QueryHandler
-    public Product handle(FindProductByIdAndStatusActiveQuery query) {
-        Product product = productRepository.findByProductIdAndProductStatus(query.getProductId(), ProductStatus.ACTIVE.toString());
-        if (product == null) {throw new UnfoundEntityException(query.getProductId(), Product.class.getName());}
         return product;
     }
 }

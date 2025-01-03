@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 public class ProductEventProducer {
 
 //    private static final String TOPIC = "product_inventory_updated_events";
-    private static final String TOPIC = "product_updated_events";
+    private static final String TOPIC = "product_deleted_events";
     private final static long sendTimeout = 3000;
 
     @Autowired

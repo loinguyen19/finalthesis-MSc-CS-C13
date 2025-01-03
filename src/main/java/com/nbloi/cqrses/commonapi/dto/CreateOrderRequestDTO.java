@@ -3,6 +3,8 @@ package com.nbloi.cqrses.commonapi.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import jakarta.persistence.Column;
+import jakarta.validation.constraints.NotBlank;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,10 +12,16 @@ import java.util.List;
 public class CreateOrderRequestDTO {
 
     private OrderStatus orderStatus;
+
+    @NotBlank(message = "order item can not be blank.")
     private List<OrderItemDTO> orderItems;
+    @NotBlank (message = "total amount can not be blank.")
     private BigDecimal totalAmount;
+    @NotBlank (message = "currency can not be blank.")
     private String currency;
+    @NotBlank (message = "customer id can not be blank.")
     private String customerId;
+    @NotBlank (message = "payment id can not be blank.")
     private String paymentId;
 
     // constructor, getters, equals/hashCode and toString

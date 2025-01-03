@@ -6,6 +6,7 @@ import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
 import com.nbloi.cqrses.commonapi.event.order.OrderShippedEvent;
 import com.nbloi.cqrses.commonapi.event.payment.PaymentCompletedEvent;
 import com.nbloi.cqrses.commonapi.event.payment.PaymentFailedEvent;
+import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.Payment;
 import com.nbloi.cqrses.query.repository.OrderRepository;
@@ -37,7 +38,8 @@ public class PaymentSummarizedEventConsumer {
         // Process the payment event, e.g., update payment status
         log.info("Received Order Shipped Event: {} to send to Payment Summarized View", orderShippedEvent);
         OrderShippedEvent shippedEvent = new ObjectMapper().readValue(orderShippedEvent, OrderShippedEvent.class);
-        Order order = orderRepository.findById(shippedEvent.getOrderId()).get();
+        Order order = orderRepository.findById(shippedEvent.getOrderId()).orElseThrow(()
+                -> new UnfoundEntityException(shippedEvent.getOrderId(),OrderShippedEvent.class.getName()));
         Payment payment = order.getPayment();
         String paymentStatus = payment.getPaymentStatus();
 

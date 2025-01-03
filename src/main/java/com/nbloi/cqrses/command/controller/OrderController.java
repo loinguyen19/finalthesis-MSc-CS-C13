@@ -15,14 +15,18 @@ import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OrderItem;
 import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.service.ProductEventHandler;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.weaver.ast.Instanceof;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.EventProcessingModule;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.queryhandling.QueryGateway;
+import org.hibernate.validator.constraints.URL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
@@ -52,7 +56,7 @@ public class OrderController {
         this.eventStore = eventStore;
     }
 
-    @PostMapping("/create-order")
+    @PostMapping(value = "/create-order", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createOrder(@RequestBody CreateOrderRequestDTO request) {
         try {
             String orderId = UUID.randomUUID().toString();
@@ -90,9 +94,17 @@ public class OrderController {
 
     // we can not implement "confirm-order" on the interface because it should be done in the backend and after order being created and paid succesfully
     @PostMapping("/confirm-order/{orderId}")
-    public String confirmOrder(@PathVariable String orderId) {
-        commandGateway.send(new ConfirmOrderCommand(orderId));
-        return "Order Id: " + orderId + " has been confirmed";
+    public ResponseEntity<String> confirmOrder(@PathVariable String orderId) {
+        try {
+            if (orderId == null) {
+                return new ResponseEntity<>("Invalid uuid-formatted order id", HttpStatus.BAD_REQUEST);
+            }
+            UUID parsedUUID = UUID.fromString(orderId);
+            commandGateway.send(new ConfirmOrderCommand(orderId));
+            return new ResponseEntity<>("Order Id: " + orderId + " has been confirmed", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error parsing order Id " + orderId + " with UUID format.", HttpStatus.BAD_REQUEST);
+        }
     }
 
 //    // we can not implement "ship-order" on the interface because it should be done in the backend and after order being confirmed
@@ -111,8 +123,18 @@ public class OrderController {
     }
 
     @GetMapping("/findbyid/{orderId}")
-    public CompletableFuture<Order> findOrderById(@PathVariable String orderId) {
-        return queryGateway.query(new FindOrderByIdQuery(orderId), ResponseTypes.instanceOf(Order.class));
+    public ResponseEntity findOrderById(@PathVariable String orderId) {
+        try {
+            if (orderId == null) {
+                return new ResponseEntity<>("Invalid uuid-formatted order id", HttpStatus.BAD_REQUEST);
+            }
+            UUID parsedUUID = UUID.fromString(orderId);
+            commandGateway.send(new ConfirmOrderCommand(orderId));
+            Order orderRetrieved = queryGateway.query(new FindOrderByIdQuery(orderId), ResponseTypes.instanceOf(Order.class)).join();
+            return new ResponseEntity<>(orderRetrieved, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Can not find order with id: " + orderId, HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping("/findbycustomerid/{customerId}")

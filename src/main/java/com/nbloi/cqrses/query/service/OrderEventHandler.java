@@ -1,10 +1,7 @@
 package com.nbloi.cqrses.query.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.commonapi.enums.EventType;
-import com.nbloi.cqrses.commonapi.enums.OrderStatus;
-import com.nbloi.cqrses.commonapi.enums.OutboxStatus;
-import com.nbloi.cqrses.commonapi.enums.PaymentStatus;
+import com.nbloi.cqrses.commonapi.enums.*;
 import com.nbloi.cqrses.commonapi.event.order.*;
 import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
@@ -23,9 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Transactional
@@ -280,6 +275,7 @@ public class OrderEventHandler {
     public Order handle(FindOrderByCustomerIdQuery query) {
         Order order = orderRepository.findById(query.getCustomerId()).orElse(null);
         if (order == null) {throw new UnfoundEntityException(query.getCustomerId(), Order.class.getSimpleName());}
+
         return order;
     }
 }

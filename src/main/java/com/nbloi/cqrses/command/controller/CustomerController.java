@@ -5,7 +5,6 @@ import com.nbloi.cqrses.commonapi.dto.CustomerDTO;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerDeletedEvent;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerUpdatedEvent;
 import com.nbloi.cqrses.commonapi.query.customer.FindAllCustomersQuery;
-import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdAndStatusActiveQuery;
 import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
 import com.nbloi.cqrses.query.entity.Customer;
 import com.nbloi.cqrses.query.service.CustomerEventHandler;

@@ -4,8 +4,11 @@ import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.commonapi.event.order.OrderConfirmedEvent;
 import com.nbloi.cqrses.commonapi.event.order.OrderCreatedEvent;
 import com.nbloi.cqrses.commonapi.event.order.OrderShippedEvent;
+import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
+import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
 import com.nbloi.cqrses.query.entity.Customer;
 import com.nbloi.cqrses.query.entity.CustomerOrderView;
+import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.repository.CustomerOrderRepository;
 import com.nbloi.cqrses.query.repository.CustomerRepository;
 import com.nbloi.cqrses.query.repository.OrderRepository;
@@ -24,14 +27,14 @@ public class CustomerOrderProjectionHandler {
     private CustomerOrderRepository customerOrderRepository;
 
     @Autowired
-    private CustomerRepository customerRepository;
+    private CustomerEventHandler customerEventHandler;
 
     @Autowired
-    private OrderRepository orderRepository;
+    private OrderEventHandler orderEventHandler;
 
     @EventHandler
     public void on(OrderCreatedEvent event) {
-        Customer customer = customerRepository.findById(event.getCustomerId()).get();
+        Customer customer = customerEventHandler.handle(new FindCustomerByIdQuery(event.getCustomerId()));
 
         CustomerOrderView customerOrderView = new CustomerOrderView();
         customerOrderView.setCustomerOrderViewId(UUID.randomUUID().toString());
@@ -48,7 +51,12 @@ public class CustomerOrderProjectionHandler {
 
     @EventHandler
     public void on(OrderConfirmedEvent event) {
-        CustomerOrderView view = customerOrderRepository.findById(event.getOrderId()).get();
+        Order order = orderEventHandler.handle(new FindOrderByIdQuery(event.getOrderId()));
+        String orderId = order.getOrderId();
+
+        Customer customer = order.getCustomer();
+        String customerId = customer.getCustomerId();
+        CustomerOrderView view = customerOrderRepository.findByCustomerIdAndOrderId(customerId, orderId);
         view.setOrderStatus(OrderStatus.CONFIRMED.toString());
 
         customerOrderRepository.save(view);
@@ -56,7 +64,12 @@ public class CustomerOrderProjectionHandler {
 
     @EventHandler
     public void on(OrderShippedEvent event) {
-        CustomerOrderView view = customerOrderRepository.findById(event.getOrderId()).get();
+        Order order = orderEventHandler.handle(new FindOrderByIdQuery(event.getOrderId()));
+        String orderId = order.getOrderId();
+
+        Customer customer = order.getCustomer();
+        String customerId = customer.getCustomerId();
+        CustomerOrderView view = customerOrderRepository.findByCustomerIdAndOrderId(customerId, orderId);
         view.setOrderStatus(OrderStatus.SHIPPED.toString());
 
         customerOrderRepository.save(view);

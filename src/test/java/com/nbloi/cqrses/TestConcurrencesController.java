@@ -2,14 +2,14 @@ package com.nbloi.cqrses;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nbloi.cqrses.command.aggregate.CustomerAggregate;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.nbloi.cqrses.command.aggregate.OrderAggregate;
 import com.nbloi.cqrses.commonapi.dto.CreateOrderRequestDTO;
 import com.nbloi.cqrses.commonapi.dto.CustomerDTO;
 import com.nbloi.cqrses.commonapi.dto.OrderItemDTO;
 import com.nbloi.cqrses.commonapi.dto.ProductDTO;
+import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.commonapi.enums.ProductStatus;
-import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.commonapi.query.customer.FindAllCustomersQuery;
 import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
@@ -31,6 +31,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
@@ -40,10 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -53,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 @DirtiesContext
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class TestConcurrencyController {
+class TestConcurrencesController {
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -71,7 +70,7 @@ class TestConcurrencyController {
     @Autowired
     private CustomerRepository customerRepository;
     @Autowired
-    private CustomerAggregate customerAggregate;
+    private OrderRepository orderRepository;
 
     @Test
     public void contextLoads() {}
@@ -100,14 +99,19 @@ class TestConcurrencyController {
         Assertions.assertEquals(HttpStatus.CREATED, customerResult.getStatusCode());
         try {
             List<Customer> customerListRetrieved = customerEventHandler.handle(new FindAllCustomersQuery());
-//            List<Customer> customerListRetrieved = customerRepository.findAll();
+
+            // Test the uniqueness of data
             Assertions.assertEquals(customerList.size(), customerListRetrieved.size());
             for (Customer customer : customerListRetrieved) {
-                // Add assertions for completeness and validity
+                // Test data completeness
                 Assertions.assertNotNull(customer);
+
+                // Test data validity
                 Assertions.assertTrue(customer.getEmail().matches(".+@.+\\..+"));
                 Assertions.assertNotNull(customer.getPhoneNumber(), () -> "Customer phone number is null");
                 Assertions.assertTrue(customer.getBalance().compareTo(BigDecimal.ZERO) >= 0, () -> "Balance phone number is negative");
+
+                // Test timeliness
                 Assertions.assertTrue(customer.getCreatedAt().isBefore(LocalDateTime.now()), () -> "CreatedAt is later than now");
             }
             System.out.println("Response Body: " + customerResult.getBody());
@@ -132,13 +136,17 @@ class TestConcurrencyController {
         Thread.sleep(30000);
         List<Product> productListRetrieved = productEventHandler.handle(new FindAllProductsQuery());
 
-            // Collect results
+                // Collect results
                 Assertions.assertEquals(HttpStatus.CREATED, productDTOListResult.getStatusCode());
+
+                // Test data completeness
                 Assertions.assertEquals(productList.size(), productListRetrieved.size());
         try {
             for (Product product : productListRetrieved) {
-                // Add assertions for completeness and validity
+                // // Test data completeness
                 Assertions.assertNotNull(product);
+
+                // Test data validity
                 Assertions.assertTrue(product.getStock() >= 0, () -> "Stock should be greater than zero");
                 Assertions.assertTrue(product.getPrice().compareTo(BigDecimal.ZERO) > 0, () -> "Price should be greater than zero");
 
@@ -203,7 +211,6 @@ class TestConcurrencyController {
                 ResponseEntity<String> orderCreatedResult = restTemplate.postForEntity("/api/v1/orders/create-order",
                         orderRequestDTO,
                         String.class);
-
                 Thread.sleep(45000);
                 return orderCreatedResult;
             });
@@ -227,8 +234,18 @@ class TestConcurrencyController {
                 Order orderRetrieved = orderEventHandler.handle(new FindOrderByIdQuery(orderId));
                 orderListCreated.add(orderRetrieved);
                 Assertions.assertNotNull(orderRetrieved);
-                // Test customer
+                Assertions.assertEquals(totalAmount, orderRetrieved.getTotalAmount());
+                Assertions.assertEquals(currency, orderRetrieved.getCurrency());
+                // Test consistency
+                if (initialBalance.compareTo(totalAmount) >= 0) {
+                    Assertions.assertEquals(OrderStatus.SHIPPED.toString(), orderRetrieved.getOrderStatus());
+                } else if (initialBalance.compareTo(totalAmount) < 0) {
+                    Assertions.assertEquals(OrderStatus.CREATED.toString(), orderRetrieved.getOrderStatus());
+                }
+
+                // Collect customer
                 Customer customerRetrieved = orderRetrieved.getCustomer();
+                // Test validity and completeness
                 Assertions.assertNotNull(customerID, customerRetrieved.getCustomerId());
                 Assertions.assertEquals(requestedCustomers.getName(), customerRetrieved.getName());
                 Assertions.assertEquals(requestedCustomers.getEmail(), customerRetrieved.getEmail());
@@ -239,25 +256,25 @@ class TestConcurrencyController {
                 Set<OrderItem> orderItemSet = orderRetrieved.getOrderItems();
                 for (OrderItem orderItem : orderItemSet) {
                     Product productRetrieved = orderItem.getProduct();
-
+                    // Test validity and completeness
                     if (productRetrieved.getProductId().equals(productId1)) {
                         Assertions.assertEquals(productId1, productRetrieved.getProductId());
                         Assertions.assertEquals(product1.getName(), productRetrieved.getName());
                         Assertions.assertEquals(product1.getPrice(), productRetrieved.getPrice());
                         Assertions.assertEquals(product1.getCurrency(), productRetrieved.getCurrency());
-
-                    } else if (productRetrieved.getProductId().equals(productId2)) {
+                    }
+                    else if (productRetrieved.getProductId().equals(productId2)) {
                         Assertions.assertEquals(productId2, productRetrieved.getProductId());
                         Assertions.assertEquals(product2.getName(), productRetrieved.getName());
                         Assertions.assertEquals(product2.getPrice(), productRetrieved.getPrice());
                         Assertions.assertEquals(product2.getCurrency(), productRetrieved.getCurrency());
-
                     }
                 }
 
                 System.out.println("Response: " + response.getBody());
                 Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode());
             }
+            // Test uniqueness
             Assertions.assertEquals(futures.size(), orderListCreated.size());
 
             Customer customerJoined = customerEventHandler.handle(new FindCustomerByIdQuery(customerID));
@@ -406,6 +423,210 @@ class TestConcurrencyController {
         }
     }
 
+    @DisplayName("should return status OK when updating the same customer simultaneously 5 concurrences")
+    @Test
+    public void test5ConcurrencesUpdateCustomerSimultaneously() throws Exception {
+        int threadCount = 5;
+        List<Callable<ResponseEntity<String>>> tasks = new ArrayList<>();
+
+        List<Customer> customerList = customerEventHandler.handle(new FindAllCustomersQuery());
+        Customer customerRequest = customerList.get(5);
+        String customerId = customerRequest.getCustomerId();
+        String name = customerRequest.getName();
+        String email = customerRequest.getEmail();
+        String phoneNumber = customerRequest.getPhoneNumber();
+        BigDecimal balance = customerRequest.getBalance();
+        LocalDateTime createdAt =  customerRequest.getCreatedAt();
+        String customerStatus = customerRequest.getCustomerStatus();
+        Set<Order> orderInitialSet = customerRequest.getOrders();
+
+
+        for (int i = 0; i < threadCount; i++) {
+            int finalI = i;
+            String phoneNumberUpdated =  String.valueOf(Math.round((Math.random()* 10000000)*(Math.random()* 10000)));
+
+            tasks.add(() -> {
+                CustomerDTO customerDTO = new CustomerDTO(
+                        customerId, name, email, phoneNumber, balance);
+                // Automatically update phoneNumbers based on the number of threads
+                customerDTO.setPhoneNumber(phoneNumberUpdated);
+
+                System.out.println("Updated Phone number is: " + phoneNumberUpdated + " at thread number: " + finalI);
+                System.out.println("Order created at thread number: " + finalI);
+                HttpEntity<CustomerDTO> httpEntity = new HttpEntity<>(customerDTO);
+                ResponseEntity<String> updatedCustomer = restTemplate.exchange("/api/v1/customers/update/"+customerId,
+                        HttpMethod.PUT,
+                        httpEntity,
+                        String.class);
+                Thread.sleep(25000);
+                return updatedCustomer;
+            });
+        }
+
+        List<Future<ResponseEntity<String>>> futures = executorService.invokeAll(tasks);
+        for (Future<ResponseEntity<String>> future : futures) {
+            ResponseEntity<String> response = future.get();
+            System.out.println("Response: " + response.getBody());
+        }
+    }
+
+    @DisplayName("should return status OK when updating the same customer multiple times with the same customer event")
+    @Test
+    public void test5ConcurrencesUpdateCustomerMultipleTimes() throws Exception {
+        int threadCount = 5;
+        List<Callable<ResponseEntity<String>>> tasks = new ArrayList<>();
+
+        List<Customer> customerList = customerEventHandler.handle(new FindAllCustomersQuery());
+        Customer customerRequest = customerList.get(5);
+        String customerId = customerRequest.getCustomerId();
+        String name = customerRequest.getName();
+        String email = customerRequest.getEmail();
+        String phoneNumber = customerRequest.getPhoneNumber();
+        BigDecimal balance = customerRequest.getBalance();
+        LocalDateTime createdAt =  customerRequest.getCreatedAt();
+        String customerStatus = customerRequest.getCustomerStatus();
+        Set<Order> orderInitialSet = customerRequest.getOrders();
+
+
+        for (int i = 0; i < threadCount; i++) {
+            int finalI = i;
+            String phoneNumberUpdated =  String.valueOf(Math.round((Math.random()* 10000000)*(Math.random()* 10000)));
+
+            tasks.add(() -> {
+                CustomerDTO customerDTO = new CustomerDTO(
+                        customerId, name, email, phoneNumber, balance);
+                // Automatically update phoneNumbers based on the number of threads
+                customerDTO.setPhoneNumber(phoneNumberUpdated);
+
+                System.out.println("Updated Phone number is: " + phoneNumberUpdated + " at thread number: " + finalI);
+                System.out.println("Order created at thread number: " + finalI);
+                HttpEntity<CustomerDTO> httpEntity = new HttpEntity<>(customerDTO);
+                ResponseEntity<String> updatedCustomer = restTemplate.exchange("/api/v1/customers/update/"+customerId,
+                        HttpMethod.PUT,
+                        httpEntity,
+                        String.class);
+                Thread.sleep(5000);
+                return updatedCustomer;
+            });
+        }
+
+        List<Future<ResponseEntity<String>>> futures = executorService.invokeAll(tasks);
+        for (Future<ResponseEntity<String>> future : futures) {
+            ResponseEntity<String> response = future.get();
+            Assertions.assertNotNull(response);
+            Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+            Map<String, Object> mapResponse = new HashMap<>();
+            mapResponse = new ObjectMapper().readValue(response.getBody(), mapResponse.getClass());
+
+            Customer customerResponse = objectMapper.convertValue(mapResponse, Customer.class);
+            Assertions.assertEquals(customerId, customerResponse.getCustomerId());
+
+            Assertions.assertNotNull(customerResponse.getPhoneNumber());
+            Assertions.assertNotEquals(phoneNumber, customerResponse.getPhoneNumber());
+            Assertions.assertEquals(name, customerResponse.getName());
+            Assertions.assertEquals(email, customerResponse.getEmail());
+            int comparedBalance = balance.compareTo(customerResponse.getBalance());
+            Assertions.assertEquals(comparedBalance, 0);
+            Assertions.assertEquals(customerStatus, customerResponse.getCustomerStatus());
+            Assertions.assertTrue(customerResponse.getUpdatedAt().isAfter(createdAt));
+
+            System.out.println("Response: " + response.getBody());
+        }
+    }
+
+    @DisplayName("should return status OK when deleting a product should deleting all related-product orders")
+    @Test
+    public void test5ConcurrencesDeleteAProductLinkage() throws Exception {
+        // GIVEN
+        int threadCount = 5;
+        List<Callable<ResponseEntity>> tasks = new ArrayList<>();
+
+        // Read customers from file Customer.json
+        List<Customer> customerList = customerEventHandler.handle(new FindAllCustomersQuery());
+        Customer requestedCustomers = customerList.get(12);
+        String customerID = requestedCustomers.getCustomerId();
+        BigDecimal initialBalance = requestedCustomers.getBalance();
+
+        List<Product> productList = productEventHandler.handle(new FindAllProductsQuery());
+        Product product1 = productList.get(12);
+        String productId1 = product1.getProductId();
+        int stock1 = product1.getStock();
+
+        List<OrderItemDTO> orderItemList = new ArrayList<>();
+        // create orderItem 1
+        BigDecimal price1 = product1.getPrice();
+        int quantity1 = 5;
+        BigDecimal totalPrice1 = price1.multiply(BigDecimal.valueOf(quantity1));
+        String currency = product1.getCurrency();
+        OrderItemDTO oDTO1 = new OrderItemDTO(UUID.randomUUID().toString(), productId1, quantity1, price1, totalPrice1, currency);
+
+        // Save 2 orderItems into orderItemlist
+        orderItemList.add(oDTO1);
+
+        BigDecimal totalAmount = totalPrice1;
+
+        for (int i = 0; i < threadCount; i++) {
+            int finalI = i;
+
+            BigDecimal finalTotalAmount = totalAmount;
+            tasks.add(() -> {
+                // Create an order
+                CreateOrderRequestDTO orderRequestDTO = new CreateOrderRequestDTO(
+                        orderItemList, finalTotalAmount, customerID, currency);
+                System.out.println("Order created at thread number: " + finalI);
+                ResponseEntity<String> orderCreatedResult = restTemplate.postForEntity("/api/v1/orders/create-order",
+                        orderRequestDTO,
+                        String.class);
+                Thread.sleep(45000);
+
+                // Delete the corresponding product
+                ResponseEntity<String> deletedOrderResult = restTemplate.exchange("/api/v1/products/delete/"+productId1,
+                        HttpMethod.DELETE,
+                        HttpEntity.EMPTY,
+                        String.class);
+                Thread.sleep(5000);
+
+                // Read this order and should return err not found
+                String orderId = orderCreatedResult.getBody();
+                ResponseEntity<String> getDeletedOrder = restTemplate.getForEntity("/api/v1/orders/findbyid/"+orderId,
+                        String.class);
+                return getDeletedOrder;
+            });
+        }
+
+        try {
+            // Invoke all tasks concurrently
+            List<Future<ResponseEntity>> futures = executorService.invokeAll(tasks);
+
+            // Collect results
+            for (Future<ResponseEntity> future : futures) {
+                ResponseEntity<String> response = future.get();
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.registerModule(new JavaTimeModule());
+                Map<String, Object> mapResponse = new HashMap<>();
+                mapResponse = new ObjectMapper().readValue(response.getBody(), mapResponse.getClass());
+
+                Order order =  objectMapper.convertValue(mapResponse, Order.class);
+                for (OrderItem orderItem : order.getOrderItems()) {
+                    Product product = orderItem.getProduct();
+                    Assertions.assertNotNull(product);
+                    Assertions.assertEquals(product.getProductStatus(), ProductStatus.DELETED.toString());
+                }
+
+                // Collect data from order created
+                Assertions.assertNotNull(response);
+                Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+
+                System.out.println("Response: " + response.getBody());
+            }
+        } catch(Exception e){
+            Assertions.fail("Exception occurred: " + e.getMessage());
+        }
+    }
 
     public List<CustomerDTO> getCustomerListFromJson() throws IOException {
         // Read customers from file Customer.json

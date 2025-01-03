@@ -60,7 +60,8 @@ public class CustomerEventHandler {
                 event.getPhoneNumber(),
                 event.getBalance(),
                 event.getCreatedAt(),
-                event.getCustomerStatus());
+                event.getCustomerStatus()
+        );
         customerRepository.save(customer);
 
         // Save Outbox Message
@@ -140,7 +141,7 @@ public class CustomerEventHandler {
 
     @QueryHandler
     public List<Customer> handle(FindAllCustomersQuery query) {
-        List<Customer> customerList = customerRepository.findAll();
+        List<Customer> customerList = customerRepository.findAllActiveCustomer();
             if (!customerList.isEmpty()) {
                 return customerList;
             } else {
@@ -149,36 +150,10 @@ public class CustomerEventHandler {
     }
 
     @QueryHandler
-    public List<Customer> handle(FindAllCustomersWithStatusActiveOrNullQuery query) {
-        List<Customer> customerList = customerRepository.findAllByCustomerStatus(CustomerStatus.ACTIVE.toString());
-        List<Customer> customerListNull = customerRepository.findAllByCustomerStatus(null);
-
-        if (!customerList.isEmpty() || !customerListNull.isEmpty()) {
-            customerList.addAll(customerListNull);
-            return customerList;
-        } else {
-            return new ArrayList<>();
-        }
-    }
-
-    @QueryHandler
     public Customer handle(FindCustomerByIdQuery query) {
-        Customer customer = customerRepository.findById(query.getCustomerId()).orElse(null);
+        Customer customer = customerRepository.findActiveCustomerById(query.getCustomerId());
         if (customer == null) {throw new UnfoundEntityException(query.getCustomerId(), Customer.class.getSimpleName());}
         return customer;
     }
 
-    @QueryHandler
-    public Customer handle(FindCustomerByIdAndStatusQuery query) {
-        Customer customer = customerRepository.findByCustomerIdAndCustomerStatus(query.getCustomerId(), query.getCustomerStatus());
-        if (customer == null) {throw new UnfoundEntityException(query.getCustomerId(), Customer.class.getSimpleName());}
-        return customer;
-    }
-
-    @QueryHandler
-    public Customer handle(FindCustomerByIdAndStatusActiveQuery query) {
-        Customer customer = customerRepository.findByCustomerIdAndCustomerStatus(query.getCustomerId(), CustomerStatus.ACTIVE.toString());
-        if (customer == null) {throw new UnfoundEntityException(query.getCustomerId(), Customer.class.getSimpleName());}
-        return customer;
-    }
 }

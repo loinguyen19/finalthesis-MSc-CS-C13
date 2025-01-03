@@ -2,12 +2,11 @@ package com.nbloi.cqrses.command.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.cqrses.commonapi.command.CreateProductCommand;
+import com.nbloi.cqrses.commonapi.command.DeleteProductCommand;
 import com.nbloi.cqrses.commonapi.dto.ProductDTO;
-import com.nbloi.cqrses.commonapi.enums.ProductStatus;
 import com.nbloi.cqrses.commonapi.event.product.ProductDeletedEvent;
 import com.nbloi.cqrses.commonapi.event.product.ProductInventoryEvent;
 import com.nbloi.cqrses.commonapi.query.product.FindAllProductsQuery;
-import com.nbloi.cqrses.commonapi.query.product.FindProductByIdAndStatusActiveQuery;
 import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.service.ProductEventHandler;
@@ -159,8 +158,11 @@ public class ProductController {
             if (product == null) {
                 throw new RuntimeException("Product not found");
             }
-            ProductDeletedEvent productDeletedEvent = new ObjectMapper().convertValue(product, ProductDeletedEvent.class);
-            productInventoryEventHandler.delete(productDeletedEvent);
+//            ProductDeletedEvent productDeletedEvent = new ObjectMapper().convertValue(product, ProductDeletedEvent.class);
+//            productInventoryEventHandler.delete(productDeletedEvent);
+
+            commandGateway.send(new DeleteProductCommand(productId));
+
             return new ResponseEntity<>(String.format("Product with id: %s has been deleted successfully!", productId), HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(String.format("Product with id: %s can not be found!!!", productId), HttpStatus.NOT_FOUND);
