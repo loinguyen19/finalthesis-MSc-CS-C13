@@ -30,16 +30,19 @@ public class Customer {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch =  FetchType.EAGER, orphanRemoval = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Set<Order> orders;
 
-    public Customer(String customerId, String name, String email, String phoneNumber, BigDecimal balance) {
+    public Customer(String customerId, String name, String email, String phoneNumber, BigDecimal balance,
+                    LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.balance = balance;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public Customer() {

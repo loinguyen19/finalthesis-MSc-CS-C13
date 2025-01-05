@@ -8,6 +8,7 @@ import lombok.Setter;
 public class CustomerDeletedEvent {
 
     private String customerId;
+    private String customerDeletedEventId;
 
     public CustomerDeletedEvent() {}
 

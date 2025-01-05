@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.View;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +30,9 @@ public class CustomerEventHandler {
                 event.getName(),
                 event.getEmail(),
                 event.getPhoneNumber(),
-                event.getBalance());
+                event.getBalance(),
+                event.getCreatedAt(),
+                LocalDateTime.now());
         customerRepository.save(customer);
     }
 

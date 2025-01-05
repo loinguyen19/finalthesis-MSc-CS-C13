@@ -2,16 +2,14 @@ package com.nbloi.conventional.eda.service.kafkaconsumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.conventional.eda.entity.OrderItem;
-import com.nbloi.conventional.eda.entity.Payment;
 import com.nbloi.conventional.eda.entity.Product;
 import com.nbloi.conventional.eda.enums.EventType;
-import com.nbloi.conventional.eda.enums.OutboxStatus;
 import com.nbloi.conventional.eda.event.OrderCreatedEvent;
 import com.nbloi.conventional.eda.event.PaymentCreatedEvent;
 import com.nbloi.conventional.eda.exception.UnfoundEntityException;
 import com.nbloi.conventional.eda.repository.PaymentRepository;
 import com.nbloi.conventional.eda.repository.ProductRepository;
-import com.nbloi.conventional.eda.service.ProductInventoryEventHandler;
+import com.nbloi.conventional.eda.service.ProductEventHandler;
 import com.nbloi.conventional.eda.service.kafkaproducer.PaymentEventProducer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +18,13 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @Slf4j
 public class ProductInventoryEventConsumer {
 
     @Autowired
-    private ProductInventoryEventHandler productInventoryEventHandler;
+    private ProductEventHandler productInventoryEventHandler;
     @Autowired
     private ProductRepository productRepository;
     @Autowired

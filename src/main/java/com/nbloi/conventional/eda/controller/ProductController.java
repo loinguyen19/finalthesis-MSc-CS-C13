@@ -5,7 +5,7 @@ import com.nbloi.conventional.eda.dto.ProductDTO;
 import com.nbloi.conventional.eda.event.ProductCreatedEvent;
 import com.nbloi.conventional.eda.event.ProductInventoryEvent;
 import com.nbloi.conventional.eda.entity.Product;
-import com.nbloi.conventional.eda.service.ProductInventoryEventHandler;
+import com.nbloi.conventional.eda.service.ProductEventHandler;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,20 +17,19 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 
 @RestController
-@RequestMapping("/eda/api")
+@RequestMapping("/eda/api/products")
 public class ProductController {
 
     @Autowired
     private final ModelMapper modelMapper;
     @Autowired
-    private ProductInventoryEventHandler productInventoryEventHandler;
+    private ProductEventHandler productInventoryEventHandler;
 
 
-    public ProductController(ProductInventoryEventHandler productInventoryEventHandler, ModelMapper modelMapper) {
+    public ProductController(ProductEventHandler productInventoryEventHandler, ModelMapper modelMapper) {
         this.modelMapper = modelMapper;
         this.productInventoryEventHandler = productInventoryEventHandler;
     }
@@ -75,7 +74,7 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/products")
+    @GetMapping("/all-products")
     public List<ProductDTO> findAllProducts() {
         List<Product> listProduct = productInventoryEventHandler.readAllProducts();
 
@@ -87,14 +86,14 @@ public class ProductController {
         return listProductDTO;
     }
 
-    @GetMapping("/products/findbyid/{productId}")
+    @GetMapping("/findbyid/{productId}")
     @ResponseBody
     public ProductDTO getProductById(@PathVariable String productId) {
         Product product = productInventoryEventHandler.readProductById(productId);
         return modelMapper.map(product, ProductDTO.class);
     }
 
-    @PutMapping("/products/update/{productId}")
+    @PutMapping("/update/{productId}")
     public String updateProduct(@PathVariable String productId, @Validated @RequestBody ProductDTO request) {
         Product product = productInventoryEventHandler.readProductById(productId);
         if (product == null) {
@@ -109,7 +108,7 @@ public class ProductController {
         return "Product with id: " + productId + " and " + " name: " + productUpdated.getName() + " was successfully updated";
     }
 
-    @DeleteMapping("/products/delete/{productId}")
+    @DeleteMapping("/delete/{productId}")
     public String deleteProduct(@PathVariable String productId) {
         Product product = productInventoryEventHandler.readProductById(productId);
         if (product == null) {

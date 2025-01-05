@@ -12,12 +12,12 @@ public class OrderItemDTO {
     private String currency;
 
 
-    public OrderItemDTO(String orderItemId, String productId, int quantity, BigDecimal price,String currency) {
+    public OrderItemDTO(String orderItemId, String productId, int quantity, BigDecimal price, BigDecimal totalPrice, String currency) {
         this.orderItemId = orderItemId;
         this.productId = productId;
         this.quantity = quantity;
         this.price = price;
-        this.totalPrice = price.multiply(BigDecimal.valueOf(quantity));
+        this.totalPrice = totalPrice;
         this.currency = currency;
     }
 

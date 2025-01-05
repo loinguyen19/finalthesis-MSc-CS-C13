@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nbloi.conventional.eda.entity.*;
 import com.nbloi.conventional.eda.enums.OrderStatus;
 import com.nbloi.conventional.eda.enums.PaymentStatus;
-import com.nbloi.conventional.eda.event.OrderConfirmedEvent;
-import com.nbloi.conventional.eda.event.OrderCreatedEvent;
-import com.nbloi.conventional.eda.event.OrderCancelledEvent;
-import com.nbloi.conventional.eda.event.OrderShippedEvent;
+import com.nbloi.conventional.eda.event.*;
 import com.nbloi.conventional.eda.exception.OutOfProductStockException;
 import com.nbloi.conventional.eda.exception.UnconfirmedOrderException;
 import com.nbloi.conventional.eda.exception.UnfoundEntityException;
@@ -189,13 +186,31 @@ public class OrderEventHandler {
 
     }
 
+    public void on(OrderDeletedEvent event) {
+        try {
+            String orderId = event.getOrderId();
+            Order orderToDelete = readOrderById(orderId);
+
+            orderRepository.delete(orderToDelete);
+
+        } catch (Exception e){
+            // Log the error for more specific message
+            log.error("Error handling event: {}", event, e);
+        }
+
+    }
+
 
     public List<Order> readAllOrders() {
         return orderRepository.findAll();
     }
 
     public Order readOrderById(String orderId) {
-        return orderRepository.findById(orderId).get();
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if (order == null) {
+            throw new UnfoundEntityException(orderId, Order.class.getSimpleName());
+        }
+        return order;
     }
 
 }

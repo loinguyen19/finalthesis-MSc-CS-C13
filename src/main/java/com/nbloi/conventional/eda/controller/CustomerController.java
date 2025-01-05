@@ -6,6 +6,7 @@ import com.nbloi.conventional.eda.event.customer.CustomerDeletedEvent;
 import com.nbloi.conventional.eda.event.customer.CustomerUpdatedEvent;
 import com.nbloi.conventional.eda.exception.UnfoundEntityException;
 import com.nbloi.conventional.eda.entity.Customer;
+import com.nbloi.conventional.eda.repository.CustomerRepository;
 import com.nbloi.conventional.eda.service.CustomerEventHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,14 +21,14 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
-@RequestMapping(path = "/api/customers")
+@RequestMapping(path = "/eda/api/customers")
 public class CustomerController {
 
     @Autowired
     private CustomerEventHandler customerEventHandler;
-
 
     // Autowiring constructor and POST/GET endpoints
     public CustomerController(CustomerEventHandler customerEventHandler) {
@@ -35,7 +36,7 @@ public class CustomerController {
     }
 
     @PostMapping("/create-customer")
-    public ResponseEntity createCustomer(@RequestBody CustomerDTO request) {
+    public ResponseEntity<String> createCustomer(@RequestBody CustomerDTO request) {
         String customerId = UUID.randomUUID().toString();
         String name = request.getName();
         String email = request.getEmail();
@@ -47,7 +48,8 @@ public class CustomerController {
                     customerId, name, email, phoneNumber, balance, createdAt);
             customerEventHandler.on(customerCreatedEvent);
             request.setCustomerId(customerId);
-            return new ResponseEntity<>(request, HttpStatus.CREATED);
+            return new ResponseEntity<>(customerId, HttpStatus.CREATED);
+
         } catch (UnfoundEntityException e) {
             return new ResponseEntity<>("Your customer request can not be processed. Please review request payload",
                     HttpStatus.INTERNAL_SERVER_ERROR);
@@ -55,7 +57,7 @@ public class CustomerController {
     }
 
     @PostMapping("/create-listofcustomers")
-    public ResponseEntity createListOfCustomer(@RequestBody CustomerDTO []requestList) {
+    public ResponseEntity createListOfCustomer(@RequestBody List<CustomerDTO> requestList) {
         try {
             List<CustomerDTO> customersCreatedList = new ArrayList<>();
             for (CustomerDTO request : requestList) {
@@ -130,4 +132,5 @@ public class CustomerController {
             return new ResponseEntity<>(String.format("Customer with id: %s can not be found!!!",customerId), HttpStatus.NOT_FOUND);
         }
     }
+
 }

@@ -31,10 +31,9 @@ public class PaymentProcessingEventConsumer {
         // Implement the logic for payment processing and order status update
 
         try {
-            // TODO: call onProcessing in PaymentEventHandler to update the balance of customer and call function go to confirm payment
-
             PaymentCreatedEvent paymentEvent = new ObjectMapper().readValue(paymentCreatedEvent, PaymentCreatedEvent.class);
             paymentEventHandler.onProcessing(paymentEvent);
+            log.info("Processing Payment Event: " + paymentCreatedEvent);
 
         } catch (Exception e) {
             e.printStackTrace();

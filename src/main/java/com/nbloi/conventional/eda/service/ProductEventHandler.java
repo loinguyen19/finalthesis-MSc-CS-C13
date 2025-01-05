@@ -13,12 +13,12 @@ import java.util.List;
 
 @Transactional
 @Service
-public class ProductInventoryEventHandler {
+public class ProductEventHandler {
 
     @Autowired
     ProductRepository productRepository;
 
-    public ProductInventoryEventHandler(ProductRepository productRepository) {
+    public ProductEventHandler(ProductRepository productRepository) {
         super();
         this.productRepository = productRepository;
     }

@@ -1,7 +1,7 @@
 package com.nbloi.conventional.eda.entity;
 
-import lombok.Builder;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 //import javax.persistence.*;
 import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -11,15 +11,18 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
-@Data
+//@Data
 @Builder
+@Getter
+@Setter
+@AllArgsConstructor
 @Entity
 public class Product {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID, generator = "UUID")
-    @UuidGenerator
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+//    @GeneratedValue(strategy = GenerationType.UUID, generator = "UUID")
+//    @UuidGenerator
+//    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private String productId;
 
     private String name;
@@ -27,8 +30,9 @@ public class Product {
     private int stock;
     private String currency;
 
-//    @OneToMany(mappedBy = "product")
-//    private Set<OrderItem> orderItems;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private Set<OrderItem> orderItems;
 
     public Product(String productId, String name, BigDecimal price, int stock, String currency) {
         this.productId = productId;
