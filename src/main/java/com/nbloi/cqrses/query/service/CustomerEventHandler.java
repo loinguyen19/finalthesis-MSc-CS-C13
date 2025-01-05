@@ -20,6 +20,7 @@ import com.nbloi.cqrses.query.repository.CustomerRepository;
 import com.nbloi.cqrses.query.repository.OrderRepository;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import java.util.UUID;
 @Transactional
 @Service
 @Slf4j
+@ProcessingGroup("customerProcessor")
 public class CustomerEventHandler {
 
     @Autowired
@@ -90,6 +92,7 @@ public class CustomerEventHandler {
 
         // Save the updated customer
         customerRepository.save(existingCustomer);
+        log.info("Updated customer is: " + existingCustomer.toString());
 
         // Save Outbox Message
         OutboxMessage outboxMessage = new OutboxMessage(

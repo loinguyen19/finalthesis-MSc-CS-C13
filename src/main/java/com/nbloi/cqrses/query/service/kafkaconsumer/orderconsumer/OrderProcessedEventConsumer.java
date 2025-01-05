@@ -5,10 +5,18 @@ import com.nbloi.cqrses.commonapi.event.order.OrderCancelledEvent;
 import com.nbloi.cqrses.commonapi.event.order.OrderDeletedEvent;
 import com.nbloi.cqrses.commonapi.event.payment.PaymentFailedEvent;
 import com.nbloi.cqrses.commonapi.event.customer.CustomerDeletedEvent;
+import com.nbloi.cqrses.commonapi.event.product.ProductDeletedEvent;
+import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
+import com.nbloi.cqrses.commonapi.query.product.FindProductByIdAllStatusQuery;
+import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Customer;
 import com.nbloi.cqrses.query.entity.Order;
+import com.nbloi.cqrses.query.entity.OrderItem;
+import com.nbloi.cqrses.query.entity.Product;
+import com.nbloi.cqrses.query.repository.OrderItemRepository;
 import com.nbloi.cqrses.query.repository.OutboxRepository;
+import com.nbloi.cqrses.query.repository.ProductRepository;
 import com.nbloi.cqrses.query.service.CustomerEventHandler;
 import com.nbloi.cqrses.query.service.OrderEventHandler;
 import com.nbloi.cqrses.query.service.ProductEventHandler;
@@ -16,6 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class OrderProcessedEventConsumer {
@@ -29,6 +41,12 @@ public class OrderProcessedEventConsumer {
     private OutboxRepository outboxRepository;
     @Autowired
     private ProductEventHandler productEventHandler;
+
+    private final Map<String, Integer> processedEventsMap = new HashMap<String, Integer>();
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+    @Autowired
+    private ProductRepository productRepository;
 
     @KafkaListener(topics = "payment_failed_events", groupId = "order_group")
     public void handleOrderCancelledEvent(@Payload String paymentFailedEvent) {
@@ -55,15 +73,64 @@ public class OrderProcessedEventConsumer {
         try {
             CustomerDeletedEvent customerEvent = new ObjectMapper().readValue(customerDeletedEvent, CustomerDeletedEvent.class);
             Customer customer = customerEventHandler.handle(new FindCustomerByIdQuery(customerEvent.getCustomerId()));
-            for (Order order : customer.getOrders()) {
-                OrderDeletedEvent orderDeletedEvent = new OrderDeletedEvent(order.getOrderId());
-                orderEventHandler.on(orderDeletedEvent);
+            String customerDeletedEventId = customerEvent.getCustomerDeletedEventId();
+
+            // check if the event processed or not
+            if (!processedEventsMap.containsKey(customerDeletedEventId)) {
+                for (Order order : customer.getOrders()) {
+                    if (order != null) {
+                        OrderDeletedEvent orderDeletedEvent = new OrderDeletedEvent(order.getOrderId());
+                        // Process the event
+                        orderEventHandler.on(orderDeletedEvent);
+                    }
+                }
+
+                // Mark the event as processed status
+                processedEventsMap.put(customerDeletedEventId, 1);
             }
 
         } catch(Exception e){
             e.printStackTrace();
             throw new RuntimeException("Exception in handleOrderConfirmedEvent");
         }
+    }
+
+    @KafkaListener(topics = "product_deleted_events", groupId = "product_group")
+    public void handleOrderDeletedEventWhenDeletingAProduct(@Payload String productDeletedEvent) {
+        System.out.println("Received Order Deleted Event When Deleting A Customer: " + productDeletedEvent);
+
+        try {
+            ProductDeletedEvent productEvent = new ObjectMapper().readValue(productDeletedEvent, ProductDeletedEvent.class);
+            Product product = productEventHandler.handle(new FindProductByIdAllStatusQuery(productEvent.getProductId()));
+//            Product product = productRepository.findById(productEvent.getProductId()).orElse(null);
+            if (product != null) {throw new UnfoundEntityException(productEvent.getProductId(), Product.class.getName());}
+            String productDeletedEventId = productEvent.getProductDeletedEventId();
+
+            // check if the event processed or not
+            if (!processedEventsMap.containsKey(productDeletedEventId)) {
+                List<OrderItem> orderItemList = orderItemRepository.findByProduct(product);
+
+                for (OrderItem orderItem : orderItemList) {
+                    Order order = orderItem.getOrder();
+                    if (order != null) {
+                        OrderDeletedEvent orderDeletedEvent = new OrderDeletedEvent(order.getOrderId());
+                        // Process the event
+                        orderEventHandler.on(orderDeletedEvent);
+                    }
+                }
+
+                // Mark the event as processed status
+                processedEventsMap.put(productDeletedEventId, 1);
+            }
+
+        } catch(Exception e){
+            e.printStackTrace();
+            throw new RuntimeException("Exception in handleOrderConfirmedEvent");
+        }
+    }
+
+    public int getProcessedCount(String eventId) {
+        return processedEventsMap.getOrDefault(eventId, 0);
     }
 
 //    @KafkaListener(topics = "product_updated_events", groupId = "order_group")

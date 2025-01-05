@@ -8,22 +8,21 @@ import com.nbloi.cqrses.commonapi.dto.OrderItemDTO;
 import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
-import com.nbloi.cqrses.commonapi.query.FindOrderByCustomerIdQuery;
+import com.nbloi.cqrses.commonapi.query.FindOrderByCustomerQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
+import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
 import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
+import com.nbloi.cqrses.query.entity.Customer;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OrderItem;
 import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.service.ProductEventHandler;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.weaver.ast.Instanceof;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.EventProcessingModule;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.messaging.responsetypes.ResponseTypes;
 import org.axonframework.queryhandling.QueryGateway;
-import org.hibernate.validator.constraints.URL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -96,14 +95,13 @@ public class OrderController {
     @PostMapping("/confirm-order/{orderId}")
     public ResponseEntity<String> confirmOrder(@PathVariable String orderId) {
         try {
-            if (orderId == null) {
+            if (orderId == null || IsValidUUID(orderId)) {
                 return new ResponseEntity<>("Invalid uuid-formatted order id", HttpStatus.BAD_REQUEST);
             }
-            UUID parsedUUID = UUID.fromString(orderId);
             commandGateway.send(new ConfirmOrderCommand(orderId));
             return new ResponseEntity<>("Order Id: " + orderId + " has been confirmed", HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error parsing order Id " + orderId + " with UUID format.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Error parsing order Id " + orderId + " with UUID format.", HttpStatus.NOT_FOUND);
         }
     }
 
@@ -125,10 +123,9 @@ public class OrderController {
     @GetMapping("/findbyid/{orderId}")
     public ResponseEntity findOrderById(@PathVariable String orderId) {
         try {
-            if (orderId == null) {
+            if (orderId == null || !IsValidUUID(orderId)) {
                 return new ResponseEntity<>("Invalid uuid-formatted order id", HttpStatus.BAD_REQUEST);
             }
-            UUID parsedUUID = UUID.fromString(orderId);
             commandGateway.send(new ConfirmOrderCommand(orderId));
             Order orderRetrieved = queryGateway.query(new FindOrderByIdQuery(orderId), ResponseTypes.instanceOf(Order.class)).join();
             return new ResponseEntity<>(orderRetrieved, HttpStatus.OK);
@@ -137,10 +134,11 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/findbycustomerid/{customerId}")
-    public CompletableFuture<Order> findOrderByCustomerId(@PathVariable String customerId) {
-        return queryGateway.query(new FindOrderByCustomerIdQuery(customerId), ResponseTypes.instanceOf(Order.class));
-    }
+//    @GetMapping("/findbycustomerid/{customerId}")
+//    public CompletableFuture<Order> findOrderByCustomerId(@PathVariable String customerId) {
+//        Customer customer = queryGateway.query(new FindCustomerByIdQuery(customerId), ResponseTypes.instanceOf(Customer.class)).join();
+//        return queryGateway.query(new FindOrderByCustomerQuery(customer), ResponseTypes.instanceOf(Order.class));
+//    }
 
 
     @GetMapping("/eventStore/{orderId}")
@@ -149,5 +147,13 @@ public class OrderController {
                 .asStream() // Convert the event store into a stream
                 .map(event -> event.getPayload()) // Extract the payload of each event
                 .collect(Collectors.toList()); // Convert them from stream into the list
+    }
+
+    private static boolean IsValidUUID(String uuid) {
+        try {
+            return UUID.fromString(uuid).toString() != null;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

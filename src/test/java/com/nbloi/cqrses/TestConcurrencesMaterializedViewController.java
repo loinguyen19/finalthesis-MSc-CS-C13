@@ -21,6 +21,7 @@ import com.nbloi.cqrses.query.repository.CustomerOrderRepository;
 import com.nbloi.cqrses.query.repository.CustomerRepository;
 import com.nbloi.cqrses.query.repository.ProductRepository;
 import com.nbloi.cqrses.query.service.CustomerEventHandler;
+import com.nbloi.cqrses.query.service.EventReplayService;
 import com.nbloi.cqrses.query.service.OrderEventHandler;
 import com.nbloi.cqrses.query.service.ProductEventHandler;
 import jakarta.persistence.EntityManager;
@@ -65,7 +66,7 @@ class TestConcurrencesMaterializedViewController {
     private CustomerOrderRepository customerOrderViewRepository;
 
     // Implement the thread-safe executor
-    private final ExecutorService executorService = Executors.newFixedThreadPool(25);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(30);
     @Autowired
     private DataSource dataSource;
 
@@ -73,12 +74,16 @@ class TestConcurrencesMaterializedViewController {
     public void contextLoads() {}
     @Autowired
     private EntityManager entityManager;
+    @Autowired
+    private EventReplayService eventReplayService;
 
     @Test
-    void testPerformanceComparison() throws InterruptedException, SQLException, ExecutionException {
+    void testDataTimelinessComparison() throws InterruptedException, SQLException, ExecutionException {
         //TODO: Please run the test from TestConcurrencesController before running this Materialized View test
         // Make sure there is CustomerOrderProjection View in database when creating orders via tests
         int threadCount = 5;
+//        int threadCount = 10;
+//        int threadCount = 30;
         List<Callable<List<CustomerOrderView>>> tasksComplexJoin = new ArrayList<>();
         List<Callable<List<CustomerOrderView>>> taskView = new ArrayList<>();
 
@@ -147,7 +152,8 @@ class TestConcurrencesMaterializedViewController {
         for (Future<List<CustomerOrderView>> future: futuresComplexJoin){
             List<CustomerOrderView> responseList = future.get();
             for (CustomerOrderView response: responseList){
-                System.out.println(response);
+                Assertions.assertNotNull(response);
+//                System.out.println(response);
             }
         }
 
@@ -186,11 +192,63 @@ class TestConcurrencesMaterializedViewController {
     }
 
     @Test
-    void testSqlInjectionPrevention() {
-        // Inject malicious input into the order retrieval endpoint
-        String maliciousInput = "1 OR 1=1";
-        ResponseEntity<String> response = restTemplate.getForEntity("/api/v1/orders/findbyid/" + maliciousInput ,String.class);
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "SQL Injection should be prevented");
+    void testSqlInjectionPrevention() throws ExecutionException, InterruptedException {
+//        int threadCount = 5;
+//        int threadCount = 10;
+        int threadCount = 25;
+        List<Callable<ResponseEntity<String>>> tasks = new ArrayList<>();
+
+        for (int i = 0; i < threadCount; i++) {
+        tasks.add(() -> {
+            // Inject malicious input into the order retrieval endpoint
+            String maliciousInput = "1 OR 1=1";
+            ResponseEntity<String> response = restTemplate.getForEntity("/api/v1/orders/findbyid/" + maliciousInput, String.class);
+            return response;
+        });
+        }
+
+        List<Future<ResponseEntity<String>>> futures = executorService.invokeAll(tasks);
+        for (Future<ResponseEntity<String>> future: futures) {
+            ResponseEntity<String> response = future.get();
+            Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Potential SQL Injection should be prevented");
+            Assertions.assertEquals(response.getBody(), "Invalid uuid-formatted order id");
+        }
     }
 
+    @Test
+    public void testOrderCreatedEventWithKafkaFailureReplayEvents() throws IOException, InterruptedException {
+        // Step 1: Start Kafka to ensure it's running
+//        KafkaManage.startKafka();
+
+        // Step 2: Trigger an OrderCreatedEvent
+        // Simulate your application sending an OrderCreatedEvent to Kafka.
+//        simulateOrderCreatedEvent();
+
+        // Step 3: Stop Kafka to simulate a broker failure
+//        KafkaManage.stopKafka();
+        System.out.println("Kafka stopped!");
+
+        // Step 4: Assert retry mechanisms or behavior during the outage
+        // Check logs, application retry mechanisms, or database entries.
+        Thread.sleep(10000); // Give some time for retries to occur
+
+        eventReplayService.replayEvents("orderProcessor");
+
+        // Step 5: Start Kafka again
+//        KafkaManage.startKafka();
+        System.out.println("Kafka restarted!");
+
+        // Step 6: Assert that the event was successfully published after Kafka restart
+//        verifyEventPublishedSuccessfully();
+    }
+
+    private void simulateOrderCreatedEvent() {
+        // Your logic to trigger an OrderCreatedEvent
+        System.out.println("OrderCreatedEvent triggered.");
+    }
+
+    private void verifyEventPublishedSuccessfully() {
+        // Your logic to verify event was published after Kafka restart
+        System.out.println("Event successfully published after Kafka restart.");
+    }
 }

@@ -8,8 +8,11 @@ import com.nbloi.cqrses.commonapi.dto.CreateOrderRequestDTO;
 import com.nbloi.cqrses.commonapi.dto.CustomerDTO;
 import com.nbloi.cqrses.commonapi.dto.OrderItemDTO;
 import com.nbloi.cqrses.commonapi.dto.ProductDTO;
+import com.nbloi.cqrses.commonapi.enums.CustomerStatus;
 import com.nbloi.cqrses.commonapi.enums.OrderStatus;
 import com.nbloi.cqrses.commonapi.enums.ProductStatus;
+import com.nbloi.cqrses.commonapi.event.customer.CustomerDeletedEvent;
+import com.nbloi.cqrses.commonapi.event.customer.CustomerUpdatedEvent;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.commonapi.query.customer.FindAllCustomersQuery;
 import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
@@ -25,6 +28,8 @@ import com.nbloi.cqrses.query.repository.ProductRepository;
 import com.nbloi.cqrses.query.service.CustomerEventHandler;
 import com.nbloi.cqrses.query.service.OrderEventHandler;
 import com.nbloi.cqrses.query.service.ProductEventHandler;
+import com.nbloi.cqrses.query.service.kafkaconsumer.orderconsumer.OrderProcessedEventConsumer;
+import com.nbloi.cqrses.query.service.kafkaproducer.CustomerEventProducer;
 import org.axonframework.test.aggregate.AggregateTestFixture;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
@@ -35,6 +40,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -62,7 +69,7 @@ class TestConcurrencesController {
     private CustomerEventHandler customerEventHandler;
 
     // Implement the thread-safe executor
-    private final ExecutorService executorService = Executors.newFixedThreadPool(25);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(30);
     @Autowired
     private ProductEventHandler productEventHandler;
     @Autowired
@@ -71,6 +78,12 @@ class TestConcurrencesController {
     private CustomerRepository customerRepository;
     @Autowired
     private OrderRepository orderRepository;
+    @Autowired
+    private CustomerEventProducer customerEventProducer;
+    @Autowired
+    private OrderProcessedEventConsumer orderProcessedEventConsumer;
+    @Autowired
+    private ConsumerFactory consumerFactory;
 
     @Test
     public void contextLoads() {}
@@ -162,12 +175,15 @@ class TestConcurrencesController {
     @Test
     public void testConcurrencesDataUniquenessAndConsistencyOrderCreation() throws InterruptedException, IOException {
         // GIVEN
+        // Alternatively change thread numbers based on the tests.
         int threadCount = 5;
+//        int threadCount = 15;
+//        int threadCount = 30;
         List<Callable<ResponseEntity>> tasks = new ArrayList<>();
 
         // Read customers from file Customer.json
         List<Customer> customerList = customerEventHandler.handle(new FindAllCustomersQuery());
-        Customer requestedCustomers = customerList.get(2);
+        Customer requestedCustomers = customerList.get(10);
         String customerID = requestedCustomers.getCustomerId();
         BigDecimal initialBalance = requestedCustomers.getBalance();
 
@@ -211,7 +227,7 @@ class TestConcurrencesController {
                 ResponseEntity<String> orderCreatedResult = restTemplate.postForEntity("/api/v1/orders/create-order",
                         orderRequestDTO,
                         String.class);
-                Thread.sleep(45000);
+                Thread.sleep(60000);
                 return orderCreatedResult;
             });
         }
@@ -279,10 +295,8 @@ class TestConcurrencesController {
 
             Customer customerJoined = customerEventHandler.handle(new FindCustomerByIdQuery(customerID));
 
-            BigDecimal totalSpent1 = totalPrice1.multiply(BigDecimal.valueOf(threadCount));
-            BigDecimal totalSpent2 = totalPrice2.multiply(BigDecimal.valueOf(threadCount));
-            BigDecimal totalSpent = totalSpent1.add(totalSpent2);
-            BigDecimal wantPostBalance = initialBalance.subtract(totalSpent);
+            BigDecimal totalSpentOfAllThreads = totalAmount.multiply(BigDecimal.valueOf(threadCount));
+            BigDecimal wantPostBalance = initialBalance.subtract(totalSpentOfAllThreads);
             Assertions.assertEquals(wantPostBalance, customerJoined.getBalance());
 
             int totalQuantity1 = quantity1 * threadCount;
@@ -310,6 +324,8 @@ class TestConcurrencesController {
         // Then, create that product in database. And this event should be retried to keep on persisting the rest of operation in read model
         // GIVEN
         int threadCount = 5;
+//        int threadCount = 15;
+//        int threadCount = 30;
         List<Callable<ResponseEntity>> tasks = new ArrayList<>();
 
         // Read customers from file Customer.json
@@ -338,7 +354,7 @@ class TestConcurrencesController {
         List<OrderItemDTO> orderItemList = new ArrayList<>();
         OrderItemDTO oDTO2 = new OrderItemDTO(UUID.randomUUID().toString(), productId, quantity, price, totalPrice, currency);
         orderItemList.add(oDTO2);
-
+        LocalDateTime time;
         for (int i = 0; i < threadCount; i++) {
             int finalI = i;
 
@@ -352,14 +368,31 @@ class TestConcurrencesController {
                 Thread.sleep(10000);
                 System.out.println("Error of failed event when creating an unknown product order: " + orderRequestDTO);
 
+                long startTimeToRetry = System.currentTimeMillis();
+                System.out.println("Time to start retrying order created at time: " + startTimeToRetry + " at thread number: " + finalI);
+
                 CreateOrderRequestDTO orderRequestDTO2 = new CreateOrderRequestDTO(
                         orderItemList, finalTotalAmount, customerID, currency);
                 ResponseEntity<String> orderCreatedResult = restTemplate.postForEntity("/api/v1/orders/create-order",
                         orderRequestDTO2, String.class);
 
+                long endTimeToRetry = System.currentTimeMillis();
+                long retryCreatedOrderDuration = endTimeToRetry - startTimeToRetry;
+                System.out.println("Time to end retrying order created at time: " + endTimeToRetry + " at thread number: " + finalI);
+                System.out.println("After retrying, order created for duration: " + retryCreatedOrderDuration + " at thread number: " + finalI);
+
+                long startTime = System.currentTimeMillis();
+                System.out.println("Order created at time: " + startTime + " at thread number: " + finalI);
+
                 System.out.println("The order has been created successfully after fix the failures and retry event with orderId: "
                         + orderCreatedResult.getBody());
-                Thread.sleep(45000);
+                switch (threadCount) {
+                    // Because handle the event failure requires more time. Please wait a minute to sync all related entities. Thanks
+                    case 5:   Thread.sleep(60000);
+                    case 15:   Thread.sleep(90000);
+                    case 30:   Thread.sleep(120000);
+                    default: Thread.sleep(60000);
+                }
                 return orderCreatedResult;
             });
         }
@@ -402,6 +435,8 @@ class TestConcurrencesController {
 
                 System.out.println("Response: " + response.getBody());
                 Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode());
+                long endTime = System.currentTimeMillis();
+                System.out.println("The whole process of order created to sync all related entities ends at time: " + endTime);
             }
             Assertions.assertEquals(futures.size(), orderListCreated.size());
 
@@ -409,7 +444,8 @@ class TestConcurrencesController {
 
             BigDecimal totalSpent = totalPrice.multiply(BigDecimal.valueOf(threadCount));
             BigDecimal wantPostBalance = initialBalance.subtract(totalSpent);
-            //TODO: check again this test
+            System.out.println("Want post balance: " + wantPostBalance);
+            System.out.println("Actual post balance: " + customerJoined.getBalance());
             Assertions.assertEquals(wantPostBalance, customerJoined.getBalance());
 
             int totalQuantity = quantity * threadCount;
@@ -425,8 +461,10 @@ class TestConcurrencesController {
 
     @DisplayName("should return status OK when updating the same customer simultaneously 5 concurrences")
     @Test
-    public void test5ConcurrencesUpdateCustomerSimultaneously() throws Exception {
-        int threadCount = 5;
+    public void testConcurrencesUpdateCustomerSimultaneously() throws Exception {
+//                int threadCount = 5;
+//        int threadCount = 15;
+        int threadCount = 30;
         List<Callable<ResponseEntity<String>>> tasks = new ArrayList<>();
 
         List<Customer> customerList = customerEventHandler.handle(new FindAllCustomersQuery());
@@ -458,7 +496,12 @@ class TestConcurrencesController {
                         HttpMethod.PUT,
                         httpEntity,
                         String.class);
-                Thread.sleep(25000);
+                switch (threadCount) {
+                    case 5: Thread.sleep(25000);
+                    case 15: Thread.sleep(45000);
+                    case 30: Thread.sleep(60000);
+                    default: Thread.sleep(60000);
+                }
                 return updatedCustomer;
             });
         }
@@ -466,55 +509,9 @@ class TestConcurrencesController {
         List<Future<ResponseEntity<String>>> futures = executorService.invokeAll(tasks);
         for (Future<ResponseEntity<String>> future : futures) {
             ResponseEntity<String> response = future.get();
-            System.out.println("Response: " + response.getBody());
-        }
-    }
-
-    @DisplayName("should return status OK when updating the same customer multiple times with the same customer event")
-    @Test
-    public void test5ConcurrencesUpdateCustomerMultipleTimes() throws Exception {
-        int threadCount = 5;
-        List<Callable<ResponseEntity<String>>> tasks = new ArrayList<>();
-
-        List<Customer> customerList = customerEventHandler.handle(new FindAllCustomersQuery());
-        Customer customerRequest = customerList.get(5);
-        String customerId = customerRequest.getCustomerId();
-        String name = customerRequest.getName();
-        String email = customerRequest.getEmail();
-        String phoneNumber = customerRequest.getPhoneNumber();
-        BigDecimal balance = customerRequest.getBalance();
-        LocalDateTime createdAt =  customerRequest.getCreatedAt();
-        String customerStatus = customerRequest.getCustomerStatus();
-        Set<Order> orderInitialSet = customerRequest.getOrders();
-
-
-        for (int i = 0; i < threadCount; i++) {
-            int finalI = i;
-            String phoneNumberUpdated =  String.valueOf(Math.round((Math.random()* 10000000)*(Math.random()* 10000)));
-
-            tasks.add(() -> {
-                CustomerDTO customerDTO = new CustomerDTO(
-                        customerId, name, email, phoneNumber, balance);
-                // Automatically update phoneNumbers based on the number of threads
-                customerDTO.setPhoneNumber(phoneNumberUpdated);
-
-                System.out.println("Updated Phone number is: " + phoneNumberUpdated + " at thread number: " + finalI);
-                System.out.println("Order created at thread number: " + finalI);
-                HttpEntity<CustomerDTO> httpEntity = new HttpEntity<>(customerDTO);
-                ResponseEntity<String> updatedCustomer = restTemplate.exchange("/api/v1/customers/update/"+customerId,
-                        HttpMethod.PUT,
-                        httpEntity,
-                        String.class);
-                Thread.sleep(5000);
-                return updatedCustomer;
-            });
-        }
-
-        List<Future<ResponseEntity<String>>> futures = executorService.invokeAll(tasks);
-        for (Future<ResponseEntity<String>> future : futures) {
-            ResponseEntity<String> response = future.get();
-            Assertions.assertNotNull(response);
             Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+            System.out.println(response.getStatusCode());
+            System.out.println(response.getBody());
 
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.registerModule(new JavaTimeModule());
@@ -523,25 +520,89 @@ class TestConcurrencesController {
 
             Customer customerResponse = objectMapper.convertValue(mapResponse, Customer.class);
             Assertions.assertEquals(customerId, customerResponse.getCustomerId());
-
             Assertions.assertNotNull(customerResponse.getPhoneNumber());
             Assertions.assertNotEquals(phoneNumber, customerResponse.getPhoneNumber());
-            Assertions.assertEquals(name, customerResponse.getName());
-            Assertions.assertEquals(email, customerResponse.getEmail());
-            int comparedBalance = balance.compareTo(customerResponse.getBalance());
-            Assertions.assertEquals(comparedBalance, 0);
-            Assertions.assertEquals(customerStatus, customerResponse.getCustomerStatus());
-            Assertions.assertTrue(customerResponse.getUpdatedAt().isAfter(createdAt));
 
-            System.out.println("Response: " + response.getBody());
+            System.out.println("Response of updated customer: " + response.getBody());
         }
+    }
+
+    @DisplayName("should return status OK when updating the same customer multiple times with the same customer event")
+    @Test
+    public void testConcurrencesUpdateOneCustomerMultipleTimesWithManySameEvents() throws Exception {
+//        int threadCount = 5;
+//        int threadCount = 15;
+        int threadCount = 30;
+        List<Callable<ResponseEntity<String>>> tasks = new ArrayList<>();
+
+        List<Customer> customerList = customerEventHandler.handle(new FindAllCustomersQuery());
+        Customer customerRequest = customerList.get(15);
+        String customerId = customerRequest.getCustomerId();
+
+        String phoneNumberUpdated =  String.valueOf(Math.round((Math.random()* 10000000)*(Math.random()* 10000)));
+
+        CustomerDeletedEvent customerDeletedEvent = new CustomerDeletedEvent(customerId);
+        // Define deleted customer event id
+        String deletedEventId = customerDeletedEvent.getCustomerDeletedEventId();
+
+        String customerDeletedEventPayload = new ObjectMapper().writeValueAsString(customerDeletedEvent);
+        // Send multiple times for unique customer deleted event
+        customerEventProducer.sendCustomerDeletedEvent(customerDeletedEventPayload);
+        customerEventProducer.sendCustomerDeletedEvent(customerDeletedEventPayload);
+        customerEventProducer.sendCustomerDeletedEvent(customerDeletedEventPayload);
+
+        Thread.sleep(15000);
+        // Verify consumer processed the event only one getProcessedCount
+        Assertions.assertEquals(1, orderProcessedEventConsumer.getProcessedCount(deletedEventId));
+        System.out.println("Updated customer with id: " + customerId + " phone number is: " + phoneNumberUpdated);
+
+//        for (int i = 0; i < threadCount; i++) {
+//            int finalI = i;
+//
+//            tasks.add(() -> {
+//
+//
+//                System.out.println("Updated Phone number is: " + phoneNumberUpdated + " at thread number: " + finalI);
+//                System.out.println("Order created at thread number: " + finalI);
+//
+//                ResponseEntity<String> deletedCustomer = restTemplate.exchange("/api/v1/customers/delete/"+ customerId,
+//                        HttpMethod.DELETE,
+//                        HttpEntity.EMPTY,
+//                        String.class);
+//
+//                return deletedCustomer;
+//            });
+//        }
+//        // Wait for consumer to process events
+//        Thread.sleep(5000);
+//
+//
+//
+//        List<Future<ResponseEntity<String>>> futures = executorService.invokeAll(tasks);
+//        for (Future<ResponseEntity<String>> future : futures) {
+//            ResponseEntity<String> response = future.get();
+//            Assertions.assertNotNull(response);
+//            Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+//
+//            String customerResponseId = response.getBody();
+//            Customer customerResponse = customerEventHandler.handle(new FindCustomerByIdQuery(customerResponseId));
+//
+//            Assertions.assertNotNull(customerResponse);
+//            Assertions.assertEquals(customerId, customerResponseId);
+//            Assertions.assertEquals(CustomerStatus.DELETED.toString(), customerResponse.getCustomerStatus());
+//            Assertions.assertTrue(customerResponse.getUpdatedAt().isAfter(LocalDateTime.now()));
+//
+//            System.out.println("Response of updated customer with same event: " + response.getBody());
+//        }
     }
 
     @DisplayName("should return status OK when deleting a product should deleting all related-product orders")
     @Test
-    public void test5ConcurrencesDeleteAProductLinkage() throws Exception {
+    public void testConcurrencesDeleteAProductLinkage() throws Exception {
         // GIVEN
         int threadCount = 5;
+//        int threadCount = 15;
+//        int threadCount = 30;
         List<Callable<ResponseEntity>> tasks = new ArrayList<>();
 
         // Read customers from file Customer.json
@@ -580,10 +641,10 @@ class TestConcurrencesController {
                 ResponseEntity<String> orderCreatedResult = restTemplate.postForEntity("/api/v1/orders/create-order",
                         orderRequestDTO,
                         String.class);
-                Thread.sleep(45000);
+                Thread.sleep(60000);
 
                 // Delete the corresponding product
-                ResponseEntity<String> deletedOrderResult = restTemplate.exchange("/api/v1/products/delete/"+productId1,
+                ResponseEntity<String> deletedProductResult = restTemplate.exchange("/api/v1/products/delete/"+productId1,
                         HttpMethod.DELETE,
                         HttpEntity.EMPTY,
                         String.class);

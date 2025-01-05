@@ -7,6 +7,7 @@ import com.nbloi.cqrses.commonapi.dto.ProductDTO;
 import com.nbloi.cqrses.commonapi.event.product.ProductDeletedEvent;
 import com.nbloi.cqrses.commonapi.event.product.ProductInventoryEvent;
 import com.nbloi.cqrses.commonapi.query.product.FindAllProductsQuery;
+import com.nbloi.cqrses.commonapi.query.product.FindProductByIdAllStatusQuery;
 import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Product;
 import com.nbloi.cqrses.query.service.ProductEventHandler;
@@ -153,7 +154,7 @@ public class ProductController {
     @DeleteMapping("/delete/{productId}")
     public ResponseEntity<String> deleteProduct(@PathVariable String productId) {
         try {
-            Product product = queryGateway.query(new FindProductByIdQuery(productId),
+            Product product = queryGateway.query(new FindProductByIdAllStatusQuery(productId),
                     ResponseTypes.instanceOf(Product.class)).join();
             if (product == null) {
                 throw new RuntimeException("Product not found");

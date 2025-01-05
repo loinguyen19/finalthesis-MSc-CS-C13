@@ -7,13 +7,14 @@ import com.nbloi.cqrses.commonapi.exception.OutOfProductStockException;
 import com.nbloi.cqrses.commonapi.exception.UnconfirmedOrderException;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.FindAllOrdersQuery;
-import com.nbloi.cqrses.commonapi.query.FindOrderByCustomerIdQuery;
+import com.nbloi.cqrses.commonapi.query.FindOrderByCustomerQuery;
 import com.nbloi.cqrses.commonapi.query.FindOrderByIdQuery;
 import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
 import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.*;
 import com.nbloi.cqrses.query.repository.*;
 import lombok.extern.slf4j.Slf4j;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.queryhandling.QueryHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @Transactional
 @Service
 @Slf4j
+@ProcessingGroup("orderProcessor")
 public class OrderEventHandler {
 
     @Autowired
@@ -240,7 +242,6 @@ public class OrderEventHandler {
 
             orderRepository.delete(orderToDelete);
 
-            // TODO: send message to transactional outbox pattern to manage the event state before sending to Kafka broker
             // Save Outbox Message
             OutboxMessage outboxMessage = new OutboxMessage(
                     UUID.randomUUID().toString(),
@@ -272,10 +273,7 @@ public class OrderEventHandler {
     }
 
     @QueryHandler
-    public Order handle(FindOrderByCustomerIdQuery query) {
-        Order order = orderRepository.findById(query.getCustomerId()).orElse(null);
-        if (order == null) {throw new UnfoundEntityException(query.getCustomerId(), Order.class.getSimpleName());}
-
-        return order;
+    public List<Order> handle(FindOrderByCustomerQuery query) {
+        return orderRepository.findByCustomer(query.getCustomer());
     }
 }

@@ -10,6 +10,7 @@ import com.nbloi.cqrses.commonapi.event.product.ProductDeletedEvent;
 import com.nbloi.cqrses.commonapi.event.product.ProductInventoryEvent;
 import com.nbloi.cqrses.commonapi.exception.UnfoundEntityException;
 import com.nbloi.cqrses.commonapi.query.product.FindAllProductsQuery;
+import com.nbloi.cqrses.commonapi.query.product.FindProductByIdAllStatusQuery;
 import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.Order;
 import com.nbloi.cqrses.query.entity.OrderItem;
@@ -93,6 +94,7 @@ public class ProductEventHandler {
                     OutboxStatus.PENDING.toString());
 
             outboxRepository.save(outboxMessage);
+            log.info("Deleted product {}", outboxMessage.getPayload());
 
         } catch (Exception e) {
             // Log the error for more specific message
@@ -128,6 +130,13 @@ public class ProductEventHandler {
     @QueryHandler
     public Product handle(FindProductByIdQuery query) {
         Product product = productRepository.findActiveProductById(query.getProductById());
+        if (product == null) {throw new UnfoundEntityException(query.getProductById(), Product.class.getName());}
+        return product;
+    }
+
+    @QueryHandler
+    public Product handle(FindProductByIdAllStatusQuery query) {
+        Product product = productRepository.findById(query.getProductById()).orElse(null);
         if (product == null) {throw new UnfoundEntityException(query.getProductById(), Product.class.getName());}
         return product;
     }

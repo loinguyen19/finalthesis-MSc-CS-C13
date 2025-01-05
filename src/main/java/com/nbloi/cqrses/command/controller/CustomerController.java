@@ -43,15 +43,17 @@ public class CustomerController {
 
 
     // Autowiring constructor and POST/GET endpoints
-    public CustomerController(CommandGateway commandGateway, QueryGateway queryGateway, EventStore eventStore) {
+    public CustomerController(CommandGateway commandGateway, QueryGateway queryGateway, EventStore eventStore,
+                              CustomerEventHandler customerEventHandler) {
         this.commandGateway = commandGateway;
         this.queryGateway = queryGateway;
         this.eventStore = eventStore;
+        this.customerEventHandler=customerEventHandler;
     }
 
     @PostMapping("/create-customer")
     public ResponseEntity createCustomer(@RequestBody CustomerDTO request) {
-        String customerId = UUID.randomUUID().toString();
+        String customerId = "3597a1e5-c732-4941-8cc8-dede47147646";
         String name = request.getName();
         String email = request.getEmail();
         String phoneNumber = request.getPhoneNumber();

@@ -37,6 +37,8 @@ public class CustomerUpdatedEventConsumer {
             PaymentCompletedEvent paymentEvent = new ObjectMapper().readValue(paymentCompletedEvent, PaymentCompletedEvent.class);
 
             Order order = orderEventHandler.handle(new FindOrderByIdQuery(paymentEvent.getOrderId()));
+            System.out.println("Retrieved Order from Payment Event: " + order.toString());
+
             if (order == null) { throw new UnfoundEntityException(paymentEvent.getOrderId(), Order.class.toString());}
 
             Customer customer = order.getCustomer();
@@ -47,6 +49,7 @@ public class CustomerUpdatedEventConsumer {
                     customer.getPhoneNumber(),
                     customer.getBalance().subtract(paymentEvent.getTotalAmount())
             );
+            System.out.println("Update-to-be Customer from Order Retrieved: " + customerUpdatedEvent.toString());
 
             customerEventHandler.on(customerUpdatedEvent);
 
