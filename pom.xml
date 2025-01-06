@@ -181,6 +181,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+		<!-- OWASP -->
+		<dependency>
+			<groupId>org.owasp</groupId>
+			<artifactId>dependency-check-maven</artifactId>
+			<version>11.1.1</version>
+		</dependency>
 
     </dependencies>
 
@@ -197,6 +203,27 @@
 				<configuration>
 					<source>21</source>
 					<target>21</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>11.1.1</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<!-- Customize paths, formats, or thresholds if needed -->
+<!--					<nvdApiKey>2f8d8143-a858-42a3-8495-b5fab0ce19bb</nvdApiKey>-->
+					<outputDirectory>${project.build.directory}/dependency-check-report</outputDirectory>
+					<formats>
+						<format>HTML</format>
+						<format>XML</format>
+					</formats>
 				</configuration>
 			</plugin>
 		</plugins>

@@ -27,10 +27,7 @@ import java.util.concurrent.Executors;
 @RunWith(SpringRunner.class)
 @EmbeddedKafka(partitions = 1, topics = {"events"})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-        "axon.eventhandling.processors.replayProcessor.mode=tracking",
-        "axon.kafka.consumer.group-id=order_group, payment_group, product_group, customer_group, test_group",
-        "spring.kafka.bootstrap-servers=172.24.236.211:9092"})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TestConcurrencesReplayEvents {
 
     @Autowired

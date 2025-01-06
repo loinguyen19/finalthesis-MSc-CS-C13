@@ -13,6 +13,7 @@ import com.nbloi.cqrses.commonapi.query.customer.FindCustomerByIdQuery;
 import com.nbloi.cqrses.commonapi.query.product.FindProductByIdQuery;
 import com.nbloi.cqrses.query.entity.*;
 import com.nbloi.cqrses.query.repository.*;
+import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
@@ -41,6 +42,8 @@ public class OrderEventHandler {
     private PaymentRepository paymentRepository;
     @Autowired
     private CustomerEventHandler customerEventHandler;
+    @Autowired
+    private EntityManager entityManager;
 
 
     public OrderEventHandler(OrderRepository orderRepository, OutboxRepository outboxRepository, ProductEventHandler productEventHandler,
@@ -120,6 +123,8 @@ public class OrderEventHandler {
                         OutboxStatus.PENDING.toString()
                 );
                 outboxRepository.save(outboxMessage);
+                entityManager.flush();
+                entityManager.clear(); // Prevent multiple representations in context
                 log.info("Processing 'created order' OutboxMessage with payload: {}", outboxMessage.getPayload());
 
 /*                // Publish the event into Kafka broker

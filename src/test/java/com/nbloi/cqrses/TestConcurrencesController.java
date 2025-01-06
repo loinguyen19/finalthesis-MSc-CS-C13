@@ -224,10 +224,17 @@ class TestConcurrencesController {
                 CreateOrderRequestDTO orderRequestDTO = new CreateOrderRequestDTO(
                         orderItemList, finalTotalAmount, customerID, currency);
                 System.out.println("Order created at thread number: " + finalI);
+
+                long startTime = System.currentTimeMillis();
+                System.out.println("Start time to create an order: " + startTime);
                 ResponseEntity<String> orderCreatedResult = restTemplate.postForEntity("/api/v1/orders/create-order",
                         orderRequestDTO,
                         String.class);
-                Thread.sleep(60000);
+                long endTime = System.currentTimeMillis();
+                long createdDuration = endTime - startTime;
+                System.out.println("End time to finish creating an order: " + endTime);
+                System.out.println("Duration to completely create an order: " + createdDuration);
+                Thread.sleep(90000);
                 return orderCreatedResult;
             });
         }
@@ -330,7 +337,6 @@ class TestConcurrencesController {
 
         // Read customers from file Customer.json
         List<Customer> customerList = customerEventHandler.handle(new FindAllCustomersQuery());
-        // "name": "siri padala", "email": "siri_padala@gmail.com", "phoneNumber": "48190586010", "balance": "976500"
         Customer requestedCustomers = customerList.get(6);
         String customerID = requestedCustomers.getCustomerId();
         BigDecimal initialBalance = requestedCustomers.getBalance();
