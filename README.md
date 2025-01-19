@@ -28,6 +28,10 @@ If "Connecting to AxonServer node [localhost:8124] failed: NOT_FOUND: [AXONIQ-13
 	Copy all the DB script in IDE from the directory: ./resources/DBLoadScript.sql (create tables and insert values for tables)
 	Paste and run in MySQL Workbench
 #### 4. Run application
+- Either use one of these step
+  1. Click 'Run' button from the top of panel
+  2. Run this command >> mvn run:springboot
+![img.png](/img.png)
 #### 5. Use postman or HTTP Client in file to test API
 #### 6. Run the test in directory for more information: 
 
